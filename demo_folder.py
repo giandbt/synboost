@@ -47,13 +47,13 @@ if not opt.no_segmentation:
     img_transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize(*mean_std)])
     
     # Create save directory
-    if not os.path.exists(opt.save_dir):
-        os.makedirs(opt.save_dir)
+    if not os.path.exists(opt.results_dir):
+        os.makedirs(opt.results_dir)
     
-    color_mask_fdr = os.path.join(opt.save_dir, 'color-mask')
-    overlap_fdr = os.path.join(opt.save_dir, 'overlap')
-    segmantic_fdr = os.path.join(opt.save_dir, 'semantic')
-    original_fdr = os.path.join(opt.save_dir, 'original')
+    color_mask_fdr = os.path.join(opt.results_dir, 'color-mask')
+    overlap_fdr = os.path.join(opt.results_dir, 'overlap')
+    segmantic_fdr = os.path.join(opt.results_dir, 'semantic')
+    original_fdr = os.path.join(opt.results_dir, 'original')
     
     if not os.path.exists(color_mask_fdr):
         os.makedirs(color_mask_fdr)
@@ -68,16 +68,16 @@ if not opt.no_segmentation:
         os.makedirs(original_fdr)
         
     # creates temporary folder to adapt format to image synthesis
-    os.makedirs(os.path.join(opt.save_dir, 'temp'))
-    os.makedirs(os.path.join(opt.save_dir, 'temp', 'gtFine', 'val'))
-    os.makedirs(os.path.join(opt.save_dir, 'temp', 'leftImg8bit', 'val'))
+    os.makedirs(os.path.join(opt.results_dir, 'temp'))
+    os.makedirs(os.path.join(opt.results_dir, 'temp', 'gtFine', 'val'))
+    os.makedirs(os.path.join(opt.results_dir, 'temp', 'leftImg8bit', 'val'))
     
     # Loop around all figures
     for img_id, img_name in enumerate(images):
         img_dir = os.path.join(data_dir, img_name)
         img = Image.open(img_dir).convert('RGB')
         img.save(os.path.join(original_fdr, img_name))
-        img.save(os.path.join(opt.save_dir, 'temp', 'leftImg8bit', 'val', img_name[:-4] + '_leftImg8bit.png'))
+        img.save(os.path.join(opt.results_dir, 'temp', 'leftImg8bit', 'val', img_name[:-4] + '_leftImg8bit.png'))
         img_tensor = img_transform(img)
     
         # predict
@@ -105,8 +105,8 @@ if not opt.no_segmentation:
         for label_id, train_id in opt.dataset_cls.id_to_trainid.items():
             label_out[np.where(pred == train_id)] = label_id
             cv2.imwrite(os.path.join(segmantic_fdr, pred_name), label_out)
-            cv2.imwrite(os.path.join(opt.save_dir, 'temp', 'gtFine', 'val', pred_name[:-4] + '_instanceIds.png'), label_out)
-            cv2.imwrite(os.path.join(opt.save_dir, 'temp', 'gtFine', 'val', pred_name[:-4] + '_labelIds.png'), label_out)
+            cv2.imwrite(os.path.join(opt.results_dir, 'temp', 'gtFine', 'val', pred_name[:-4] + '_instanceIds.png'), label_out)
+            cv2.imwrite(os.path.join(opt.results_dir, 'temp', 'gtFine', 'val', pred_name[:-4] + '_labelIds.png'), label_out)
     
     print('Segmentation Results saved.')
 
@@ -121,6 +121,9 @@ from util import html
 
 world_size = 1
 rank = 0
+
+# Corrects where dataset is in necesary format
+opt.dataroot = os.path.join(opt.results_dir, 'temp')
 
 opt.world_size = world_size
 opt.gpu = 0
@@ -157,17 +160,17 @@ for i, data_i in enumerate(dataloader):
 
 webpage.save()
 
-synthesis_fdr = os.path.join(opt.save_dir, 'synthesis')
+synthesis_fdr = os.path.join(opt.results_dir, 'synthesis')
 
 # Cleans output folders and deletes temporary files
 if not os.path.exists(synthesis_fdr):
     os.makedirs(synthesis_fdr)
 
-source_fdr = os.path.join(opt.save_dir, 'image-synthesis/test_latest/images/synthesized_image')
+source_fdr = os.path.join(opt.results_dir, 'image-synthesis/test_latest/images/synthesized_image')
 for image_name in os.listdir(source_fdr):
-    os.rename(os.path.join(source_fdr,image_name), os.path.join(synthesis_fdr,image_name))
+    shutil.move(os.path.join(source_fdr,image_name), os.path.join(synthesis_fdr,image_name))
     
-shutil.rmtree(os.path.join(opt.save_dir, 'image-synthesis'))
-shutil.rmtree(os.path.join(opt.save_dir, 'temp'))
+shutil.rmtree(os.path.join(opt.results_dir, 'image-synthesis'))
+shutil.rmtree(os.path.join(opt.results_dir, 'temp'))
 
 

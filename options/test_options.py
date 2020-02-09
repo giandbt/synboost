@@ -11,8 +11,7 @@ class TestOptions(BaseOptions):
         # General
         parser.add_argument('--demo-folder', type=str, default='./sample_images', help='path to the folder containing demo images',
                             required=False)
-        parser.add_argument('--save-dir', type=str, default='./results', help='path to save your results')
-        parser.add_argument('--no-segmentation', action='store_true', help='if specified, do *not* segment images')
+        parser.add_argument('--no-segmentation', action='store_true', help='if specified, do *not* segment images since they are already created')
 
         # Segmentation
         parser.add_argument('--snapshot', type=str, default='./models/image-segmentation/cityscapes_best.pth',
