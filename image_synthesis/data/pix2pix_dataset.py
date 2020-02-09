@@ -25,11 +25,6 @@ class Pix2pixDataset(BaseDataset):
         image_paths = image_paths[:opt.max_dataset_size]
         instance_paths = instance_paths[:opt.max_dataset_size]
 
-        if not opt.no_pairing_check:
-            for path1, path2 in zip(label_paths, image_paths):
-                assert self.paths_match(path1, path2), \
-                    "The label-image pair (%s, %s) do not look like the right pair because the filenames are quite different. Are you sure about the pairing? Please see data/pix2pix_dataset.py to see what is going on, and use --no_pairing_check to bypass this." % (path1, path2)
-
         self.label_paths = label_paths
         self.image_paths = image_paths
         self.instance_paths = instance_paths
@@ -63,9 +58,6 @@ class Pix2pixDataset(BaseDataset):
 
         # input image (real images)
         image_path = self.image_paths[index]
-        assert self.paths_match(label_path, image_path), \
-            "The label_path %s and image_path %s don't match." % \
-            (label_path, image_path)
         image = Image.open(image_path)
         image = image.convert('RGB')
 

@@ -1,2 +1,4 @@
 models/
 results/
+*.pyc
+*.idea

@@ -8,4 +8,3 @@ python test.py \
     --dataset_mode cityscapes \
     --dataroot datasets/cityscapes \
     --use_vae
-``
