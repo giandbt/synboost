@@ -1,6 +1,5 @@
 import torch.nn as nn
 
-				
 class VGGFeatures(nn.Module):
 
 	def __init__(self, original_model):
