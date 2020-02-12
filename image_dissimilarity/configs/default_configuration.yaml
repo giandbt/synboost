@@ -1,0 +1,57 @@
+# Define training strategy
+training_strategy:
+  max_iter: 300000 # 300000/2975*1 = 37.432738048818529 epochs
+  single_task_backprop: False
+
+# model options
+model:
+  architecture: vgg16 #[options: 'vgg16']
+  # Define accordingly, e.g.
+  parameters:
+    pretrained: True
+
+# logger options
+logger:
+  train_log_iter: 100             # How often do you want to log the training stats
+  val_log_iter: 1000              # How often do you want to log the validation stats
+  image_log_iter: 1000            # How often do you want to display output images during training
+  results_dir: ./results
+
+# loss options (remove tasks not needed)
+loss:  BCEWithLogitsLoss
+
+
+# optimization options
+optimizer:
+  algorithm: Adam
+  # Define accordingly, e.g.
+  parameters:
+    lr: 1.e-4 # 1.e-4
+    weight_decay: 0.0000
+    beta1: 0.5 # momentum term of adam
+    beta2: 0.999 # momentum term of adam
+
+# learning rate scheduler options
+scheduler:
+  lr_policy: PolynomialLR
+  # Define accordingly, e.g.
+  parameters:
+    max_iter: 300000
+    decay_iter: 1
+    gamma: 0.9
+
+train_dataloader:
+  dataset_args:
+    dataroot: /media/giancarlo/Samsung_T5/master_thesis/results/Pipeline
+    preprocess_mode: scale_width_and_crop
+    load_size: 1024
+    crop_size: 512
+    dataset_name: cityscapes
+    image_set: train
+    no_flip: false
+  dataloader_args:
+    batch_size: 8
+    num_workers: 1
+    shuffle: False
+val_dataloader:
+  # TODO COPY TRAIN DATALOADER ARGUMENTS
