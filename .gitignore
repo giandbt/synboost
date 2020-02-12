@@ -1,4 +1,4 @@
-models/
+*.pth
 results/
 *.pyc
 *.idea
