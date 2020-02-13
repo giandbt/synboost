@@ -2,8 +2,8 @@ import torch.nn as nn
 import torchvision.models as models
 import torch
 
-from semantic_encoder import SemanticEncoder
-from vgg_features import VGGFeatures
+from models.semantic_encoder import SemanticEncoder
+from models.vgg_features import VGGFeatures
 
 class DissimNet(nn.Module):
     def __init__(self, pretrained=True):

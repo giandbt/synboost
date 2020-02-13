@@ -42,6 +42,11 @@ scheduler:
     decay_iter: 1
     gamma: 0.9
 
+# parameters for dataset
+dataset:
+  num_classes: 19 # Actual training labels
+
+# parameters for dataloaders
 train_dataloader:
   dataset_args:
     dataroot: /media/giancarlo/Samsung_T5/master_thesis/results/Pipeline

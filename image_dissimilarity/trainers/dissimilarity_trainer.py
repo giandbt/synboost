@@ -1,11 +1,12 @@
-from models.dissimilarity_model import DissimNet
 import torch
 import os
 import torch.nn as nn
+import torch.backends.cudnn as cudnn
 
 import sys
 sys.path.append("..")
-from util.cityscapes_dataset import trainer_util
+from util import trainer_util
+from models.dissimilarity_model import DissimNet
 
 class DissimilarityTrainer():
     #TODO (Giancarlo): Complete this class. Also add weights for loss from https://github.com/iArunava/ENet-Real-Time-Semantic-Segmentation/blob/master/train.py
@@ -16,8 +17,10 @@ class DissimilarityTrainer():
     """
 
     def __init__(self, config):
+        cudnn.enabled = True
         self.config = config
-        self.diss_model = DissimNet()
+        self.gpu = config['gpu_ids']
+        self.diss_model = DissimNet().cuda(self.gpu)
         
         lr_config = config['optimizer']
         lr_options = lr_config['parameters']
@@ -31,11 +34,12 @@ class DissimilarityTrainer():
         
         self.old_lr = lr_options['lr']
         
-        segmented_path = os.path.join(config['train_dataloader']['dataset_args']['dataroot'], 'semantic')
+        segmented_path = os.path.join(config['train_dataloader']['dataset_args']['dataroot'], 'semantic/')
         full_loader = trainer_util.loader(segmented_path, batch_size='all')
-        class_weights = trainer_util.get_class_weights(full_loader, num_classes=19)
-
-        self.criterion = nn.CrossEntropyLoss(weight=torch.FloatTensor(class_weights).to('gpu'))
+        class_weights = trainer_util.get_class_weights(full_loader, num_classes=config['dataset']['num_classes'])
+        
+        self.criterion = nn.CrossEntropyLoss(weight=torch.FloatTensor(class_weights).to("cuda"),
+                                             ignore_index=255).cuda(self.gpu)
         
         
     # TODO All these functions
@@ -83,3 +87,15 @@ class DissimilarityTrainer():
                 param_group['lr'] = new_lr_G
             print('update learning rate: %f -> %f' % (self.old_lr, new_lr))
             self.old_lr = new_lr
+
+
+if __name__ == "__main__":
+    import yaml
+    
+    config = '../configs/default_configuration.yaml'
+    gpu_ids = 0
+
+    with open(config, 'r') as stream:
+        config = yaml.load(stream, Loader=yaml.FullLoader)
+    config['gpu_ids'] = gpu_ids
+    trainer = DissimilarityTrainer(config)

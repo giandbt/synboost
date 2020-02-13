@@ -6,45 +6,14 @@ import torchvision.transforms as transforms
 import numpy as np
 import random
 from natsort import natsorted
-"""
-labels = [
-	#       name                     id    trainId   category            catId     hasInstances   ignoreInEval   color
-	Label(  'unlabeled'            ,  0 ,      255 , 'void'            , 0       , False        , True         , (  0,  0,  0) ),
-	Label(  'ego vehicle'          ,  1 ,      255 , 'void'            , 0       , False        , True         , (  0,  0,  0) ),
-	Label(  'rectification border' ,  2 ,      255 , 'void'            , 0       , False        , True         , (  0,  0,  0) ),
-	Label(  'out of roi'           ,  3 ,      255 , 'void'            , 0       , False        , True         , (  0,  0,  0) ),
-	Label(  'static'               ,  4 ,      255 , 'void'            , 0       , False        , True         , (  0,  0,  0) ),
-	Label(  'dynamic'              ,  5 ,      255 , 'void'            , 0       , False        , True         , (111, 74,  0) ),
-	Label(  'ground'               ,  6 ,      255 , 'void'            , 0       , False        , True         , ( 81,  0, 81) ),
-	Label(  'road'                 ,  7 ,        0 , 'flat'            , 1       , False        , False        , (128, 64,128) ),
-	Label(  'sidewalk'             ,  8 ,        1 , 'flat'            , 1       , False        , False        , (244, 35,232) ),
-	Label(  'parking'              ,  9 ,      255 , 'flat'            , 1       , False        , True         , (250,170,160) ),
-	Label(  'rail track'           , 10 ,      255 , 'flat'            , 1       , False        , True         , (230,150,140) ),
-	Label(  'building'             , 11 ,        2 , 'construction'    , 2       , False        , False        , ( 70, 70, 70) ),
-	Label(  'wall'                 , 12 ,        3 , 'construction'    , 2       , False        , False        , (102,102,156) ),
-	Label(  'fence'                , 13 ,        4 , 'construction'    , 2       , False        , False        , (190,153,153) ),
-	Label(  'guard rail'           , 14 ,      255 , 'construction'    , 2       , False        , True         , (180,165,180) ),
-	Label(  'bridge'               , 15 ,      255 , 'construction'    , 2       , False        , True         , (150,100,100) ),
-	Label(  'tunnel'               , 16 ,      255 , 'construction'    , 2       , False        , True         , (150,120, 90) ),
-	Label(  'pole'                 , 17 ,        5 , 'object'          , 3       , False        , False        , (153,153,153) ),
-	Label(  'polegroup'            , 18 ,      255 , 'object'          , 3       , False        , True         , (153,153,153) ),
-	Label(  'traffic light'        , 19 ,        6 , 'object'          , 3       , False        , False        , (250,170, 30) ),
-	Label(  'traffic sign'         , 20 ,        7 , 'object'          , 3       , False        , False        , (220,220,  0) ),
-	Label(  'vegetation'           , 21 ,        8 , 'nature'          , 4       , False        , False        , (107,142, 35) ),
-	Label(  'terrain'              , 22 ,        9 , 'nature'          , 4       , False        , False        , (152,251,152) ),
-	Label(  'sky'                  , 23 ,       10 , 'sky'             , 5       , False        , False        , ( 70,130,180) ),
-	Label(  'person'               , 24 ,       11 , 'human'           , 6       , True         , False        , (220, 20, 60) ),
-	Label(  'rider'                , 25 ,       12 , 'human'           , 6       , True         , False        , (255,  0,  0) ),
-	Label(  'car'                  , 26 ,       13 , 'vehicle'         , 7       , True         , False        , (  0,  0,142) ),
-	Label(  'truck'                , 27 ,       14 , 'vehicle'         , 7       , True         , False        , (  0,  0, 70) ),
-	Label(  'bus'                  , 28 ,       15 , 'vehicle'         , 7       , True         , False        , (  0, 60,100) ),
-	Label(  'caravan'              , 29 ,      255 , 'vehicle'         , 7       , True         , True         , (  0,  0, 90) ),
-	Label(  'trailer'              , 30 ,      255 , 'vehicle'         , 7       , True         , True         , (  0,  0,110) ),
-	Label(  'train'                , 31 ,       16 , 'vehicle'         , 7       , True         , False        , (  0, 80,100) ),
-	Label(  'motorcycle'           , 32 ,       17 , 'vehicle'         , 7       , True         , False        , (  0,  0,230) ),
-	Label(  'bicycle'              , 33 ,       18 , 'vehicle'         , 7       , True         , False        , (119, 11, 32) ),
-	Label(  'license plate'        , -1 ,       -1 , 'vehicle'         , 7       , False        , True         , (  0,  0,142) ),
-]"""
+
+import sys
+sys.path.append("..")
+import data.cityscapes_labels as cityscapes_labels
+
+trainid_to_name = cityscapes_labels.trainId2name
+id_to_trainid = cityscapes_labels.label2trainid
+
 class CityscapesDataset(Dataset):
     
     def __init__(self, dataroot, preprocess_mode, image_set, load_size=1024, crop_size=512, no_flip=False):
@@ -76,9 +45,11 @@ class CityscapesDataset(Dataset):
         self.is_train = True if image_set == 'train' else False
         
     def __getitem__(self, index):
-        # Label Image
+        
+        # Label Image.
         label_path = self.label_paths[index]
         label = Image.open(label_path)
+        
         params = get_params(self.preprocess_mode, label.size, self.load_size, self.crop_size)
         
         transform_label = get_transform(self.preprocess_mode, params,
@@ -105,6 +76,14 @@ class CityscapesDataset(Dataset):
         # semantic image
         semantic_path = self.semantic_paths[index]
         semantic = Image.open(semantic_path)
+        
+        # Correct labels to train ID
+        semantic = np.array(semantic)
+        semantic_copy = semantic.copy()
+        for k, v in id_to_trainid.items():
+            semantic_copy[semantic == k] = v
+        semantic = Image.fromarray(semantic_copy.astype(np.uint8))
+        
         semantic_tensor = transform_label(semantic) * 255.0
         semantic_tensor[semantic_tensor == 255] = 35  # 'unknown' is label_nc from cityscapes
 
@@ -258,10 +237,11 @@ def test(dataset_args, dataloader_args, save_imgs=False, path='./visualization')
                 label = Image.fromarray(label).convert('RGB')
                 label.save(os.path.join(path, 'Label_%i_%i' % (counter, idx) + '.png'))
 
-                # get label image
+                # get semantic image
                 semantic = semantic.squeeze().cpu().numpy()
                 semantic = np.asarray(transform(semantic))
-                semantic = Image.fromarray(semantic).convert('RGB')
+                semantic = visualization.colorize_mask(semantic)
+                semantic = semantic.convert('RGB')
                 semantic.save(os.path.join(path, 'Semantic_%i_%i' % (counter, idx) + '.png'))
 
                 # get original image
@@ -279,6 +259,7 @@ if __name__ == '__main__':
     import sys
     sys.path.append("..")
     from util.image_decoders import DenormalizeImage
+    from util import visualization
     
     dataset_args = {
         'dataroot': '/media/giancarlo/Samsung_T5/master_thesis/results/Pipeline',

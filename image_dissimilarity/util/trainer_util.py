@@ -10,6 +10,8 @@ import cv2
 import sys
 sys.path.append("..")
 from data.cityscapes_dataset import CityscapesDataset
+import data.cityscapes_labels as cityscapes_labels
+
 
 def activate_gpus(config):
     """Identify which GPUs to activate
@@ -70,59 +72,6 @@ def get_class_weights(loader, num_classes, c=1.02):
     return class_weights
 
 
-def show_images(images, in_row=True):
-    '''
-    Helper function to show 3 images
-    '''
-    total_images = len(images)
-    
-    rc_tuple = (1, total_images)
-    if not in_row:
-        rc_tuple = (total_images, 1)
-
-    # figure = plt.figure(figsize=(20, 10))
-    for ii in range(len(images)):
-        plt.subplot(*rc_tuple, ii + 1)
-        plt.title(images[ii][0])
-        plt.axis('off')
-        plt.imshow(images[ii][1])
-    plt.show()
-    
-def decode_segmap(image):
-    Sky = [128, 128, 128]
-    Building = [128, 0, 0]
-    Pole = [192, 192, 128]
-    Road_marking = [255, 69, 0]
-    Road = [128, 64, 128]
-    Pavement = [60, 40, 222]
-    Tree = [128, 128, 0]
-    SignSymbol = [192, 128, 128]
-    Fence = [64, 64, 128]
-    Car = [64, 0, 128]
-    Pedestrian = [64, 64, 0]
-    Bicyclist = [0, 128, 192]
-
-    label_colors = np.array([Sky, Building, Pole, Road_marking, Road,
-                              Pavement, Tree, SignSymbol, Fence, Car,
-                              Pedestrian, Bicyclist]).astype(np.uint8)
-
-    r = np.zeros_like(image).astype(np.uint8)
-    g = np.zeros_like(image).astype(np.uint8)
-    b = np.zeros_like(image).astype(np.uint8)
-
-    for label in range(len(label_colors)):
-            r[image == label] = label_colors[label, 0]
-            g[image == label] = label_colors[label, 1]
-            b[image == label] = label_colors[label, 2]
-
-    rgb = np.zeros((image.shape[0], image.shape[1], 3)).astype(np.uint8)
-    rgb[:, :, 0] = r
-    rgb[:, :, 1] = g
-    rgb[:, :, 2] = b
-
-    return rgb
-
-
 def loader(segmented_path, batch_size, h=512, w=512):
     """
     The Loader to generate inputs and labels from the Image and Segmented Directory
@@ -135,6 +84,7 @@ def loader(segmented_path, batch_size, h=512, w=512):
     
     filenames_s = os.listdir(segmented_path)
     total_files_s = len(filenames_s)
+    id_to_trainid = cityscapes_labels.label2trainid
     
     if str(batch_size).lower() == 'all':
         batch_size = total_files_s
@@ -148,6 +98,13 @@ def loader(segmented_path, batch_size, h=512, w=512):
         for jj in batch_idxs:
             img = Image.open(segmented_path + filenames_s[jj])
             img = np.array(img)
+            
+            # Correct Labels to Train IDs
+            img_copy = img.copy()
+            for k, v in id_to_trainid.items():
+                img_copy[img == k] = v
+            img = img_copy.astype(np.uint8)
+            
             img = cv2.resize(img, (h, w), cv2.INTER_NEAREST)
             labels.append(img)
         
