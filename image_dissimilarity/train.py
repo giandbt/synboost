@@ -46,11 +46,7 @@ for epoch in iter_counter.training_epochs():
         iter_counter.record_one_iteration()
         
         # Training
-        # train generator
-        trainer.run_generator_one_step(data_i)
-        
-        # train discriminator
-        trainer.run_discriminator_one_step(data_i)
+        trainer.run_model_one_step(data_i)
         
         # Visualizations
         # TODO (Giancarlo): Need to add visualization tool

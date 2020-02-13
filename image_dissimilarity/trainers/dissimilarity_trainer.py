@@ -1,9 +1,14 @@
 from models.dissimilarity_model import DissimNet
 import torch
-import torchvision.models as models
+import os
+import torch.nn as nn
+
+import sys
+sys.path.append("..")
+from util.cityscapes_dataset import trainer_util
 
 class DissimilarityTrainer():
-    #TODO (Giancarlo): Complete this class
+    #TODO (Giancarlo): Complete this class. Also add weights for loss from https://github.com/iArunava/ENet-Real-Time-Semantic-Segmentation/blob/master/train.py
     """
     Trainer creates the model and optimizers, and uses them to
     updates the weights of the network while reporting losses
@@ -25,23 +30,24 @@ class DissimilarityTrainer():
             raise NotImplementedError
         
         self.old_lr = lr_options['lr']
+        
+        segmented_path = os.path.join(config['train_dataloader']['dataset_args']['dataroot'], 'semantic')
+        full_loader = trainer_util.loader(segmented_path, batch_size='all')
+        class_weights = trainer_util.get_class_weights(full_loader, num_classes=19)
 
-    def run_generator_one_step(self, data):
+        self.criterion = nn.CrossEntropyLoss(weight=torch.FloatTensor(class_weights).to('gpu'))
+        
+        
+    # TODO All these functions
+
+    def run_model_one_step(self, data):
         self.optimizer.zero_grad()
-        g_losses, generated = self.pix2pix_model(data, mode='generator')
+        g_losses, generated = self.diss_model(data)
         g_loss = sum(g_losses.values()).mean()
         g_loss.backward()
         self.optimizer_G.step()
         self.g_losses = g_losses
         self.generated = generated
-
-    def run_discriminator_one_step(self, data):
-        self.optimizer_D.zero_grad()
-        d_losses = self.pix2pix_model(data, mode='discriminator')
-        d_loss = sum(d_losses.values()).mean()
-        d_loss.backward()
-        self.optimizer_D.step()
-        self.d_losses = d_losses
 
     def get_latest_losses(self):
         return {**self.g_losses, **self.d_losses}
@@ -50,7 +56,7 @@ class DissimilarityTrainer():
         return self.generated
 
     def save(self, epoch):
-        self.pix2pix_model_on_one_gpu.save(epoch)
+        self.diss_model.save(epoch)
 
     ##################################################################
     # Helper functions
