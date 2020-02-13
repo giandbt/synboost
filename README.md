@@ -6,7 +6,7 @@ at ETH Zurich.
 ### Installation
 
 In order to set-up the project, please follow these steps:
-1) Run  `git clone https://github.com/giandbt/driving_uncertainty.git'. 
+1) Run  `git clone https://github.com/giandbt/driving_uncertainty.git`. 
 2) Download pre-trained model for CC-FPSE [2] 
 (https://drive.google.com/uc?id=1m4JMtKLDfcXCW1HXHKz-fP6y3_SAaUqX&export=download) and save it under `/models/image-synthesis/`
 3) Download pre-trained model for DeepLabV3+ with WiderResNet38 [3] (https://drive.google.com/file/d/1P4kPaMY-SmQ3yPJQTJ7xMGAB_Su-1zTl/view). 

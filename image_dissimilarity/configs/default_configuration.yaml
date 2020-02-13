@@ -1,3 +1,7 @@
+# Name of the experiment for saving files
+experiment_name: default
+save_folder: results/
+
 # Define training strategy
 training_strategy:
   niter: 100 # of iter at starting learning rate. Total #epochs is niter + niter_decay'

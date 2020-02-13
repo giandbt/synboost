@@ -15,6 +15,10 @@ cudnn.benchmark = True
 # Load experiment setting
 with open(opts.config, 'r') as stream:
     config = yaml.load(stream, Loader=yaml.FullLoader)
+    
+# get experiment information
+exp_name = config['experiment_name']
+save_fdr = config['save_folder']
 
 # Activate GPUs
 config['gpu_ids'] = opts.gpu_ids
@@ -45,15 +49,21 @@ for epoch in iter_counter.training_epochs():
     for i, data_i in enumerate(train_loader, start=iter_counter.epoch_iter):
         iter_counter.record_one_iteration()
         
+        original = data_i['original']
+        semantic = data_i['semantic']
+        synthesis = data_i['synthesis']
+        label = data_i['label']
+        
         # Training
-        trainer.run_model_one_step(data_i)
+        trainer.run_model_one_step(original, synthesis, semantic, label)
+        
         
         # Visualizations
         # TODO (Giancarlo): Need to add visualization tool
     
     print('saving the latest model (epoch %d, total_steps %d)' %
           (epoch, iter_counter.total_steps_so_far))
-    trainer.save('latest')
+    trainer.save(save_fdr, 'latest', exp_name)
     iter_counter.record_current_iter()
     
     trainer.update_learning_rate(epoch)
@@ -62,6 +72,6 @@ for epoch in iter_counter.training_epochs():
     if (epoch % config['logger']['save_epoch_freq'] == 0 or epoch == iter_counter.total_epochs):
         print('saving the model at the end of epoch %d, iters %d' %
               (epoch, iter_counter.total_steps_so_far))
-        trainer.save(epoch)
+        trainer.save(save_fdr, epoch, exp_name)
 
 print('Training was successfully finished.')

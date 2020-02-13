@@ -25,33 +25,37 @@ class DissimilarityTrainer():
         lr_config = config['optimizer']
         lr_options = lr_config['parameters']
         if lr_config['algorithm'] == 'SGD':
-            self.optimizer = torch.optim.SGD(self.diss_model.parameters(), lr=lr_options['lr'])
+            self.optimizer = torch.optim.SGD(self.diss_model.parameters(), lr=lr_options['lr'],
+                                             weight_decay=lr_options['weight_decay'],)
         elif lr_config['algorithm'] == 'Adam':
             self.optimizer = torch.optim.Adam(self.diss_model.parameters(),
-                                              lr=lr_options['lr'], betas=(lr_options['beta1'], lr_options['beta2']))
+                                              lr=lr_options['lr'],
+                                              weight_decay=lr_options['weight_decay'],
+                                              betas=(lr_options['beta1'], lr_options['beta2']))
         else:
             raise NotImplementedError
         
         self.old_lr = lr_options['lr']
         
+        # Set loss. Shouldn't we be doign Binary Cross Entropy for two classes? (uncertain = 1, not_uncertain = 0)
         segmented_path = os.path.join(config['train_dataloader']['dataset_args']['dataroot'], 'semantic/')
         full_loader = trainer_util.loader(segmented_path, batch_size='all')
         class_weights = trainer_util.get_class_weights(full_loader, num_classes=config['dataset']['num_classes'])
-        
         self.criterion = nn.CrossEntropyLoss(weight=torch.FloatTensor(class_weights).to("cuda"),
                                              ignore_index=255).cuda(self.gpu)
         
         
     # TODO All these functions
 
-    def run_model_one_step(self, data):
+    def run_model_one_step(self, original, synthesis, semantic, label):
         self.optimizer.zero_grad()
-        g_losses, generated = self.diss_model(data)
-        g_loss = sum(g_losses.values()).mean()
-        g_loss.backward()
-        self.optimizer_G.step()
-        self.g_losses = g_losses
-        self.generated = generated
+        predictions = self.diss_model(original, synthesis, semantic)
+        
+        model_loss = self.criterion(predictions)
+        model_loss.backward()
+        self.optimizer.step()
+        self.model_losses = model_loss
+        self.generated = predictions
 
     def get_latest_losses(self):
         return {**self.g_losses, **self.d_losses}
@@ -59,32 +63,25 @@ class DissimilarityTrainer():
     def get_latest_generated(self):
         return self.generated
 
-    def save(self, epoch):
-        self.diss_model.save(epoch)
+    def save(self, save_dir, epoch, name):
+        save_filename = '%s_net_%s.pth' % (epoch, name)
+        save_path = os.path.join(save_dir, name, save_filename)
+        torch.save(self.diss_model.state_dict(), save_path)  # net.cpu() -> net
 
     ##################################################################
     # Helper functions
     ##################################################################
 
     def update_learning_rate(self, epoch):
-        if epoch > self.opt.niter:
-            lrd = self.opt.lr / self.opt.niter_decay
+        if epoch > self.config['training_strategy']['niter']:
+            lrd = self.config['optimizer']['parameters']['lr'] / self.config['training_strategy']['niter_decay']
             new_lr = self.old_lr - lrd
         else:
             new_lr = self.old_lr
 
         if new_lr != self.old_lr:
-            if self.opt.no_TTUR:
-                new_lr_G = new_lr
-                new_lr_D = new_lr
-            else:
-                new_lr_G = new_lr / 2
-                new_lr_D = new_lr * 2
-
-            for param_group in self.optimizer_D.param_groups:
-                param_group['lr'] = new_lr_D
-            for param_group in self.optimizer_G.param_groups:
-                param_group['lr'] = new_lr_G
+            for param_group in self.optimizer.param_groups:
+                param_group['lr'] = new_lr
             print('update learning rate: %f -> %f' % (self.old_lr, new_lr))
             self.old_lr = new_lr
 

@@ -1,5 +1,5 @@
 import torch.nn as nn
-import torchvision.models as models
+import os
 import torch
 
 from models.semantic_encoder import SemanticEncoder
@@ -10,6 +10,9 @@ class DissimNet(nn.Module):
         super(DissimNet, self).__init__()
         
         # TODO (Giancarlo): Add correlation layer
+        
+        # experiment name
+        self.name = name
         
         # generate encoders
         vgg16 = models.vgg16(pretrained=pretrained)
@@ -80,6 +83,9 @@ class DissimNet(nn.Module):
         self.final_prediction = self.softmax(x)
         
         return self.final_prediction
+    
+
+        
 
 
 if __name__ == "__main__":
