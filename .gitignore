@@ -3,3 +3,4 @@ results/
 *.pyc
 *.idea
 visualization/
+checkpoints/

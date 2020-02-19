@@ -23,8 +23,8 @@ class CityscapesDataset(Dataset):
                                for image in os.listdir(os.path.join(dataroot, 'semantic'))]
         self.synthesis_paths = [os.path.join(dataroot, 'synthesis', image)
                                 for image in os.listdir(os.path.join(dataroot, 'synthesis'))]
-        self.label_paths = [os.path.join(dataroot, 'semantic', image) #TODO Change to labels when dataset is ready
-                            for image in os.listdir(os.path.join(dataroot, 'semantic'))]
+        self.label_paths = [os.path.join(dataroot, 'labels', image)
+                            for image in os.listdir(os.path.join(dataroot, 'labels'))]
         
         # We need to sort the images to ensure all the pairs match with each other
         self.original_paths = natsorted(self.original_paths)
@@ -56,7 +56,7 @@ class CityscapesDataset(Dataset):
                                         self.load_size, self.crop_size, method=Image.NEAREST,
                                         normalize=False, no_flip=self.no_flip, is_train=self.is_train)
         label_tensor = transform_label(label) * 255.0
-        label_tensor[label_tensor == 255] = 35  # 'unknown' is label_nc from cityscapes
+        label_tensor[label_tensor == 255] = 1  # 'unknown' is label as 1
 
         # input image (real images)
         image_path = self.original_paths[index]

@@ -154,10 +154,10 @@ def create_known_examples(instance_path, semantic_path, original_path, save_dir)
 
 
 if __name__ == '__main__':
-    instance_path = '/media/giancarlo/Samsung_T5/master_thesis/data/dissimilarity_model/train/instances'
-    semantic_path = '/media/giancarlo/Samsung_T5/master_thesis/data/dissimilarity_model/train/semantic'
-    original_path = '/media/giancarlo/Samsung_T5/master_thesis/data/dissimilarity_model/train/original'
-    save_dir = '/media/giancarlo/Samsung_T5/master_thesis/data/dissimilarity_model/post-process/train'
+    instance_path = '/media/giancarlo/Samsung_T5/master_thesis/data/dissimilarity_model/val/instances'
+    semantic_path = '/media/giancarlo/Samsung_T5/master_thesis/data/dissimilarity_model/val/semantic'
+    original_path = '/media/giancarlo/Samsung_T5/master_thesis/data/dissimilarity_model/val/original'
+    save_dir = '/media/giancarlo/Samsung_T5/master_thesis/data/dissimilarity_model/post-process/val'
     
     create_unknown_examples(instance_path, semantic_path, original_path, save_dir, visualize=False)
-    create_known_examples(instance_path, semantic_path, original_path, save_dir)
+    #create_known_examples(instance_path, semantic_path, original_path, save_dir)

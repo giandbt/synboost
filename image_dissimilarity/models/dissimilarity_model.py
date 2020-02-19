@@ -34,9 +34,25 @@ class DissimNet(nn.Module):
         self.conv8 = nn.Conv2d(640, 256, kernel_size=1, padding=0)
         self.conv9 = nn.Conv2d(320, 128, kernel_size=1, padding=0)
         self.conv10 = nn.Conv2d(160, 64, kernel_size=1, padding=0)
-        self.conv11 = nn.Conv2d(64, 2, kernel_size=1, padding=0)
+        self.conv11 = nn.Conv2d(64, 1, kernel_size=1, padding=0)
         
-        self.softmax = nn.Softmax(dim=2)
+        self.softmax = nn.Softmax(dim=1)
+        self.sigmoid = nn.Sigmoid()
+
+        self._initialize_weights()
+
+    def _initialize_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.BatchNorm2d):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.Linear):
+                nn.init.normal_(m.weight, 0, 0.01)
+                nn.init.constant_(m.bias, 0)
         
 
     def forward(self, original_img, synthesis_img, semantic_img, softmax_out=False):
@@ -77,7 +93,7 @@ class DissimNet(nn.Module):
         x = self.conv6(x)
         x = self.conv11(x)
         
-        self.final_prediction = self.softmax(x)
+        self.final_prediction = self.sigmoid(x) # This is the same as softmax for BCE
         
         return self.final_prediction
     

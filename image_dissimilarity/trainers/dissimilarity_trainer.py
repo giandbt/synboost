@@ -42,12 +42,15 @@ class DissimilarityTrainer():
         self.old_lr = lr_options['lr']
         
         # Set loss. Shouldn't we be doign Binary Cross Entropy for two classes? (uncertain = 1, not_uncertain = 0)
-        segmented_path = os.path.join(config['train_dataloader']['dataset_args']['dataroot'], 'semantic/')
-        full_loader = trainer_util.loader(segmented_path, batch_size='all')
-        print('Getting class weights for cross entropy loss. This might take some time.')
-        class_weights = trainer_util.get_class_weights(full_loader, num_classes=config['dataset']['num_classes'])
-        self.criterion = nn.CrossEntropyLoss(weight=torch.FloatTensor(class_weights).to("cuda"),
-                                             ignore_index=255).cuda(self.gpu)
+        if config['training_strategy']['class_weight']:
+            segmented_path = os.path.join(config['train_dataloader']['dataset_args']['dataroot'], 'semantic/')
+            full_loader = trainer_util.loader(segmented_path, batch_size='all')
+            print('Getting class weights for cross entropy loss. This might take some time.')
+            class_weights = trainer_util.get_class_weights(full_loader, num_classes=config['dataset']['num_classes'])
+            self.criterion = nn.BCELoss(weight=torch.FloatTensor(class_weights).to("cuda"),
+                                                 ignore_index=255).cuda(self.gpu)
+        else:
+            self.criterion = nn.BCELoss().cuda(self.gpu)
         
         
     # TODO All these functions
@@ -55,12 +58,22 @@ class DissimilarityTrainer():
     def run_model_one_step(self, original, synthesis, semantic, label):
         self.optimizer.zero_grad()
         predictions = self.diss_model(original, synthesis, semantic)
-        
-        model_loss = self.criterion(predictions, label)
+        #import pdb; pdb.set_trace()
+        # import
+        model_loss = self.criterion(predictions, label.cuda())
+        #for name, param in self.diss_model.named_parameters():
+        #    print(name, param.grad)
+            
         model_loss.backward()
         self.optimizer.step()
         self.model_losses = model_loss
         self.generated = predictions
+        return model_loss, predictions
+        
+    def run_validation(self, original, synthesis, semantic, label):
+        predictions = self.diss_model(original, synthesis, semantic)
+        model_loss = self.criterion(predictions, label.cuda())
+        return model_loss
 
     def get_latest_losses(self):
         return {**self.model_loss}
@@ -69,6 +82,10 @@ class DissimilarityTrainer():
         return self.generated
 
     def save(self, save_dir, epoch, name):
+        if not os.path.isdir(os.path.join(save_dir, name)):
+            os.mkdir(save_dir)
+            os.mkdir(os.path.join(save_dir, name))
+        
         save_filename = '%s_net_%s.pth' % (epoch, name)
         save_path = os.path.join(save_dir, name, save_filename)
         torch.save(self.diss_model.state_dict(), save_path)  # net.cpu() -> net

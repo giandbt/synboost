@@ -7,6 +7,7 @@ training_strategy:
   niter: 100 # of iter at starting learning rate. Total #epochs is niter + niter_decay'
   niter_decay: 100 # of iter to linearly decay learning rate to zero
   is_train: True
+  class_weight: False
 
 # model options
 model:
@@ -53,19 +54,19 @@ dataset:
 # parameters for dataloaders
 train_dataloader:
   dataset_args:
-    dataroot: /media/giancarlo/Samsung_T5/master_thesis/results/Pipeline
+    dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/dissimilarity_model/post-process/train
     preprocess_mode: scale_width_and_crop
     load_size: 1024
     crop_size: 512
     image_set: train
     no_flip: false
   dataloader_args:
-    batch_size: 1
+    batch_size: 4
     num_workers: 1
     shuffle: False
 val_dataloader:
   dataset_args:
-    dataroot: /media/giancarlo/Samsung_T5/master_thesis/results/Pipeline
+    dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/dissimilarity_model/post-process/val
     preprocess_mode: scale_width_and_crop
     load_size: 1024
     crop_size: 512

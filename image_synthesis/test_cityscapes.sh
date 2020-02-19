@@ -6,5 +6,5 @@ python test.py \
     --which_epoch 200 \
     --name cs_pretrained \
     --dataset_mode cityscapes \
-    --dataroot /media/giancarlo/Samsung_T5/data/cityscapes \
+    --dataroot /media/giancarlo/Samsung_T5/master_thesis/data/dissimilarity_model \
     --use_vae

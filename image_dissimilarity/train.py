@@ -1,6 +1,7 @@
 import argparse
 import yaml
 import torch.backends.cudnn as cudnn
+import torch
 
 from trainers.dissimilarity_trainer import DissimilarityTrainer
 from util import trainer_util
@@ -52,11 +53,25 @@ for epoch in iter_counter.training_epochs():
         label = data_i['label'].cuda()
         
         # Training
-        trainer.run_model_one_step(original, synthesis, semantic, label)
-        
+        model_loss, _ = trainer.run_model_one_step(original, synthesis, semantic, label)
         
         # Visualizations
         # TODO (Giancarlo): Need to add visualization tool
+    
+    print('Starting Validation')
+    with torch.no_grad():
+        val_loss = 0
+        for i, data_i in enumerate(val_loader):
+            original = data_i['original'].cuda()
+            semantic = data_i['semantic'].cuda()
+            synthesis = data_i['synthesis'].cuda()
+            label = data_i['label'].cuda()
+        
+            # Training
+            loss = trainer.run_validation(original, synthesis, semantic, label)
+            val_loss += loss
+        avg_val_loss = val_loss / len(val_loader)
+        print('Validation Loss: %f' % avg_val_loss)
     
     print('saving the latest model (epoch %d, total_steps %d)' %
           (epoch, iter_counter.total_steps_so_far))
