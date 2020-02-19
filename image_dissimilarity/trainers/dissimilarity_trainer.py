@@ -19,7 +19,11 @@ class DissimilarityTrainer():
     def __init__(self, config):
         cudnn.enabled = True
         self.config = config
-        self.gpu = config['gpu_ids']
+        
+        if config['gpu_ids'] != -1:
+            self.gpu = 'cuda'
+        else:
+            self.gpu = 'cpu'
         self.diss_model = DissimNet().cuda(self.gpu)
         
         lr_config = config['optimizer']
@@ -40,6 +44,7 @@ class DissimilarityTrainer():
         # Set loss. Shouldn't we be doign Binary Cross Entropy for two classes? (uncertain = 1, not_uncertain = 0)
         segmented_path = os.path.join(config['train_dataloader']['dataset_args']['dataroot'], 'semantic/')
         full_loader = trainer_util.loader(segmented_path, batch_size='all')
+        print('Getting class weights for cross entropy loss. This might take some time.')
         class_weights = trainer_util.get_class_weights(full_loader, num_classes=config['dataset']['num_classes'])
         self.criterion = nn.CrossEntropyLoss(weight=torch.FloatTensor(class_weights).to("cuda"),
                                              ignore_index=255).cuda(self.gpu)
@@ -51,14 +56,14 @@ class DissimilarityTrainer():
         self.optimizer.zero_grad()
         predictions = self.diss_model(original, synthesis, semantic)
         
-        model_loss = self.criterion(predictions)
+        model_loss = self.criterion(predictions, label)
         model_loss.backward()
         self.optimizer.step()
         self.model_losses = model_loss
         self.generated = predictions
 
     def get_latest_losses(self):
-        return {**self.g_losses, **self.d_losses}
+        return {**self.model_loss}
 
     def get_latest_generated(self):
         return self.generated

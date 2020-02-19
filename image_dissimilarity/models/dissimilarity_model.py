@@ -1,5 +1,5 @@
 import torch.nn as nn
-import os
+import torchvision.models
 import torch
 
 from models.semantic_encoder import SemanticEncoder
@@ -11,11 +11,8 @@ class DissimNet(nn.Module):
         
         # TODO (Giancarlo): Add correlation layer
         
-        # experiment name
-        self.name = name
-        
         # generate encoders
-        vgg16 = models.vgg16(pretrained=pretrained)
+        vgg16 = torchvision.models.vgg16(pretrained=pretrained)
         self.vgg_encoder = VGGFeatures(original_model=vgg16)
         self.semantic_encoder = SemanticEncoder()
         

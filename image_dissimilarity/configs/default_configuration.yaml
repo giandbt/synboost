@@ -60,7 +60,7 @@ train_dataloader:
     image_set: train
     no_flip: false
   dataloader_args:
-    batch_size: 8
+    batch_size: 1
     num_workers: 1
     shuffle: False
 val_dataloader:
@@ -72,6 +72,6 @@ val_dataloader:
     image_set: val
     no_flip: false
   dataloader_args:
-    batch_size: 8
+    batch_size: 1
     num_workers: 1
     shuffle: False

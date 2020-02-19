@@ -41,18 +41,15 @@ iter_counter = IterationCounter(config, len(train_loader), batch_size)
 # TODO (Giancarlo): Need to add visualization tool
 
 for epoch in iter_counter.training_epochs():
-    # set epoch for data sampler
-    train_loader.sampler.set_epoch(epoch)
-    
     iter_counter.record_epoch_start(epoch)
     
     for i, data_i in enumerate(train_loader, start=iter_counter.epoch_iter):
         iter_counter.record_one_iteration()
         
-        original = data_i['original']
-        semantic = data_i['semantic']
-        synthesis = data_i['synthesis']
-        label = data_i['label']
+        original = data_i['original'].cuda()
+        semantic = data_i['semantic'].cuda()
+        synthesis = data_i['synthesis'].cuda()
+        label = data_i['label'].cuda()
         
         # Training
         trainer.run_model_one_step(original, synthesis, semantic, label)

@@ -3,7 +3,7 @@ import torch.nn as nn
 class SemanticEncoder(nn.Module):
 	''' Semantic Encoder as described in Detecting the Unexpected via Image Resynthesis '''
 	
-	def __init__(self, in_channels=3):
+	def __init__(self, in_channels=1):
 		super(SemanticEncoder, self).__init__()
 		self.relu = nn.ReLU(True)
 		self.conv1 = nn.Conv2d(in_channels, 32, kernel_size=7, stride=1, padding=3)

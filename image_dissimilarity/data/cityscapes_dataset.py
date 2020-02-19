@@ -23,8 +23,8 @@ class CityscapesDataset(Dataset):
                                for image in os.listdir(os.path.join(dataroot, 'semantic'))]
         self.synthesis_paths = [os.path.join(dataroot, 'synthesis', image)
                                 for image in os.listdir(os.path.join(dataroot, 'synthesis'))]
-        self.label_paths = [os.path.join(dataroot, 'semantic', image)
-                            for image in os.listdir(os.path.join(dataroot, 'semantic'))] # TODO need to replace semantic for labels
+        self.label_paths = [os.path.join(dataroot, 'semantic', image) #TODO Change to labels when dataset is ready
+                            for image in os.listdir(os.path.join(dataroot, 'semantic'))]
         
         # We need to sort the images to ensure all the pairs match with each other
         self.original_paths = natsorted(self.original_paths)
