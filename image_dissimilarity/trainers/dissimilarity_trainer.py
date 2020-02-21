@@ -9,7 +9,6 @@ from util import trainer_util
 from models.dissimilarity_model import DissimNet
 
 class DissimilarityTrainer():
-    #TODO (Giancarlo): Complete this class. Also add weights for loss from https://github.com/iArunava/ENet-Real-Time-Semantic-Segmentation/blob/master/train.py
     """
     Trainer creates the model and optimizers, and uses them to
     updates the weights of the network while reporting losses
@@ -43,27 +42,27 @@ class DissimilarityTrainer():
         
         # Set loss. Shouldn't we be doign Binary Cross Entropy for two classes? (uncertain = 1, not_uncertain = 0)
         if config['training_strategy']['class_weight']:
-            segmented_path = os.path.join(config['train_dataloader']['dataset_args']['dataroot'], 'semantic/')
-            full_loader = trainer_util.loader(segmented_path, batch_size='all')
-            print('Getting class weights for cross entropy loss. This might take some time.')
-            class_weights = trainer_util.get_class_weights(full_loader, num_classes=config['dataset']['num_classes'])
-            self.criterion = nn.BCELoss(weight=torch.FloatTensor(class_weights).to("cuda"),
-                                                 ignore_index=255).cuda(self.gpu)
+            if not config['training_strategy']['class_weight_cityscapes']:
+                label_path = os.path.join(config['train_dataloader']['dataset_args']['dataroot'], 'labels/')
+                full_loader = trainer_util.loader(label_path, batch_size='all')
+                print('Getting class weights for cross entropy loss. This might take some time.')
+                class_weights = trainer_util.get_class_weights(full_loader, num_classes=2)
+            else:
+                class_weights = [1.43950185, 27.58075794]
+            self.criterion = nn.NLLLoss(weight=torch.FloatTensor(class_weights).to("cuda")).cuda(self.gpu)
         else:
             self.criterion = nn.BCELoss().cuda(self.gpu)
         
         
-    # TODO All these functions
 
     def run_model_one_step(self, original, synthesis, semantic, label):
         self.optimizer.zero_grad()
         predictions = self.diss_model(original, synthesis, semantic)
         #import pdb; pdb.set_trace()
-        # import
         model_loss = self.criterion(predictions, label.cuda())
         #for name, param in self.diss_model.named_parameters():
         #    print(name, param.grad)
-            
+        #print(np.unique(predictions.cpu().detach().numpy()))
         model_loss.backward()
         self.optimizer.step()
         self.model_losses = model_loss
@@ -73,7 +72,8 @@ class DissimilarityTrainer():
     def run_validation(self, original, synthesis, semantic, label):
         predictions = self.diss_model(original, synthesis, semantic)
         model_loss = self.criterion(predictions, label.cuda())
-        return model_loss
+            
+        return model_loss, predictions
 
     def get_latest_losses(self):
         return {**self.model_loss}

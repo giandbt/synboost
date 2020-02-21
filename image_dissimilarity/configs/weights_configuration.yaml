@@ -1,5 +1,5 @@
 # Name of the experiment for saving files
-experiment_name: default
+experiment_name: weights
 save_folder: results/
 
 # Define training strategy

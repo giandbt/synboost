@@ -2,6 +2,8 @@ import argparse
 import yaml
 import torch.backends.cudnn as cudnn
 import torch
+from PIL import Image
+import numpy as np
 
 from trainers.dissimilarity_trainer import DissimilarityTrainer
 from util import trainer_util
@@ -43,10 +45,9 @@ iter_counter = IterationCounter(config, len(train_loader), batch_size)
 
 for epoch in iter_counter.training_epochs():
     iter_counter.record_epoch_start(epoch)
-    
+    train_loss = 0 
     for i, data_i in enumerate(train_loader, start=iter_counter.epoch_iter):
         iter_counter.record_one_iteration()
-        
         original = data_i['original'].cuda()
         semantic = data_i['semantic'].cuda()
         synthesis = data_i['synthesis'].cuda()
@@ -54,10 +55,13 @@ for epoch in iter_counter.training_epochs():
         
         # Training
         model_loss, _ = trainer.run_model_one_step(original, synthesis, semantic, label)
+        train_loss += model_loss
         
         # Visualizations
         # TODO (Giancarlo): Need to add visualization tool
     
+    avg_train_loss = train_loss / len(train_loader)
+    print('Training Loss: %f' % (avg_train_loss))
     print('Starting Validation')
     with torch.no_grad():
         val_loss = 0
@@ -68,8 +72,17 @@ for epoch in iter_counter.training_epochs():
             label = data_i['label'].cuda()
         
             # Training
-            loss = trainer.run_validation(original, synthesis, semantic, label)
+            loss, predicitions = trainer.run_validation(original, synthesis, semantic, label)
             val_loss += loss
+
+            if i == 2:
+                predicted_tensor = torch.ge(predicitions, 0.5)*255
+                label_tensor = label*255
+                print(data_i['label_path'])
+                label_img = Image.fromarray(label_tensor.squeeze().cpu().numpy()).convert('RGB')
+                predicted_img = Image.fromarray(predicted_tensor.squeeze().cpu().numpy()).convert('RGB')
+                predicted_img.save('/home/giancarlo/Desktop/testing/pred_image%i.png' % epoch)
+                label_img.save('/home/giancarlo/Desktop/testing/label_image%i.png' % epoch)
         avg_val_loss = val_loss / len(val_loader)
         print('Validation Loss: %f' % avg_val_loss)
     

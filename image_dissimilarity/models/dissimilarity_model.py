@@ -36,7 +36,6 @@ class DissimNet(nn.Module):
         self.conv10 = nn.Conv2d(160, 64, kernel_size=1, padding=0)
         self.conv11 = nn.Conv2d(64, 1, kernel_size=1, padding=0)
         
-        self.softmax = nn.Softmax(dim=1)
         self.sigmoid = nn.Sigmoid()
 
         self._initialize_weights()

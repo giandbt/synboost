@@ -101,14 +101,11 @@ def loader(segmented_path, batch_size, h=512, w=512):
             
             # Correct Labels to Train IDs
             img_copy = img.copy()
-            for k, v in id_to_trainid.items():
-                img_copy[img == k] = v
+            img_copy[img == 255] = 1
             img = img_copy.astype(np.uint8)
             
             img = cv2.resize(img, (h, w), cv2.INTER_NEAREST)
             labels.append(img)
-        
         labels = torch.tensor(labels)
-        
         yield labels
     
