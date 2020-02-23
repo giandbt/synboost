@@ -18,18 +18,24 @@ class DissimNet(nn.Module):
         
         # layers for decoder
         # all the 3x3 convolutions
-        self.conv1 = nn.Sequential(nn.Conv2d(512, 256, kernel_size=3, padding=1), nn.SELU())
+        self.conv1 = nn.Sequential(nn.Conv2d(513, 256, kernel_size=3, padding=1), nn.SELU())
         self.conv2 = nn.Sequential(nn.Conv2d(256, 256, kernel_size=3, padding=1), nn.SELU())
-        self.conv3 = nn.Sequential(nn.Conv2d(384, 128, kernel_size=3, padding=1), nn.SELU())
+        self.conv3 = nn.Sequential(nn.Conv2d(385, 128, kernel_size=3, padding=1), nn.SELU())
         self.conv4 = nn.Sequential(nn.Conv2d(128, 128, kernel_size=3, padding=1), nn.SELU())
-        self.conv5 = nn.Sequential(nn.Conv2d(192, 64, kernel_size=3, padding=1), nn.SELU())
+        self.conv5 = nn.Sequential(nn.Conv2d(193, 64, kernel_size=3, padding=1), nn.SELU())
         self.conv6 = nn.Sequential(nn.Conv2d(64, 64, kernel_size=3, padding=1), nn.SELU())
 
         # all the tranposed convolutions
         self.tconv1 = nn.ConvTranspose2d(256, 256, kernel_size=2, stride=2, padding=0)
         self.tconv2 = nn.ConvTranspose2d(128, 128, kernel_size=2, stride=2, padding=0)
-        
-        # all the 1x1 convolutions
+       
+        # all correlations 1x1
+        self.corr1 = nn.Conv2d(512, 1, kernel_size=1, padding=0)
+        self.corr2 = nn.Conv2d(256, 1, kernel_size=1, padding=0)
+        self.corr3 = nn.Conv2d(128, 1, kernel_size=1, padding=0)
+        self.corr4 = nn.Conv2d(64, 1, kernel_size=1, padding=0)
+
+        # all the other 1x1 convolutions
         self.conv7 = nn.Conv2d(1280, 512, kernel_size=1, padding=0)
         self.conv8 = nn.Conv2d(640, 256, kernel_size=1, padding=0)
         self.conv9 = nn.Conv2d(320, 128, kernel_size=1, padding=0)
@@ -65,6 +71,17 @@ class DissimNet(nn.Module):
         layer2_cat = torch.cat((self.encoding_og[1], self.encoding_syn[1], self.encoding_sem[1]), dim=1)
         layer3_cat = torch.cat((self.encoding_og[2], self.encoding_syn[2], self.encoding_sem[2]), dim=1)
         layer4_cat = torch.cat((self.encoding_og[3], self.encoding_syn[3], self.encoding_sem[3]), dim=1)
+        
+        # get correlation for each layer (multiplication + 1x1 conv)
+        corr1_mul = torch.mul(self.encoding_og[0], self.encoding_syn[0])
+        corr2_mul = torch.mul(self.encoding_og[1], self.encoding_syn[1])
+        corr3_mul = torch.mul(self.encoding_og[2], self.encoding_syn[2])
+        corr4_mul = torch.mul(self.encoding_og[3], self.encoding_syn[3])
+
+        corr4 = self.corr1(corr4_mul)
+        corr3 = self.corr2(corr3_mul)
+        corr2 = self.corr3(corr2_mul)
+        corr1 = self.corr4(corr1_mul)
 
         # use 1x1 convolutions to reduce dimensions of concatenations
         layer4_cat = self.conv7(layer4_cat)
@@ -72,6 +89,12 @@ class DissimNet(nn.Module):
         layer2_cat = self.conv9(layer2_cat)
         layer1_cat = self.conv10(layer1_cat)
         
+        # concatenate correlation layers
+        layer4_cat = torch.cat((corr4, layer4_cat), dim = 1)
+        layer3_cat = torch.cat((corr3, layer3_cat), dim = 1)
+        layer2_cat = torch.cat((corr2, layer2_cat), dim = 1)
+        layer1_cat = torch.cat((corr1, layer1_cat), dim = 1)
+
         # Run Decoder
         x = self.conv1(layer4_cat)
         x = self.conv2(x)

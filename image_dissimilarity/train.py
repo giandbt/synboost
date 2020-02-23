@@ -78,11 +78,11 @@ for epoch in iter_counter.training_epochs():
             if i == 2:
                 predicted_tensor = torch.ge(predicitions, 0.5)*255
                 label_tensor = label*255
-                print(data_i['label_path'])
+                #print(data_i['label_path'])
                 label_img = Image.fromarray(label_tensor.squeeze().cpu().numpy()).convert('RGB')
                 predicted_img = Image.fromarray(predicted_tensor.squeeze().cpu().numpy()).convert('RGB')
-                predicted_img.save('/home/giancarlo/Desktop/testing/pred_image%i.png' % epoch)
-                label_img.save('/home/giancarlo/Desktop/testing/label_image%i.png' % epoch)
+                predicted_img.save('/home/giancarlo/Desktop/testing-2/pred_image%i.png' % epoch)
+                #label_img.save('/home/giancarlo/Desktop/testing-2/label_image%i.png' % epoch)
         avg_val_loss = val_loss / len(val_loader)
         print('Validation Loss: %f' % avg_val_loss)
     
