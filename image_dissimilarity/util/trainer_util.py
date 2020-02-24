@@ -108,4 +108,4 @@ def loader(segmented_path, batch_size, h=512, w=512):
             labels.append(img)
         labels = torch.tensor(labels)
         yield labels
-    
+

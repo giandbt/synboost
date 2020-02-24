@@ -28,13 +28,13 @@ class DissimNet(nn.Module):
         # all the tranposed convolutions
         self.tconv1 = nn.ConvTranspose2d(256, 256, kernel_size=2, stride=2, padding=0)
         self.tconv2 = nn.ConvTranspose2d(128, 128, kernel_size=2, stride=2, padding=0)
-       
+
         # all correlations 1x1
         self.corr1 = nn.Conv2d(512, 1, kernel_size=1, padding=0)
         self.corr2 = nn.Conv2d(256, 1, kernel_size=1, padding=0)
         self.corr3 = nn.Conv2d(128, 1, kernel_size=1, padding=0)
         self.corr4 = nn.Conv2d(64, 1, kernel_size=1, padding=0)
-
+        
         # all the other 1x1 convolutions
         self.conv7 = nn.Conv2d(1280, 512, kernel_size=1, padding=0)
         self.conv8 = nn.Conv2d(640, 256, kernel_size=1, padding=0)
@@ -73,15 +73,10 @@ class DissimNet(nn.Module):
         layer4_cat = torch.cat((self.encoding_og[3], self.encoding_syn[3], self.encoding_sem[3]), dim=1)
         
         # get correlation for each layer (multiplication + 1x1 conv)
-        corr1_mul = torch.mul(self.encoding_og[0], self.encoding_syn[0])
-        corr2_mul = torch.mul(self.encoding_og[1], self.encoding_syn[1])
-        corr3_mul = torch.mul(self.encoding_og[2], self.encoding_syn[2])
-        corr4_mul = torch.mul(self.encoding_og[3], self.encoding_syn[3])
-
-        corr4 = self.corr1(corr4_mul)
-        corr3 = self.corr2(corr3_mul)
-        corr2 = self.corr3(corr2_mul)
-        corr1 = self.corr4(corr1_mul)
+        corr1 = torch.sum(torch.mul(self.encoding_og[0], self.encoding_syn[0]), dim=1)
+        corr2 = torch.sum(torch.mul(self.encoding_og[1], self.encoding_syn[1]), dim=1)
+        corr3 = torch.sum(torch.mul(self.encoding_og[2], self.encoding_syn[2]), dim=1)
+        corr4 = torch.sum(torch.mul(self.encoding_og[3], self.encoding_syn[3]), dim=1)
 
         # use 1x1 convolutions to reduce dimensions of concatenations
         layer4_cat = self.conv7(layer4_cat)
@@ -118,10 +113,6 @@ class DissimNet(nn.Module):
         self.final_prediction = self.sigmoid(x) # This is the same as softmax for BCE
         
         return self.final_prediction
-    
-
-        
-
 
 if __name__ == "__main__":
     from PIL import Image

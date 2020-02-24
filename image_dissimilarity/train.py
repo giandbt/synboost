@@ -11,7 +11,7 @@ from util.iter_counter import IterationCounter
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', type=str, help='Path to the config file.')
-parser.add_argument('--gpu_ids', type=str, default='-1', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
+parser.add_argument('--gpu_ids', type=str, default='0', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
 opts = parser.parse_args()
 cudnn.benchmark = True
 
@@ -72,11 +72,11 @@ for epoch in iter_counter.training_epochs():
             label = data_i['label'].cuda()
         
             # Training
-            loss, predicitions = trainer.run_validation(original, synthesis, semantic, label)
+            loss, predictions = trainer.run_validation(original, synthesis, semantic, label)
             val_loss += loss
 
             if i == 2:
-                predicted_tensor = torch.ge(predicitions, 0.5)*255
+                predicted_tensor = torch.ge(predictions, 0.5)*255
                 label_tensor = label*255
                 #print(data_i['label_path'])
                 label_img = Image.fromarray(label_tensor.squeeze().cpu().numpy()).convert('RGB')

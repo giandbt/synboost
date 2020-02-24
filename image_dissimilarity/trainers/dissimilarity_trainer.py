@@ -23,6 +23,7 @@ class DissimilarityTrainer():
             self.gpu = 'cuda'
         else:
             self.gpu = 'cpu'
+            
         self.diss_model = DissimNet().cuda(self.gpu)
         
         lr_config = config['optimizer']
