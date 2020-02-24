@@ -7,6 +7,7 @@ import numpy as np
 import os
 from sklearn import metrics
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 from util import trainer_util
 from util.iter_counter import IterationCounter
@@ -46,7 +47,7 @@ diss_model.load_state_dict(model_weights)
 flat_pred = []
 flat_labels = []
 with torch.no_grad():
-    for i, data_i in enumerate(test_loader):
+    for i, data_i in enumerate(tqdm(test_loader)):
         print('Evaluating image %i our of %i' % (i + 1, len(test_loader)))
         original = data_i['original'].cuda()
         semantic = data_i['semantic'].cuda()

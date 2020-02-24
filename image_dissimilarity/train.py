@@ -2,8 +2,7 @@ import argparse
 import yaml
 import torch.backends.cudnn as cudnn
 import torch
-from PIL import Image
-import numpy as np
+from tqdm import tqdm
 
 from trainers.dissimilarity_trainer import DissimilarityTrainer
 from util import trainer_util
@@ -49,8 +48,7 @@ for epoch in iter_counter.training_epochs():
     print('Starting Epoch #%i'%epoch)
     iter_counter.record_epoch_start(epoch)
     train_loss = 0 
-    for i, data_i in enumerate(train_loader, start=iter_counter.epoch_iter):
-        print(i)
+    for i, data_i in enumerate(tqdm(train_loader), start=iter_counter.epoch_iter):
         iter_counter.record_one_iteration()
         original = data_i['original'].cuda()
         semantic = data_i['semantic'].cuda()
@@ -69,8 +67,7 @@ for epoch in iter_counter.training_epochs():
     print('Starting Validation')
     with torch.no_grad():
         val_loss = 0
-        for i, data_i in enumerate(val_loader):
-            print(i)
+        for i, data_i in enumerate(tqdm(val_loader)):
             original = data_i['original'].cuda()
             semantic = data_i['semantic'].cuda()
             synthesis = data_i['synthesis'].cuda()

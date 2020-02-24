@@ -8,7 +8,7 @@ training_strategy:
   niter_decay: 25 # of iter to linearly decay learning rate to zero
   is_train: True
   class_weight: True
-  class_weight_cityscapes: True
+  class_weight_cityscapes: False
 
 # model options
 model:
