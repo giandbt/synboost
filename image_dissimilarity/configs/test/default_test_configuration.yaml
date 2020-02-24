@@ -1,10 +1,8 @@
 # Name of the experiment for saving files
-experiment_name: weights # where checkpoints are stored
+experiment_name: default # where checkpoints are stored
 save_folder: results/ # where checkpoints are stored
-which_epoch: 50
+which_epoch: latest
 store_results: /home/giancarlo/Desktop/lost-found/
-
-threshold: 0.5
 
 # model options
 model:
@@ -23,7 +21,7 @@ test_dataloader:
     dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/lost_and_found/post-process
     preprocess_mode: fixed
     load_size: 1024
-    crop_size: 512
+    crop_size: 1024
     image_set: val
     no_flip: false
   dataloader_args:

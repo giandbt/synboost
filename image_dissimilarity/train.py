@@ -34,6 +34,7 @@ train_loader = trainer_util.get_dataloader(cfg_train_loader['dataset_args'], cfg
 val_loader = trainer_util.get_dataloader(cfg_val_loader['dataset_args'], cfg_val_loader['dataloader_args'])
 
 # create trainer for our model
+print('Loading Model')
 trainer = DissimilarityTrainer(config)
 
 # create tool for counting iterations
@@ -43,10 +44,13 @@ iter_counter = IterationCounter(config, len(train_loader), batch_size)
 # create tool for visualization
 # TODO (Giancarlo): Need to add visualization tool
 
+print('Starting Training...')
 for epoch in iter_counter.training_epochs():
+    print('Starting Epoch #%i'%epoch)
     iter_counter.record_epoch_start(epoch)
     train_loss = 0 
     for i, data_i in enumerate(train_loader, start=iter_counter.epoch_iter):
+        print(i)
         iter_counter.record_one_iteration()
         original = data_i['original'].cuda()
         semantic = data_i['semantic'].cuda()
@@ -66,23 +70,16 @@ for epoch in iter_counter.training_epochs():
     with torch.no_grad():
         val_loss = 0
         for i, data_i in enumerate(val_loader):
+            print(i)
             original = data_i['original'].cuda()
             semantic = data_i['semantic'].cuda()
             synthesis = data_i['synthesis'].cuda()
             label = data_i['label'].cuda()
         
-            # Training
+            # Evaluating
             loss, predictions = trainer.run_validation(original, synthesis, semantic, label)
             val_loss += loss
 
-            if i == 2:
-                predicted_tensor = torch.ge(predictions, 0.5)*255
-                label_tensor = label*255
-                #print(data_i['label_path'])
-                label_img = Image.fromarray(label_tensor.squeeze().cpu().numpy()).convert('RGB')
-                predicted_img = Image.fromarray(predicted_tensor.squeeze().cpu().numpy()).convert('RGB')
-                predicted_img.save('/home/giancarlo/Desktop/testing-2/pred_image%i.png' % epoch)
-                #label_img.save('/home/giancarlo/Desktop/testing-2/label_image%i.png' % epoch)
         avg_val_loss = val_loss / len(val_loader)
         print('Validation Loss: %f' % avg_val_loss)
     

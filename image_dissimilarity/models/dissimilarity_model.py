@@ -9,8 +9,6 @@ class DissimNet(nn.Module):
     def __init__(self, pretrained=True):
         super(DissimNet, self).__init__()
         
-        # TODO (Giancarlo): Add correlation layer
-        
         # generate encoders
         vgg16 = torchvision.models.vgg16(pretrained=pretrained)
         self.vgg_encoder = VGGFeatures(original_model=vgg16)
@@ -40,9 +38,9 @@ class DissimNet(nn.Module):
         self.conv8 = nn.Conv2d(640, 256, kernel_size=1, padding=0)
         self.conv9 = nn.Conv2d(320, 128, kernel_size=1, padding=0)
         self.conv10 = nn.Conv2d(160, 64, kernel_size=1, padding=0)
-        self.conv11 = nn.Conv2d(64, 1, kernel_size=1, padding=0)
+        self.conv11 = nn.Conv2d(64, 2, kernel_size=1, padding=0)
         
-        self.sigmoid = nn.Sigmoid()
+        self.softmax = nn.LogSoftmax(dim=2)
 
         self._initialize_weights()
 
@@ -73,11 +71,11 @@ class DissimNet(nn.Module):
         layer4_cat = torch.cat((self.encoding_og[3], self.encoding_syn[3], self.encoding_sem[3]), dim=1)
         
         # get correlation for each layer (multiplication + 1x1 conv)
-        corr1 = torch.sum(torch.mul(self.encoding_og[0], self.encoding_syn[0]), dim=1)
-        corr2 = torch.sum(torch.mul(self.encoding_og[1], self.encoding_syn[1]), dim=1)
-        corr3 = torch.sum(torch.mul(self.encoding_og[2], self.encoding_syn[2]), dim=1)
-        corr4 = torch.sum(torch.mul(self.encoding_og[3], self.encoding_syn[3]), dim=1)
-
+        corr1 = torch.sum(torch.mul(self.encoding_og[0], self.encoding_syn[0]), dim=1).unsqueeze(dim=1)
+        corr2 = torch.sum(torch.mul(self.encoding_og[1], self.encoding_syn[1]), dim=1).unsqueeze(dim=1)
+        corr3 = torch.sum(torch.mul(self.encoding_og[2], self.encoding_syn[2]), dim=1).unsqueeze(dim=1)
+        corr4 = torch.sum(torch.mul(self.encoding_og[3], self.encoding_syn[3]), dim=1).unsqueeze(dim=1)
+        
         # use 1x1 convolutions to reduce dimensions of concatenations
         layer4_cat = self.conv7(layer4_cat)
         layer3_cat = self.conv8(layer3_cat)
@@ -110,7 +108,7 @@ class DissimNet(nn.Module):
         x = self.conv6(x)
         x = self.conv11(x)
         
-        self.final_prediction = self.sigmoid(x) # This is the same as softmax for BCE
+        self.final_prediction = self.softmax(x)
         
         return self.final_prediction
 

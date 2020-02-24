@@ -45,33 +45,33 @@ diss_model.load_state_dict(model_weights)
 
 flat_pred = []
 flat_labels = []
-
-for i, data_i in enumerate(test_loader):
-    print('Evaluating image %i our of %i' % (i + 1, len(test_loader)))
-    original = data_i['original'].cuda()
-    semantic = data_i['semantic'].cuda()
-    synthesis = data_i['synthesis'].cuda()
-    label = data_i['label'].cuda()
+with torch.no_grad():
+    for i, data_i in enumerate(test_loader):
+        print('Evaluating image %i our of %i' % (i + 1, len(test_loader)))
+        original = data_i['original'].cuda()
+        semantic = data_i['semantic'].cuda()
+        synthesis = data_i['synthesis'].cuda()
+        label = data_i['label'].cuda()
+        
+        outputs = torch.exp(diss_model(original, synthesis, semantic))
+        (softmax_pred, predictions) = torch.max(outputs,dim=1)
+        
+        if i == 0:
+            flat_pred = torch.flatten(softmax_pred).detach().cpu().numpy()
+            flat_labels = torch.flatten(label).detach().cpu().numpy()
+        else:
+            flat_pred = np.append(flat_pred, torch.flatten(softmax_pred).detach().cpu().numpy(), axis=0)
+            flat_labels = np.append(flat_labels, torch.flatten(label).detach().cpu().numpy(), axis=0)
     
-    predictions = diss_model(original, synthesis, semantic)
-
-    if i == 0:
-        flat_pred = torch.flatten(predictions).detach().cpu().numpy()
-        flat_labels = torch.flatten(label).detach().cpu().numpy()
-    else:
-        flat_pred = np.append(flat_pred, torch.flatten(predictions).detach().cpu().numpy(), axis=0)
-        flat_labels = np.append(flat_labels, torch.flatten(label).detach().cpu().numpy(), axis=0)
-
-    
-    # Save results
-    predicted_tensor = torch.ge(predictions, config['threshold']) * 255
-    label_tensor = label * 255
-    
-    file_name = os.path.basename(data_i['original_path'][0])
-    label_img = Image.fromarray(label_tensor.squeeze().cpu().numpy()).convert('RGB')
-    predicted_img = Image.fromarray(predicted_tensor.squeeze().cpu().numpy()).convert('RGB')
-    predicted_img.save(os.path.join(store_fdr, 'pred', file_name))
-    label_img.save(os.path.join(store_fdr, 'label', file_name))
+        # Save results
+        predicted_tensor = predictions * 255
+        label_tensor = label * 255
+        
+        file_name = os.path.basename(data_i['original_path'][0])
+        label_img = Image.fromarray(label_tensor.squeeze().cpu().numpy().astype(np.uint8)).convert('RGB')
+        predicted_img = Image.fromarray(predicted_tensor.squeeze().cpu().numpy().astype(np.uint8)).convert('RGB')
+        predicted_img.save(os.path.join(store_fdr, 'pred', file_name))
+        label_img.save(os.path.join(store_fdr, 'label', file_name))
 
 print('Calculating AUC-ROC score')
 fpr, tpr, _ = metrics.roc_curve(flat_labels, flat_pred)

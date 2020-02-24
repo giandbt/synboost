@@ -4,10 +4,10 @@ save_folder: results/
 
 # Define training strategy
 training_strategy:
-  niter: 100 # of iter at starting learning rate. Total #epochs is niter + niter_decay'
-  niter_decay: 100 # of iter to linearly decay learning rate to zero
+  niter: 25 # of iter at starting learning rate. Total #epochs is niter + niter_decay'
+  niter_decay: 25 # of iter to linearly decay learning rate to zero
   is_train: True
-  class_weight: False
+  class_weight: True
   class_weight_cityscapes: True
 
 # model options
@@ -24,7 +24,7 @@ logger:
   val_log_iter: 1000              # How often do you want to log the validation stats
   image_log_iter: 1000            # How often do you want to display output images during training
   results_dir: ./checkpoints
-  save_epoch_freq: 10 #frequency of saving checkpoints at the end of epochs
+  save_epoch_freq: 5 #frequency of saving checkpoints at the end of epochs
 
 # loss options (remove tasks not needed)
 loss:  BCEWithLogitsLoss
@@ -34,7 +34,7 @@ optimizer:
   algorithm: Adam # ['Adam' or 'SGD']
   # Define accordingly, e.g.
   parameters:
-    lr: 1.e-5 # 1.e-4
+    lr: 1.e-4 # 1.e-4
     weight_decay: 0.0000
     beta1: 0.5 # momentum term of adam
     beta2: 0.999 # momentum term of adam
@@ -55,10 +55,10 @@ dataset:
 # parameters for dataloaders
 train_dataloader:
   dataset_args:
-    dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/dissimilarity_model/post-process/train
+    dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/dissimilarity_model/epfl/train
     preprocess_mode: fixed
     load_size: 1024
-    crop_size: 512
+    crop_size: 1024
     image_set: train
     no_flip: false
   dataloader_args:
@@ -67,10 +67,10 @@ train_dataloader:
     shuffle: False
 val_dataloader:
   dataset_args:
-    dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/dissimilarity_model/post-process/val
+    dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/dissimilarity_model/epfl/val
     preprocess_mode: fixed
     load_size: 1024
-    crop_size: 512
+    crop_size: 1024
     image_set: val
     no_flip: false
   dataloader_args:

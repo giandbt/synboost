@@ -55,8 +55,7 @@ class CityscapesDataset(Dataset):
         transform_label = get_transform(self.preprocess_mode, params,
                                         self.load_size, self.crop_size, method=Image.NEAREST,
                                         normalize=False, no_flip=self.no_flip, is_train=self.is_train)
-        label_tensor = transform_label(label) * 255.0
-        label_tensor[label_tensor == 255] = 1  # 'unknown' is label as 1
+        label_tensor = transform_label(label)*255
 
         # input image (real images)
         image_path = self.original_paths[index]
@@ -77,16 +76,7 @@ class CityscapesDataset(Dataset):
         semantic_path = self.semantic_paths[index]
         semantic = Image.open(semantic_path)
         
-        # Correct labels to train ID
-        semantic = np.array(semantic)
-        semantic_copy = semantic.copy()
-        for k, v in id_to_trainid.items():
-            semantic_copy[semantic == k] = v
-        semantic = Image.fromarray(semantic_copy.astype(np.uint8))
-        
         semantic_tensor = transform_label(semantic) * 255.0
-        semantic_tensor[semantic_tensor == 255] = 35  # 'unknown' is label_nc from cityscapes
-
 
         input_dict = {'label': label_tensor,
                       'original': image_tensor,
@@ -103,7 +93,7 @@ class CityscapesDataset(Dataset):
     def __len__(self):
         return self.dataset_size
     
-def get_params(preprocess_mode, size, load_size = 1024, crop_size = 512):
+def get_params(preprocess_mode, size, load_size = 1024, crop_size = 512, aspect_ratio = 2):
     w, h = size
     new_h = h
     new_w = w
@@ -126,7 +116,7 @@ def get_params(preprocess_mode, size, load_size = 1024, crop_size = 512):
 
 
 def get_transform(preprocess_mode, params, load_size, crop_size,
-                  aspect_ratio=1, method=Image.BICUBIC, normalize=True, toTensor=True, no_flip=False, is_train=True):
+                  aspect_ratio=2, method=Image.BICUBIC, normalize=True, toTensor=True, no_flip=False, is_train=True):
     transform_list = []
     if 'resize' in preprocess_mode:
         osize = [load_size, load_size]
@@ -233,7 +223,7 @@ def test(dataset_args, dataloader_args, save_imgs=False, path='./visualization')
 
                 # get label image
                 label = label.squeeze().cpu().numpy()
-                label = np.asarray(transform(label))
+                label = np.asarray(transform(label))*255
                 label = Image.fromarray(label).convert('RGB')
                 label.save(os.path.join(path, 'Label_%i_%i' % (counter, idx) + '.png'))
 
@@ -262,10 +252,10 @@ if __name__ == '__main__':
     from util import visualization
     
     dataset_args = {
-        'dataroot': '/media/giancarlo/Samsung_T5/master_thesis/results/Pipeline',
-        'preprocess_mode': 'scale_width_and_crop',
+        'dataroot': '/media/giancarlo/Samsung_T5/master_thesis/data/dissimilarity_model/epfl/val',
+        'preprocess_mode': 'fixed',
         'load_size': 1024,
-        'crop_size': 512,
+        'crop_size': 1024,
         'image_set': 'train',
         'no_flip': False
     }

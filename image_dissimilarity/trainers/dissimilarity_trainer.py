@@ -41,7 +41,6 @@ class DissimilarityTrainer():
         
         self.old_lr = lr_options['lr']
         
-        # Set loss. Shouldn't we be doign Binary Cross Entropy for two classes? (uncertain = 1, not_uncertain = 0)
         if config['training_strategy']['class_weight']:
             if not config['training_strategy']['class_weight_cityscapes']:
                 label_path = os.path.join(config['train_dataloader']['dataset_args']['dataroot'], 'labels/')
@@ -49,21 +48,18 @@ class DissimilarityTrainer():
                 print('Getting class weights for cross entropy loss. This might take some time.')
                 class_weights = trainer_util.get_class_weights(full_loader, num_classes=2)
             else:
-                class_weights = [1.43950185, 27.58075794]
+                class_weights = [1.46494611, 16.90304619]
+            print('Using the following weights for each respective class [0,1]:', class_weights)
             self.criterion = nn.NLLLoss(weight=torch.FloatTensor(class_weights).to("cuda")).cuda(self.gpu)
         else:
-            self.criterion = nn.BCELoss().cuda(self.gpu)
+            self.criterion = nn.NLLLoss(ignore_index=255).cuda(self.gpu)
         
         
 
     def run_model_one_step(self, original, synthesis, semantic, label):
         self.optimizer.zero_grad()
         predictions = self.diss_model(original, synthesis, semantic)
-        #import pdb; pdb.set_trace()
-        model_loss = self.criterion(predictions, label.cuda())
-        #for name, param in self.diss_model.named_parameters():
-        #    print(name, param.grad)
-        #print(np.unique(predictions.cpu().detach().numpy()))
+        model_loss = self.criterion(predictions, label.type(torch.LongTensor).squeeze(dim=1).cuda())
         model_loss.backward()
         self.optimizer.step()
         self.model_losses = model_loss
@@ -72,7 +68,7 @@ class DissimilarityTrainer():
         
     def run_validation(self, original, synthesis, semantic, label):
         predictions = self.diss_model(original, synthesis, semantic)
-        model_loss = self.criterion(predictions, label.cuda())
+        model_loss = self.criterion(predictions, label.type(torch.LongTensor).squeeze(dim=1).cuda())
             
         return model_loss, predictions
 
@@ -84,7 +80,6 @@ class DissimilarityTrainer():
 
     def save(self, save_dir, epoch, name):
         if not os.path.isdir(os.path.join(save_dir, name)):
-            os.mkdir(save_dir)
             os.mkdir(os.path.join(save_dir, name))
         
         save_filename = '%s_net_%s.pth' % (epoch, name)
