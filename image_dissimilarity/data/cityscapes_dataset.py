@@ -17,7 +17,7 @@ id_to_trainid = cityscapes_labels.label2trainid
 
 class CityscapesDataset(Dataset):
     
-    def __init__(self, dataroot, preprocess_mode, image_set, load_size=1024, crop_size=512, no_flip=False):
+    def __init__(self, dataroot, preprocess_mode, image_set, load_size=1024, crop_size=512, aspect_ratio= 0.5, no_flip=False):
         self.original_paths = [os.path.join(dataroot, 'original', image)
                                for image in os.listdir(os.path.join(dataroot, 'original'))]
         self.semantic_paths = [os.path.join(dataroot, 'semantic', image)
@@ -43,6 +43,7 @@ class CityscapesDataset(Dataset):
         self.load_size = load_size
         self.crop_size = crop_size
         self.no_flip = no_flip
+        self.aspect_ratio = aspect_ratio
         self.is_train = True if image_set == 'train' else False
         
     def __getitem__(self, index):
@@ -54,7 +55,7 @@ class CityscapesDataset(Dataset):
         params = get_params(self.preprocess_mode, label.size, self.load_size, self.crop_size)
         
         transform_label = get_transform(self.preprocess_mode, params,
-                                        self.load_size, self.crop_size, method=Image.NEAREST,
+                                        self.load_size, self.crop_size, self.aspect_ratio, method=Image.NEAREST,
                                         normalize=False, no_flip=self.no_flip, is_train=self.is_train)
         label_tensor = transform_label(label)*255
 
@@ -125,7 +126,7 @@ def get_params(preprocess_mode, size, load_size = 1024, crop_size = 512, aspect_
 
 
 def get_transform(preprocess_mode, params, load_size, crop_size,
-                  aspect_ratio=2, method=Image.BICUBIC, normalize=True, toTensor=True, no_flip=False, is_train=True):
+                  aspect_ratio=2., method=Image.BICUBIC, normalize=True, toTensor=True, no_flip=False, is_train=True):
     transform_list = []
     if 'resize' in preprocess_mode:
         osize = [load_size, load_size]

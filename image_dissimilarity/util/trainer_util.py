@@ -6,7 +6,6 @@ from PIL import Image
 import os
 import cv2
 
-
 import sys
 sys.path.append("..")
 from data.cityscapes_dataset import CityscapesDataset

@@ -23,7 +23,7 @@ logger:
   train_log_iter: 100             # How often do you want to log the training stats
   val_log_iter: 1000              # How often do you want to log the validation stats
   image_log_iter: 1000            # How often do you want to display output images during training
-  results_dir: ./checkpoints
+  results_dir: ./logs
   save_epoch_freq: 5 #frequency of saving checkpoints at the end of epochs
 
 # loss options (remove tasks not needed)
@@ -55,22 +55,24 @@ dataset:
 # parameters for dataloaders
 train_dataloader:
   dataset_args:
-    dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/dissimilarity_model/epfl_our/train
+    dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/dissimilarity_model/epfl_our/val
     preprocess_mode: fixed
     load_size: 512
     crop_size: 512
+    aspect_ratio: 2
     image_set: train
     no_flip: false
   dataloader_args:
     batch_size: 1
     num_workers: 1
-    shuffle: False
+    shuffle: True
 val_dataloader:
   dataset_args:
     dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/dissimilarity_model/epfl_our/val
     preprocess_mode: fixed
     load_size: 512
     crop_size: 512
+    aspect_ratio: 2
     image_set: val
     no_flip: false
   dataloader_args:

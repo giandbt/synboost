@@ -15,7 +15,10 @@ class DissimilarityTrainer():
     and the latest visuals to visualize the progress in training.
     """
 
-    def __init__(self, config):
+    def __init__(self, config, seed=0):
+        
+        trainer_util.set_seed(seed)
+        
         cudnn.enabled = True
         self.config = config
         

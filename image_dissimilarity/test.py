@@ -46,8 +46,13 @@ diss_model.load_state_dict(model_weights)
 
 softmax = torch.nn.Softmax(dim=1)
 
-flat_pred = np.zeros(1024*512*len(test_loader)) # TODO update to be right dimension for config file
-flat_labels = np.zeros(1024*512*len(test_loader))
+# create memory locations for results to save time while running the code
+dataset = cfg_test_loader['dataset_args']
+h = int((dataset['crop_size']/dataset['aspect_ratio']))
+w = int(dataset['crop_size'])
+flat_pred = np.zeros(w*h*len(test_loader))
+flat_labels = np.zeros(w*h*len(test_loader))
+
 with torch.no_grad():
     for i, data_i in enumerate(tqdm(test_loader)):
         original = data_i['original'].cuda()
@@ -57,8 +62,8 @@ with torch.no_grad():
         
         outputs = softmax(diss_model(original, synthesis, semantic))
         (softmax_pred, predictions) = torch.max(outputs,dim=1)
-        flat_pred[i*1024*512:i*1024*512+1024*512] = torch.flatten(outputs[:,1,:,:]).detach().cpu().numpy()
-        flat_labels[i*1024*512:i*1024*512+1024*512] = torch.flatten(label).detach().cpu().numpy()
+        flat_pred[i*w*h:i*w*h+w*h] = torch.flatten(outputs[:,1,:,:]).detach().cpu().numpy()
+        flat_labels[i*w*h:i*w*h+w*h] = torch.flatten(label).detach().cpu().numpy()
     
         # Save results
         predicted_tensor = predictions * 255

@@ -46,15 +46,6 @@ class IterationCounter():
         self.time_per_epoch = current_time - self.epoch_start_time
         print('End of epoch %d / %d \t Time Taken: %d sec' %
               (self.current_epoch, self.total_epochs, self.time_per_epoch))
-        if self.current_epoch % self.config['logger']['save_epoch_freq'] == 0:
-            np.savetxt(self.iter_record_path, (self.current_epoch + 1, 0),
-                       delimiter=',', fmt='%d')
-            print('Saved current iteration count at %s.' % self.iter_record_path)
-    
-    def record_current_iter(self):
-        np.savetxt(self.iter_record_path, (self.current_epoch, self.epoch_iter),
-                       delimiter=',', fmt='%d')
-        print('Saved current iteration count at %s.' % self.iter_record_path)
     
     def needs_printing(self):
         return (self.total_steps_so_far % self.print_freq) < self.batch_size
