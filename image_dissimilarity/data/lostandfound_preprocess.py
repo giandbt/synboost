@@ -4,6 +4,13 @@ from PIL import Image
 
 from natsort import natsorted
 
+import sys
+sys.path.append("..")
+import data.cityscapes_labels as cityscapes_labels
+
+trainid_to_name = cityscapes_labels.trainId2name
+id_to_trainid = cityscapes_labels.label2trainid
+
 def convert_gtCoarse_to_labels(data_path, save_dir):
     if not os.path.isdir(os.path.join(save_dir, 'labels')):
         os.mkdir(os.path.join(save_dir, 'labels'))
@@ -27,8 +34,35 @@ def convert_gtCoarse_to_labels(data_path, save_dir):
         semantic_name = os.path.basename(semantic)
         mask_img.save(os.path.join(save_dir, 'labels', semantic_name))
         ignore_mask_img.save(os.path.join(save_dir, 'ignore', semantic_name))
+        
+def convert_semantic_to_trainids(semantic_path, save_dir):
+    if not os.path.isdir(os.path.join(save_dir, 'semantic')):
+        os.mkdir(os.path.join(save_dir, 'semantic'))
+
+    semantic_paths = [os.path.join(semantic_path, image)
+                      for image in os.listdir(semantic_path)]
+
+    semantic_paths = natsorted(semantic_paths)
+
+    for idx, semantic in enumerate(semantic_paths):
+        print('Generating image %i our of %i' % (idx + 1, len(semantic_paths)))
+
+        semantic_img = np.array(Image.open(semantic))
+
+        # Correct labels to train ID
+        semantic_copy = semantic_img.copy()
+        for k, v in id_to_trainid.items():
+            semantic_copy[semantic_img == k] = v
+
+        semantic_img = Image.fromarray(semantic_copy.astype(np.uint8))
+
+        semantic_name = os.path.basename(semantic)
+        semantic_img.save(os.path.join(save_dir, 'semantic', semantic_name))
 
 if __name__ == '__main__':
     data_path = '/media/giancarlo/Samsung_T5/master_thesis/data/lost_and_found/post-process/L&F_TrainID_labels'
     save_dir = '/media/giancarlo/Samsung_T5/master_thesis/data/lost_and_found/post-process'
-    convert_gtCoarse_to_labels(data_path, save_dir)
+    #convert_gtCoarse_to_labels(data_path, save_dir)
+
+    semantic_path = '/media/giancarlo/Samsung_T5/master_thesis/data/lost_and_found/post-process/semantic_labelids'
+    convert_semantic_to_trainids(semantic_path, save_dir)

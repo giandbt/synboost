@@ -44,6 +44,8 @@ iter_counter = IterationCounter(config, len(train_loader), batch_size)
 # TODO (Giancarlo): Need to add visualization tool
 
 print('Starting Training...')
+best_val_loss = float('inf')
+
 for epoch in iter_counter.training_epochs():
     print('Starting Epoch #%i'%epoch)
     iter_counter.record_epoch_start(epoch)
@@ -79,6 +81,11 @@ for epoch in iter_counter.training_epochs():
 
         avg_val_loss = val_loss / len(val_loader)
         print('Validation Loss: %f' % avg_val_loss)
+        if avg_val_loss < best_val_loss:
+            print('Validation loss for epoch %d (%f) is better than previous best loss (%f). Saving best model.'
+                  %(epoch, avg_val_loss, best_val_loss))
+            best_val_loss = avg_val_loss
+            trainer.save(save_fdr, 'best', exp_name)
     
     print('saving the latest model (epoch %d, total_steps %d)' %
           (epoch, iter_counter.total_steps_so_far))

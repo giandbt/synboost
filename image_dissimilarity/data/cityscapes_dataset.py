@@ -6,6 +6,7 @@ import torchvision.transforms as transforms
 import numpy as np
 import random
 from natsort import natsorted
+import torch 
 
 import sys
 sys.path.append("..")
@@ -75,8 +76,9 @@ class CityscapesDataset(Dataset):
         # semantic image
         semantic_path = self.semantic_paths[index]
         semantic = Image.open(semantic_path)
-        
         semantic_tensor = transform_label(semantic) * 255.0
+        semantic_tensor[semantic_tensor == 255] = 20  # 'ignore label is 20' 
+        semantic_tensor = one_hot_encoding(semantic_tensor, 20)
 
         input_dict = {'label': label_tensor,
                       'original': image_tensor,
@@ -92,7 +94,14 @@ class CityscapesDataset(Dataset):
         
     def __len__(self):
         return self.dataset_size
-    
+
+def one_hot_encoding(semantic, num_classes=20):
+    one_hot = torch.zeros(num_classes, semantic.size(1), semantic.size(2))
+    for class_id in range(num_classes):
+        one_hot[class_id,:,:] = (semantic.squeeze(0)==class_id)
+    one_hot = one_hot[:num_classes-1,:,:]
+    return one_hot
+
 def get_params(preprocess_mode, size, load_size = 1024, crop_size = 512, aspect_ratio = 2):
     w, h = size
     new_h = h

@@ -52,7 +52,8 @@ if not opt.no_segmentation:
     
     color_mask_fdr = os.path.join(opt.results_dir, 'color-mask')
     overlap_fdr = os.path.join(opt.results_dir, 'overlap')
-    segmantic_fdr = os.path.join(opt.results_dir, 'semantic')
+    semantic_label_fdr = os.path.join(opt.results_dir, 'semantic_labelIds')
+    semantic_fdr = os.path.join(opt.results_dir, 'semantic')
     original_fdr = os.path.join(opt.results_dir, 'original')
     
     if not os.path.exists(color_mask_fdr):
@@ -61,8 +62,11 @@ if not opt.no_segmentation:
     if not os.path.exists(overlap_fdr):
         os.makedirs(overlap_fdr)
     
-    if not os.path.exists(segmantic_fdr):
-        os.makedirs(segmantic_fdr)
+    if not os.path.exists(semantic_fdr):
+        os.makedirs(semantic_fdr)
+        
+    if not os.path.exists(semantic_label_fdr):
+        os.makedirs(semantic_label_fdr)
         
     if not os.path.exists(original_fdr):
         os.makedirs(original_fdr)
@@ -94,7 +98,7 @@ if not opt.no_segmentation:
     
         # save colorized predictions
         colorized = opt.dataset_cls.colorize_mask(pred)
-        colorized.save(os.path.join(color_mask_fdr, color_name))
+        #colorized.save(os.path.join(color_mask_fdr, color_name))
     
         # save colorized predictions overlapped on original images
         overlap = cv2.addWeighted(np.array(img), 0.5, np.array(colorized.convert('RGB')), 0.5, 0)
@@ -104,7 +108,8 @@ if not opt.no_segmentation:
         label_out = np.zeros_like(pred)
         for label_id, train_id in opt.dataset_cls.id_to_trainid.items():
             label_out[np.where(pred == train_id)] = label_id
-            cv2.imwrite(os.path.join(segmantic_fdr, pred_name), label_out)
+            cv2.imwrite(os.path.join(semantic_label_fdr, pred_name), label_out)
+            cv2.imwrite(os.path.join(semantic_fdr, pred_name), pred)
             cv2.imwrite(os.path.join(opt.results_dir, 'temp', 'gtFine', 'val', pred_name[:-4] + '_instanceIds.png'), label_out)
             cv2.imwrite(os.path.join(opt.results_dir, 'temp', 'gtFine', 'val', pred_name[:-4] + '_labelIds.png'), label_out)
     

@@ -44,25 +44,21 @@ model_path = os.path.join(save_fdr, exp_name, '%s_net_%s.pth' %(epoch, exp_name)
 model_weights = torch.load(model_path)
 diss_model.load_state_dict(model_weights)
 
-flat_pred = []
-flat_labels = []
+softmax = torch.nn.Softmax(dim=1)
+
+flat_pred = np.zeros(1024*512*len(test_loader)) # TODO update to be right dimension for config file
+flat_labels = np.zeros(1024*512*len(test_loader))
 with torch.no_grad():
     for i, data_i in enumerate(tqdm(test_loader)):
-        print('Evaluating image %i our of %i' % (i + 1, len(test_loader)))
         original = data_i['original'].cuda()
         semantic = data_i['semantic'].cuda()
         synthesis = data_i['synthesis'].cuda()
         label = data_i['label'].cuda()
         
-        outputs = torch.exp(diss_model(original, synthesis, semantic))
+        outputs = softmax(diss_model(original, synthesis, semantic))
         (softmax_pred, predictions) = torch.max(outputs,dim=1)
-        
-        if i == 0:
-            flat_pred = torch.flatten(softmax_pred).detach().cpu().numpy()
-            flat_labels = torch.flatten(label).detach().cpu().numpy()
-        else:
-            flat_pred = np.append(flat_pred, torch.flatten(softmax_pred).detach().cpu().numpy(), axis=0)
-            flat_labels = np.append(flat_labels, torch.flatten(label).detach().cpu().numpy(), axis=0)
+        flat_pred[i*1024*512:i*1024*512+1024*512] = torch.flatten(outputs[:,1,:,:]).detach().cpu().numpy()
+        flat_labels[i*1024*512:i*1024*512+1024*512] = torch.flatten(label).detach().cpu().numpy()
     
         # Save results
         predicted_tensor = predictions * 255
@@ -90,4 +86,4 @@ plt.xlabel('False Positive Rate')
 plt.ylabel('True Positive Rate')
 plt.title('Receiver Operating Characteristic Curve' )
 plt.legend(loc="lower right")
-plt.show()
+plt.savefig('/home/giancarlo/Desktop/roc_curve.png')

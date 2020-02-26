@@ -40,9 +40,7 @@ class DissimNet(nn.Module):
         self.conv10 = nn.Conv2d(160, 64, kernel_size=1, padding=0)
         self.conv11 = nn.Conv2d(64, 2, kernel_size=1, padding=0)
         
-        self.softmax = nn.LogSoftmax(dim=2)
-
-        self._initialize_weights()
+        #self._initialize_weights()
 
     def _initialize_weights(self):
         for m in self.modules():
@@ -108,8 +106,9 @@ class DissimNet(nn.Module):
         x = self.conv6(x)
         x = self.conv11(x)
         
-        self.final_prediction = self.softmax(x)
-        
+        #self.final_prediction = self.softmax(x)
+        self.final_prediction = x
+
         return self.final_prediction
 
 if __name__ == "__main__":

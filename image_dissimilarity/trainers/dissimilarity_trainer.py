@@ -50,9 +50,9 @@ class DissimilarityTrainer():
             else:
                 class_weights = [1.46494611, 16.90304619]
             print('Using the following weights for each respective class [0,1]:', class_weights)
-            self.criterion = nn.NLLLoss(weight=torch.FloatTensor(class_weights).to("cuda")).cuda(self.gpu)
+            self.criterion = nn.CrossEntropyLoss(weight=torch.FloatTensor(class_weights).to("cuda")).cuda(self.gpu)
         else:
-            self.criterion = nn.NLLLoss(ignore_index=255).cuda(self.gpu)
+            self.criterion = nn.CrossEntropyLoss(ignore_index=255).cuda(self.gpu)
         
         
 
@@ -102,7 +102,6 @@ class DissimilarityTrainer():
                 param_group['lr'] = new_lr
             print('update learning rate: %f -> %f' % (self.old_lr, new_lr))
             self.old_lr = new_lr
-
 
 if __name__ == "__main__":
     import yaml
