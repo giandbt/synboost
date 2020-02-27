@@ -1,5 +1,5 @@
 # Name of the experiment for saving files
-experiment_name: epfl_our_synthesis
+experiment_name: final_baseline
 save_folder: results/
 
 # Define training strategy
@@ -8,7 +8,7 @@ training_strategy:
   niter_decay: 25 # of iter to linearly decay learning rate to zero
   is_train: True
   class_weight: True
-  class_weight_cityscapes: True
+  class_weight_cityscapes: False
 
 # model options
 model:
@@ -19,10 +19,6 @@ model:
 
 # logger options
 logger:
-  experiment_name: default
-  train_log_iter: 100             # How often do you want to log the training stats
-  val_log_iter: 1000              # How often do you want to log the validation stats
-  image_log_iter: 1000            # How often do you want to display output images during training
   results_dir: ./logs
   save_epoch_freq: 5 #frequency of saving checkpoints at the end of epochs
 
@@ -55,10 +51,10 @@ dataset:
 # parameters for dataloaders
 train_dataloader:
   dataset_args:
-    dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/dissimilarity_model/epfl_our/val
+    dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/dissimilarity_model/epfl_our/train
     preprocess_mode: fixed
-    load_size: 512
-    crop_size: 512
+    load_size: 1024
+    crop_size: 1024
     aspect_ratio: 2
     image_set: train
     no_flip: false
@@ -70,11 +66,25 @@ val_dataloader:
   dataset_args:
     dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/dissimilarity_model/epfl_our/val
     preprocess_mode: fixed
-    load_size: 512
-    crop_size: 512
+    load_size: 1024
+    crop_size: 1024
     aspect_ratio: 2
     image_set: val
-    no_flip: false
+    no_flip: True
+  dataloader_args:
+    batch_size: 1
+    num_workers: 1
+    shuffle: False
+test_dataloader:
+  dataset_args:
+    dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/road_anomaly
+    preprocess_mode: fixed
+    load_size: 1024
+    crop_size: 1024
+    aspect_ratio: 2
+    image_set: test
+    no_flip: True
+    roi: False
   dataloader_args:
     batch_size: 1
     num_workers: 1

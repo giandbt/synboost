@@ -15,17 +15,25 @@ import data.cityscapes_labels as cityscapes_labels
 trainid_to_name = cityscapes_labels.trainId2name
 id_to_trainid = cityscapes_labels.label2trainid
 
+# invalid frames are those where np.count_nonzero(labels_source) is 0 for Lost and Found Dataset
+INVALID_LABELED_FRAMES = [17,  37,  55,  72,  91, 110, 129, 153, 174, 197, 218, 353, 490, 618, 686, 792, 793]
+
 class CityscapesDataset(Dataset):
     
-    def __init__(self, dataroot, preprocess_mode, image_set, load_size=1024, crop_size=512, aspect_ratio= 0.5, no_flip=False):
+    def __init__(self, dataroot, preprocess_mode, image_set, load_size=1024, crop_size=512, 
+                 aspect_ratio= 0.5, no_flip=False, only_valid = False, roi = False):
         self.original_paths = [os.path.join(dataroot, 'original', image)
                                for image in os.listdir(os.path.join(dataroot, 'original'))]
         self.semantic_paths = [os.path.join(dataroot, 'semantic', image)
                                for image in os.listdir(os.path.join(dataroot, 'semantic'))]
         self.synthesis_paths = [os.path.join(dataroot, 'synthesis', image)
                                 for image in os.listdir(os.path.join(dataroot, 'synthesis'))]
-        self.label_paths = [os.path.join(dataroot, 'labels', image)
-                            for image in os.listdir(os.path.join(dataroot, 'labels'))]
+        if roi:
+            self.label_paths = [os.path.join(dataroot, 'labels_with_ROI', image)
+                                for image in os.listdir(os.path.join(dataroot, 'labels_with_ROI'))]
+        else:
+            self.label_paths = [os.path.join(dataroot, 'labels', image)
+                                for image in os.listdir(os.path.join(dataroot, 'labels'))]
         
         # We need to sort the images to ensure all the pairs match with each other
         self.original_paths = natsorted(self.original_paths)
@@ -33,6 +41,14 @@ class CityscapesDataset(Dataset):
         self.synthesis_paths = natsorted(self.synthesis_paths)
         self.label_paths = natsorted(self.label_paths)
         
+        #import pdb; pdb.set_trace()
+        
+        if only_valid: # Only for Lost and Found
+            self.original_paths = np.delete(self.original_paths, INVALID_LABELED_FRAMES)
+            self.semantic_paths = np.delete(self.semantic_paths, INVALID_LABELED_FRAMES)
+            self.synthesis_paths = np.delete(self.label_paths, INVALID_LABELED_FRAMES)
+            self.label_paths = np.delete(self.label_paths, INVALID_LABELED_FRAMES)
+               
         assert len(self.original_paths) == len(self.semantic_paths) == len(self.synthesis_paths) \
                == len(self.label_paths), \
             "Number of images in the dataset does not match with each other"

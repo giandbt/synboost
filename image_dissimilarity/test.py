@@ -15,7 +15,7 @@ from models.dissimilarity_model import DissimNet
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', type=str, help='Path to the config file.')
-parser.add_argument('--gpu_ids', type=str, default='-1', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
+parser.add_argument('--gpu_ids', type=str, default='0', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
 opts = parser.parse_args()
 cudnn.benchmark = True
 
@@ -76,6 +76,11 @@ with torch.no_grad():
         label_img.save(os.path.join(store_fdr, 'label', file_name))
 
 print('Calculating AUC-ROC score')
+if config['test_dataloader']['dataset_args']['roi']:
+    invalid_indices = np.argwhere(flat_labels == 255)
+    flat_labels = np.delete(flat_labels, invalid_indices)
+    flat_pred = np.delete(flat_pred, invalid_indices)
+
 fpr, tpr, _ = metrics.roc_curve(flat_labels, flat_pred)
 roc_auc = metrics.auc(fpr, tpr)
 print("roc_auc_score : " + str(roc_auc))

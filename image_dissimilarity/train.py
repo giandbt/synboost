@@ -1,7 +1,9 @@
 import argparse
 import yaml
-from tqdm import tqdm
 import os
+from tqdm import tqdm
+import numpy as np
+from sklearn import metrics
 
 import torch.backends.cudnn as cudnn
 import torch
@@ -34,6 +36,7 @@ if not os.path.isdir(logs_fdr):
     
 train_writer = SummaryWriter(os.path.join(logs_fdr, exp_name, 'train'), flush_secs=30)
 val_writer = SummaryWriter(os.path.join(logs_fdr, exp_name, 'validation'), flush_secs=30)
+test_writer = SummaryWriter(os.path.join(logs_fdr, exp_name, 'test'), flush_secs=30)
 
 # Activate GPUs
 config['gpu_ids'] = opts.gpu_ids
@@ -42,12 +45,20 @@ gpu_info = trainer_util.activate_gpus(config)
 # Get data loaders
 cfg_train_loader = config['train_dataloader']
 cfg_val_loader = config['val_dataloader']
+cfg_test_loader = config['test_dataloader']
 train_loader = trainer_util.get_dataloader(cfg_train_loader['dataset_args'], cfg_train_loader['dataloader_args'])
 val_loader = trainer_util.get_dataloader(cfg_val_loader['dataset_args'], cfg_val_loader['dataloader_args'])
+test_loader = trainer_util.get_dataloader(cfg_test_loader['dataset_args'], cfg_test_loader['dataloader_args'])
+
+# Getting parameters for test
+dataset = cfg_test_loader['dataset_args']
+h = int((dataset['crop_size']/dataset['aspect_ratio']))
+w = int(dataset['crop_size'])
 
 # create trainer for our model
 print('Loading Model')
 trainer = DissimilarityTrainer(config)
+
 
 # create tool for counting iterations
 batch_size = config['train_dataloader']['dataloader_args']['batch_size']
@@ -74,7 +85,6 @@ for epoch in iter_counter.training_epochs():
     avg_train_loss = train_loss / len(train_loader)
     train_writer.add_scalar('Loss', avg_train_loss, epoch)
     
-    
     print('Training Loss: %f' % (avg_train_loss))
     print('Starting Validation')
     with torch.no_grad():
@@ -86,7 +96,7 @@ for epoch in iter_counter.training_epochs():
             label = data_i['label'].cuda()
         
             # Evaluating
-            loss, predictions = trainer.run_validation(original, synthesis, semantic, label)
+            loss, _ = trainer.run_validation(original, synthesis, semantic, label)
             val_loss += loss
 
         avg_val_loss = val_loss / len(val_loader)
@@ -99,6 +109,29 @@ for epoch in iter_counter.training_epochs():
                   %(epoch, avg_val_loss, best_val_loss))
             best_val_loss = avg_val_loss
             trainer.save(save_fdr, 'best', exp_name)
+    
+    with torch.no_grad():
+        print('Starting Testing For ROC Curve')
+        flat_pred = np.zeros(w * h * len(test_loader))
+        flat_labels = np.zeros(w * h * len(test_loader))
+        for i, data_i in enumerate(tqdm(test_loader)):
+            original = data_i['original'].cuda()
+            semantic = data_i['semantic'].cuda()
+            synthesis = data_i['synthesis'].cuda()
+            label = data_i['label'].cuda()
+        
+            # Evaluating
+            loss, outputs = trainer.run_validation(original, synthesis, semantic, label)
+            (softmax_pred, predictions) = torch.max(outputs, dim=1)
+            flat_pred[i * w * h:i * w * h + w * h] = torch.flatten(outputs[:, 1, :, :]).detach().cpu().numpy()
+            flat_labels[i * w * h:i * w * h + w * h] = torch.flatten(label).detach().cpu().numpy()
+            
+        print('Calculating AUC-ROC score')
+        fpr, tpr, _ = metrics.roc_curve(flat_labels, flat_pred)
+        roc_auc = metrics.auc(fpr, tpr)
+        print('AUC for ROC: %f' % roc_auc)
+    
+        test_writer.add_scalar('AUC_ROC', roc_auc, epoch)
     
     print('saving the latest model (epoch %d, total_steps %d)' %
           (epoch, iter_counter.total_steps_so_far))

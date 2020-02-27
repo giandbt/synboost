@@ -1,5 +1,5 @@
 # Name of the experiment for saving files
-experiment_name: epfl_our_synthesis # where checkpoints are stored
+experiment_name: epfl_our_synthesis_2 # where checkpoints are stored
 save_folder: results/ # where checkpoints are stored
 which_epoch: best
 store_results: /home/giancarlo/Desktop/lost-found/
@@ -20,11 +20,13 @@ test_dataloader:
   dataset_args:
     dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/lost_and_found/post-process
     preprocess_mode: fixed
-    load_size: 512
-    crop_size: 512
+    load_size: 1024
+    crop_size: 1024
     aspect_ratio: 2
     image_set: val
-    no_flip: false
+    no_flip: False
+    only_valid: False
+    roi: True
   dataloader_args:
     batch_size: 1
     num_workers: 1

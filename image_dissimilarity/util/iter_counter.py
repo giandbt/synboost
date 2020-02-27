@@ -12,8 +12,6 @@ class IterationCounter():
         self.first_epoch = 1
         self.total_epochs = config['training_strategy']['niter'] + config['training_strategy']['niter_decay']
         self.epoch_iter = 0  # iter number within each epoch
-        self.iter_record_path = os.path.join(config['logger']['results_dir'],
-                                             config['logger']['experiment_name'], 'iter.txt')
         
         self.total_steps_so_far = (self.first_epoch - 1) * dataset_size + self.epoch_iter
         
