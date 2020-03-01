@@ -1,5 +1,5 @@
 # Name of the experiment for saving files
-experiment_name: epfl_our_synthesis_2 # where checkpoints are stored
+experiment_name: final_baseline # where checkpoints are stored
 save_folder: results/ # where checkpoints are stored
 which_epoch: best
 store_results: /home/giancarlo/Desktop/road-anomaly/
@@ -10,6 +10,7 @@ model:
   # Define accordingly, e.g.
   parameters:
     pretrained: True
+    correlation: True
 
 # parameters for dataset
 dataset:

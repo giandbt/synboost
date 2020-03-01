@@ -1,12 +1,11 @@
 import bdlb
 import tensorflow as tf
 
-# Error with importing bdlb "ValueError: Dataset with name lost_and_found already registered."
+# Error with AssertionError: Manual directory /home/giancarlo/tensorflow_datasets/downloads/manual/cityscapes does not exist. Create it and download/extract dataset artifacts in there. Additional instructions: None
 
 fs = bdlb.load(benchmark="fishyscapes")
 # automatically downloads the dataset
 data = fs.get_dataset('LostAndFound')
-
 # test your method with the benchmark metrics
 def estimator(image):
     """Assigns a random uncertainty per pixel."""

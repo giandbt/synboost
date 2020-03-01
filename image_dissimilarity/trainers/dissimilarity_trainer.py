@@ -7,6 +7,7 @@ import sys
 sys.path.append("..")
 from util import trainer_util
 from models.dissimilarity_model import DissimNet
+from models.dissimilarity_model_no_semantic import DissimNet_NS
 
 class DissimilarityTrainer():
     """
@@ -26,8 +27,8 @@ class DissimilarityTrainer():
             self.gpu = 'cuda'
         else:
             self.gpu = 'cpu'
-            
-        self.diss_model = DissimNet().cuda(self.gpu)
+        
+        self.diss_model = DissimNet(**config['model']['parameters']).cuda(self.gpu)
         
         lr_config = config['optimizer']
         lr_options = lr_config['parameters']

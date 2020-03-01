@@ -5,3 +5,5 @@ results/
 visualization/
 checkpoints/
 logs/
+*no*.yaml
+*no*.py
