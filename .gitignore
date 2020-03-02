@@ -2,3 +2,8 @@
 results/
 *.pyc
 *.idea
+visualization/
+checkpoints/
+logs/
+*no*.yaml
+*no*.py
