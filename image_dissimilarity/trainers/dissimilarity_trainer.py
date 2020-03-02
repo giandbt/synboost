@@ -7,7 +7,6 @@ import sys
 sys.path.append("..")
 from util import trainer_util
 from models.dissimilarity_model import DissimNet
-from models.dissimilarity_model_no_semantic import DissimNet_NS
 
 class DissimilarityTrainer():
     """
