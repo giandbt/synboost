@@ -38,7 +38,7 @@ cfg_test_loader = config['test_dataloader']
 test_loader = trainer_util.get_dataloader(cfg_test_loader['dataset_args'], cfg_test_loader['dataloader_args'])
 
 # get model
-diss_model = DissimNet().cuda()
+diss_model = DissimNet(**config['model']['parameters']).cuda()
 diss_model.eval()
 model_path = os.path.join(save_fdr, exp_name, '%s_net_%s.pth' %(epoch, exp_name))
 model_weights = torch.load(model_path)
@@ -50,8 +50,8 @@ softmax = torch.nn.Softmax(dim=1)
 dataset = cfg_test_loader['dataset_args']
 h = int((dataset['crop_size']/dataset['aspect_ratio']))
 w = int(dataset['crop_size'])
-flat_pred = np.zeros(w*h*len(test_loader))
-flat_labels = np.zeros(w*h*len(test_loader))
+flat_pred = np.zeros(w*h*len(test_loader), dtype='float32')
+flat_labels = np.zeros(w*h*len(test_loader), dtype='float32')
 
 with torch.no_grad():
     for i, data_i in enumerate(tqdm(test_loader)):

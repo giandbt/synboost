@@ -1,5 +1,5 @@
 # Name of the experiment for saving files
-experiment_name: final_baseline # where checkpoints are stored
+experiment_name: no_correlation # where checkpoints are stored
 save_folder: results/ # where checkpoints are stored
 which_epoch: best
 store_results: /home/giancarlo/Desktop/lost-found/
@@ -10,7 +10,7 @@ model:
   # Define accordingly, e.g.
   parameters:
     pretrained: True
-    correlation: True
+    correlation: False
 
 # parameters for dataset
 dataset:
