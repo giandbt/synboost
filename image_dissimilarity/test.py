@@ -29,6 +29,13 @@ save_fdr = config['save_folder']
 epoch = config['which_epoch']
 store_fdr = config['store_results']
 
+if not os.path.isdir(store_fdr):
+    os.mkdir(store_fdr)
+
+if not os.path.isdir(os.path.join(store_fdr, 'pred')):
+    os.mkdir(os.path.join(store_fdr, 'label'))
+    os.mkdir(os.path.join(store_fdr, 'pred'))
+
 # Activate GPUs
 config['gpu_ids'] = opts.gpu_ids
 gpu_info = trainer_util.activate_gpus(config)
@@ -94,6 +101,6 @@ plt.xlim([0.0, 1.0])
 plt.ylim([0.0, 1.0])
 plt.xlabel('False Positive Rate')
 plt.ylabel('True Positive Rate')
-plt.title('Receiver Operating Characteristic Curve' )
+plt.title('Receiver Operating Characteristic Curve')
 plt.legend(loc="lower right")
-plt.savefig('/home/giancarlo/Desktop/roc_curve.png')
+plt.savefig(os.path.join(store_fdr,'roc_curve.png'))
