@@ -66,7 +66,7 @@ iter_counter = IterationCounter(config, len(train_loader), batch_size)
 
 print('Starting Training...')
 best_val_loss = float('inf')
-
+iter = 0
 for epoch in iter_counter.training_epochs():
     print('Starting Epoch #%i'%epoch)
     iter_counter.record_epoch_start(epoch)
@@ -81,9 +81,11 @@ for epoch in iter_counter.training_epochs():
         # Training
         model_loss, _ = trainer.run_model_one_step(original, synthesis, semantic, label)
         train_loss += model_loss
-    
+        train_writer.add_scalar('Loss_iter', model_loss, iter)
+        iter+=1
+        
     avg_train_loss = train_loss / len(train_loader)
-    train_writer.add_scalar('Loss', avg_train_loss, epoch)
+    train_writer.add_scalar('Loss_epoch', avg_train_loss, epoch)
     
     print('Training Loss: %f' % (avg_train_loss))
     print('Starting Validation')
@@ -98,11 +100,11 @@ for epoch in iter_counter.training_epochs():
             # Evaluating
             loss, _ = trainer.run_validation(original, synthesis, semantic, label)
             val_loss += loss
-
+            
         avg_val_loss = val_loss / len(val_loader)
         print('Validation Loss: %f' % avg_val_loss)
 
-        val_writer.add_scalar('Loss', avg_val_loss, epoch)
+        val_writer.add_scalar('Loss_epoch', avg_val_loss, epoch)
         
         if avg_val_loss < best_val_loss:
             print('Validation loss for epoch %d (%f) is better than previous best loss (%f). Saving best model.'
@@ -110,7 +112,7 @@ for epoch in iter_counter.training_epochs():
             best_val_loss = avg_val_loss
             trainer.save(save_fdr, 'best', exp_name)
     
-    with torch.no_grad():
+    # Starts Testing
         print('Starting Testing For ROC Curve')
         flat_pred = np.zeros(w * h * len(test_loader))
         flat_labels = np.zeros(w * h * len(test_loader))

@@ -4,8 +4,8 @@ save_folder: results/
 
 # Define training strategy
 training_strategy:
-  niter: 25 # of iter at starting learning rate. Total #epochs is niter + niter_decay'
-  niter_decay: 25 # of iter to linearly decay learning rate to zero
+  niter: 50 # of iter at starting learning rate. Total #epochs is niter + niter_decay'
+  niter_decay: 0 # of iter to linearly decay learning rate to zero
   is_train: True
   class_weight: True
   class_weight_cityscapes: False
@@ -20,7 +20,7 @@ model:
 # logger options
 logger:
   results_dir: ./logs
-  save_epoch_freq: 5 #frequency of saving checkpoints at the end of epochs
+  save_epoch_freq: 1 #frequency of saving checkpoints at the end of epochs
 
 # loss options (remove tasks not needed)
 loss:  CrossEntropyLoss
@@ -51,7 +51,7 @@ dataset:
 # parameters for dataloaders
 train_dataloader:
   dataset_args:
-    dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/dissimilarity_model/epfl_our/train
+    dataroot: /home/giancarlo/data/innosuisse/epfl/train
     preprocess_mode: fixed
     load_size: 1024
     crop_size: 1024
@@ -59,12 +59,12 @@ train_dataloader:
     image_set: train
     no_flip: false
   dataloader_args:
-    batch_size: 1
-    num_workers: 1
+    batch_size: 4
+    num_workers: 2
     shuffle: True
 val_dataloader:
   dataset_args:
-    dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/dissimilarity_model/epfl_our/val
+    dataroot: /home/giancarlo/data/innosuisse/epfl/val 
     preprocess_mode: fixed
     load_size: 1024
     crop_size: 1024
@@ -77,7 +77,7 @@ val_dataloader:
     shuffle: False
 test_dataloader:
   dataset_args:
-    dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/road_anomaly
+    dataroot: /home/giancarlo/data/innosuisse/road_anomaly
     preprocess_mode: fixed
     load_size: 1024
     crop_size: 1024

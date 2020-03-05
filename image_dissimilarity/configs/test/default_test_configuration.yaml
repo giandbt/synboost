@@ -2,7 +2,7 @@
 experiment_name: final_baseline # where checkpoints are stored
 save_folder: results/ # where checkpoints are stored
 which_epoch: best
-store_results: /home/giancarlo/Desktop/lost-found/
+store_results: /home/giancarlo/lost-found/
 
 # model options
 model:
@@ -19,7 +19,7 @@ dataset:
 # parameters for dataloaders
 test_dataloader:
   dataset_args:
-    dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/lost_and_found/post-process
+    dataroot: /home/giancarlo/data/innosuisse/lost_and_found/post-process
     preprocess_mode: fixed
     load_size: 1024
     crop_size: 1024
