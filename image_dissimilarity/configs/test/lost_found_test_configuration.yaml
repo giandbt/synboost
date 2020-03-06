@@ -28,7 +28,7 @@ test_dataloader:
     image_set: val
     no_flip: False
     only_valid: False
-    roi: True
+    roi: False
   dataloader_args:
     batch_size: 1
     num_workers: 1

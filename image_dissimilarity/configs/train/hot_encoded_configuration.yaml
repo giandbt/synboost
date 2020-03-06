@@ -52,6 +52,7 @@ dataset:
 train_dataloader:
   dataset_args:
     dataroot: /home/giancarlo/data/innosuisse/epfl/train
+    #dataroot: /home/giancarlo/data/innosuisse/road_anomaly (only for quick debugging)
     preprocess_mode: fixed
     load_size: 1024
     crop_size: 1024
@@ -64,7 +65,7 @@ train_dataloader:
     shuffle: True
 val_dataloader:
   dataset_args:
-    dataroot: /home/giancarlo/data/innosuisse/epfl/val 
+    dataroot: /home/giancarlo/data/innosuisse/fs_lost_and_found
     preprocess_mode: fixed
     load_size: 1024
     crop_size: 1024
@@ -75,7 +76,7 @@ val_dataloader:
     batch_size: 1
     num_workers: 1
     shuffle: False
-test_dataloader:
+test_dataloader1:
   dataset_args:
     dataroot: /home/giancarlo/data/innosuisse/road_anomaly
     preprocess_mode: fixed
@@ -85,6 +86,34 @@ test_dataloader:
     image_set: test
     no_flip: True
     roi: False
+  dataloader_args:
+    batch_size: 1
+    num_workers: 1
+    shuffle: False
+test_dataloader2:
+  dataset_args:
+    dataroot: /home/giancarlo/data/innosuisse/fs_static
+    preprocess_mode: fixed
+    load_size: 1024
+    crop_size: 1024
+    aspect_ratio: 2
+    image_set: test
+    no_flip: True
+    roi: True
+  dataloader_args:
+    batch_size: 1
+    num_workers: 1
+    shuffle: False
+test_dataloader3:
+  dataset_args:
+    dataroot: /home/giancarlo/data/innosuisse/fs_lost_and_found
+    preprocess_mode: fixed
+    load_size: 1024
+    crop_size: 1024
+    aspect_ratio: 2
+    image_set: test
+    no_flip: True
+    roi: True
   dataloader_args:
     batch_size: 1
     num_workers: 1

@@ -53,7 +53,7 @@ class DissimilarityTrainer():
             else:
                 class_weights = [1.46494611, 16.90304619]
             print('Using the following weights for each respective class [0,1]:', class_weights)
-            self.criterion = nn.CrossEntropyLoss(weight=torch.FloatTensor(class_weights).to("cuda")).cuda(self.gpu)
+            self.criterion = nn.CrossEntropyLoss(ignore_index=255, weight=torch.FloatTensor(class_weights).to("cuda")).cuda(self.gpu)
         else:
             self.criterion = nn.CrossEntropyLoss(ignore_index=255).cuda(self.gpu)
         

@@ -14,6 +14,7 @@ class Pix2PixModel(torch.nn.Module):
         self.opt = opt
         self.FloatTensor = torch.cuda.FloatTensor
         self.ByteTensor = torch.cuda.ByteTensor
+        self.BoolTensor = torch.cuda.BoolTensor
 
         self.netG, self.netD, self.netE = self.initialize_networks(opt)
 
@@ -213,7 +214,7 @@ class Pix2PixModel(torch.nn.Module):
 
 
     def get_edges(self, t):
-        edge = self.ByteTensor(t.size()).zero_() # for PyTorch versions higher than 1.2.0, use BoolTensor instead of ByteTensor
+        edge = self.BoolTensor(t.size()).zero_() # for PyTorch versions higher than 1.2.0, use BoolTensor instead of ByteTensor
         edge[:, :, :, 1:] = edge[:, :, :, 1:] | (t[:, :, :, 1:] != t[:, :, :, :-1])
         edge[:, :, :, :-1] = edge[:, :, :, :-1] | (t[:, :, :, 1:] != t[:, :, :, :-1])
         edge[:, :, 1:, :] = edge[:, :, 1:, :] | (t[:, :, 1:, :] != t[:, :, :-1, :])

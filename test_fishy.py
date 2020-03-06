@@ -2,10 +2,12 @@ import bdlb
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import numpy as np
+from PIL import Image
+import cv2
 
 fs = bdlb.load(benchmark="fishyscapes")
 # automatically downloads the dataset
-data = fs.get_dataset('LostAndFound')
+data = fs.get_dataset('Static')
 
 
 # test your method with the benchmark metrics
@@ -15,24 +17,16 @@ def estimator(image):
     return uncertainty
 
 
-def visualize_tfdataset(tfdataset, num_samples):
-    """Visualizes `num_samples` from the `tfdataset`."""
-    
-    fig, axs = plt.subplots(num_samples, 2, figsize=(15, 4 * num_samples))
-    for i, blob in enumerate(tfdataset.take(num_samples)):
+def get_images(tfdataset):
+    for i, blob in enumerate(tfdataset):
         image = blob['image_left'].numpy()
         mask = blob['mask'].numpy()
-        axs[i][0].imshow(image.astype('int'))
-        axs[i][0].axis("off")
-        axs[i][0].set(title="Image")
-        # map 255 to 2 such that difference between labels is better visible
-        mask[mask == 255] = 2
-        axs[i][1].imshow(mask[..., 0])
-        axs[i][1].axis("off")
-        axs[i][1].set(title="Mask")
-    fig.show()
+        Image.fromarray(image).save('/home/giancarlo/data/innosuisse/fs_static/original/image_%i.png' %i)
+        cv2.imwrite('/home/giancarlo/data/innosuisse/fs_static/label/image_%i.png' %i, mask)
 
-metrics = fs.evaluate(estimator, data.take(2))
-print('My method achieved {:.2f}% AP'.format(100 * metrics['AP']))
 
-visualize_tfdataset(data, 5)
+
+#metrics = fs.evaluate(estimator, data.take(2))
+#print('My method achieved {:.2f}% AP'.format(100 * metrics['AP']))
+
+get_images(data)

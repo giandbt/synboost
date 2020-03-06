@@ -11,6 +11,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from trainers.dissimilarity_trainer import DissimilarityTrainer
 from util import trainer_util
+from util import trainer_util, metrics
 from util.iter_counter import IterationCounter
 
 parser = argparse.ArgumentParser()
@@ -45,13 +46,17 @@ gpu_info = trainer_util.activate_gpus(config)
 # Get data loaders
 cfg_train_loader = config['train_dataloader']
 cfg_val_loader = config['val_dataloader']
-cfg_test_loader = config['test_dataloader']
+cfg_test_loader1 = config['test_dataloader1']
+cfg_test_loader2 = config['test_dataloader2']
+cfg_test_loader3 = config['test_dataloader3']
 train_loader = trainer_util.get_dataloader(cfg_train_loader['dataset_args'], cfg_train_loader['dataloader_args'])
 val_loader = trainer_util.get_dataloader(cfg_val_loader['dataset_args'], cfg_val_loader['dataloader_args'])
-test_loader = trainer_util.get_dataloader(cfg_test_loader['dataset_args'], cfg_test_loader['dataloader_args'])
+test_loader1 = trainer_util.get_dataloader(cfg_test_loader1['dataset_args'], cfg_test_loader1['dataloader_args'])
+test_loader2 = trainer_util.get_dataloader(cfg_test_loader2['dataset_args'], cfg_test_loader2['dataloader_args'])
+test_loader3 = trainer_util.get_dataloader(cfg_test_loader3['dataset_args'], cfg_test_loader3['dataloader_args'])
 
 # Getting parameters for test
-dataset = cfg_test_loader['dataset_args']
+dataset = cfg_test_loader1['dataset_args']
 h = int((dataset['crop_size']/dataset['aspect_ratio']))
 w = int(dataset['crop_size'])
 
@@ -112,11 +117,11 @@ for epoch in iter_counter.training_epochs():
             best_val_loss = avg_val_loss
             trainer.save(save_fdr, 'best', exp_name)
     
-    # Starts Testing
-        print('Starting Testing For ROC Curve')
-        flat_pred = np.zeros(w * h * len(test_loader))
-        flat_labels = np.zeros(w * h * len(test_loader))
-        for i, data_i in enumerate(tqdm(test_loader)):
+    # Starts Testing (Test Set 1)
+        print('Starting Testing For %s' % os.path.basename(cfg_test_loader1['dataset_args']['dataroot']))
+        flat_pred = np.zeros(w * h * len(test_loader1))
+        flat_labels = np.zeros(w * h * len(test_loader1))
+        for i, data_i in enumerate(tqdm(test_loader1)):
             original = data_i['original'].cuda()
             semantic = data_i['semantic'].cuda()
             synthesis = data_i['synthesis'].cuda()
@@ -127,13 +132,89 @@ for epoch in iter_counter.training_epochs():
             (softmax_pred, predictions) = torch.max(outputs, dim=1)
             flat_pred[i * w * h:i * w * h + w * h] = torch.flatten(outputs[:, 1, :, :]).detach().cpu().numpy()
             flat_labels[i * w * h:i * w * h + w * h] = torch.flatten(label).detach().cpu().numpy()
+
+        if config['test_dataloader1']['dataset_args']['roi']:
+            invalid_indices = np.argwhere(flat_labels == 255)
+            flat_labels = np.delete(flat_labels, invalid_indices)
+            flat_pred = np.delete(flat_pred, invalid_indices)
             
-        print('Calculating AUC-ROC score')
-        fpr, tpr, _ = metrics.roc_curve(flat_labels, flat_pred)
-        roc_auc = metrics.auc(fpr, tpr)
-        print('AUC for ROC: %f' % roc_auc)
+        print('Calculating metrics')
+        results = metrics.get_metrics(flat_labels, flat_pred)
+        print('AU_ROC: %f' % results['auroc'])
+        print('mAP: %f' % results['AP'])
+        print('FPR@95TPR: %f' % results['FPR@95%TPR'])
     
-        test_writer.add_scalar('AUC_ROC', roc_auc, epoch)
+        test_writer.add_scalar('%s AUC_ROC' % os.path.basename(cfg_test_loader1['dataset_args']['dataroot']), results['auroc'], epoch)
+        test_writer.add_scalar('%s mAP' % os.path.basename(cfg_test_loader1['dataset_args']['dataroot']), results['AP'], epoch)
+        test_writer.add_scalar('%s FPR@95TPR' % os.path.basename(cfg_test_loader1['dataset_args']['dataroot']), results['FPR@95%TPR'], epoch)
+
+        # Starts Testing (Test Set 2)
+        print('Starting Testing For %s' % os.path.basename(cfg_test_loader2['dataset_args']['dataroot']))
+        flat_pred = np.zeros(w * h * len(test_loader2))
+        flat_labels = np.zeros(w * h * len(test_loader2))
+        for i, data_i in enumerate(tqdm(test_loader2)):
+            original = data_i['original'].cuda()
+            semantic = data_i['semantic'].cuda()
+            synthesis = data_i['synthesis'].cuda()
+            label = data_i['label'].cuda()
+    
+            # Evaluating
+            loss, outputs = trainer.run_validation(original, synthesis, semantic, label)
+            (softmax_pred, predictions) = torch.max(outputs, dim=1)
+            flat_pred[i * w * h:i * w * h + w * h] = torch.flatten(outputs[:, 1, :, :]).detach().cpu().numpy()
+            flat_labels[i * w * h:i * w * h + w * h] = torch.flatten(label).detach().cpu().numpy()
+
+        if config['test_dataloader2']['dataset_args']['roi']:
+            invalid_indices = np.argwhere(flat_labels == 255)
+            flat_labels = np.delete(flat_labels, invalid_indices)
+            flat_pred = np.delete(flat_pred, invalid_indices)
+
+        print('Calculating metrics')
+        results = metrics.get_metrics(flat_labels, flat_pred)
+        print('AU_ROC: %f' % results['auroc'])
+        print('mAP: %f' % results['AP'])
+        print('FPR@95TPR: %f' % results['FPR@95%TPR'])
+
+        test_writer.add_scalar('%s AUC_ROC' % os.path.basename(cfg_test_loader2['dataset_args']['dataroot']),
+                               results['auroc'], epoch)
+        test_writer.add_scalar('%s mAP' % os.path.basename(cfg_test_loader2['dataset_args']['dataroot']), results['AP'],
+                               epoch)
+        test_writer.add_scalar('%s FPR@95TPR' % os.path.basename(cfg_test_loader2['dataset_args']['dataroot']),
+                               results['FPR@95%TPR'], epoch)
+        
+        # Starts Testing (Test Set 3)
+        print('Starting Testing For %s' % os.path.basename(cfg_test_loader3['dataset_args']['dataroot']))
+        flat_pred = np.zeros(w * h * len(test_loader3))
+        flat_labels = np.zeros(w * h * len(test_loader3))
+        for i, data_i in enumerate(tqdm(test_loader3)):
+            original = data_i['original'].cuda()
+            semantic = data_i['semantic'].cuda()
+            synthesis = data_i['synthesis'].cuda()
+            label = data_i['label'].cuda()
+    
+            # Evaluating
+            loss, outputs = trainer.run_validation(original, synthesis, semantic, label)
+            (softmax_pred, predictions) = torch.max(outputs, dim=1)
+            flat_pred[i * w * h:i * w * h + w * h] = torch.flatten(outputs[:, 1, :, :]).detach().cpu().numpy()
+            flat_labels[i * w * h:i * w * h + w * h] = torch.flatten(label).detach().cpu().numpy()
+
+        if config['test_dataloader3']['dataset_args']['roi']:
+            invalid_indices = np.argwhere(flat_labels == 255)
+            flat_labels = np.delete(flat_labels, invalid_indices)
+            flat_pred = np.delete(flat_pred, invalid_indices)
+
+        print('Calculating metrics')
+        results = metrics.get_metrics(flat_labels, flat_pred)
+        print('AU_ROC: %f' % results['auroc'])
+        print('mAP: %f' % results['AP'])
+        print('FPR@95TPR: %f' % results['FPR@95%TPR'])
+
+        test_writer.add_scalar('%s AUC_ROC' % os.path.basename(cfg_test_loader3['dataset_args']['dataroot']),
+                               results['auroc'], epoch)
+        test_writer.add_scalar('%s mAP' % os.path.basename(cfg_test_loader3['dataset_args']['dataroot']), results['AP'],
+                               epoch)
+        test_writer.add_scalar('%s FPR@95TPR' % os.path.basename(cfg_test_loader3['dataset_args']['dataroot']),
+                               results['FPR@95%TPR'], epoch)
     
     print('saving the latest model (epoch %d, total_steps %d)' %
           (epoch, iter_counter.total_steps_so_far))
