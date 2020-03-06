@@ -3,6 +3,7 @@ experiment_name: final_baseline # where checkpoints are stored
 save_folder: results/ # where checkpoints are stored
 which_epoch: best
 store_results: /home/giancarlo/road-anomaly/
+visualize: False
 
 # model options
 model:
