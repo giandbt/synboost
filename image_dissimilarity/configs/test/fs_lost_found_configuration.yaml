@@ -20,7 +20,7 @@ dataset:
 # parameters for dataloaders
 test_dataloader:
   dataset_args:
-    dataroot: /home/giancarlo/data/innosuisse/fs_lost_found
+    dataroot: /home/giancarlo/data/innosuisse/fs_lost_and_found
     preprocess_mode: fixed
     load_size: 1024
     crop_size: 1024
