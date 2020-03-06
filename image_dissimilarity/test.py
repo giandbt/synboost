@@ -59,6 +59,7 @@ h = int((dataset['crop_size']/dataset['aspect_ratio']))
 w = int(dataset['crop_size'])
 flat_pred = np.zeros(w*h*len(test_loader), dtype='float32')
 flat_labels = np.zeros(w*h*len(test_loader), dtype='float32')
+num_points=50
 
 with torch.no_grad():
     for i, data_i in enumerate(tqdm(test_loader)):
@@ -82,20 +83,93 @@ with torch.no_grad():
         predicted_img.save(os.path.join(store_fdr, 'pred', file_name))
         label_img.save(os.path.join(store_fdr, 'label', file_name))
 
-print('Calculating AUC-ROC score')
+print('Calculating metric scores')
 if config['test_dataloader']['dataset_args']['roi']:
     invalid_indices = np.argwhere(flat_labels == 255)
     flat_labels = np.delete(flat_labels, invalid_indices)
     flat_pred = np.delete(flat_pred, invalid_indices)
 
-fpr, tpr, _ = metrics.roc_curve(flat_labels, flat_pred)
-roc_auc = metrics.auc(fpr, tpr)
-print("roc_auc_score : " + str(roc_auc))
+# From fishyscapes code
+# NOW CALCULATE METRICS
+pos = flat_labels == 1
+valid = flat_labels <= 1  # filter out void
+gt = pos[valid]
+del pos
+uncertainty = flat_pred[valid].reshape(-1).astype(np.float32, copy=False)
+del valid
+
+# Sort the classifier scores (uncertainties)
+sorted_indices = np.argsort(uncertainty, kind='mergesort')[::-1]
+uncertainty, gt = uncertainty[sorted_indices], gt[sorted_indices]
+del sorted_indices
+
+# Remove duplicates along the curve
+distinct_value_indices = np.where(np.diff(uncertainty))[0]
+threshold_idxs = np.r_[distinct_value_indices, gt.size - 1]
+del distinct_value_indices, uncertainty
+
+# Accumulate TPs and FPs
+tps = np.cumsum(gt, dtype=np.uint64)[threshold_idxs]
+fps = 1 + threshold_idxs - tps
+del threshold_idxs
+
+# Compute Precision and Recall
+precision = tps / (tps + fps)
+precision[np.isnan(precision)] = 0
+recall = tps / tps[-1]
+# stop when full recall attained and reverse the outputs so recall is decreasing
+sl = slice(tps.searchsorted(tps[-1]), None, -1)
+precision = np.r_[precision[sl], 1]
+recall = np.r_[recall[sl], 0]
+average_precision = -np.sum(np.diff(recall) * precision[:-1])
+
+# select num_points values for a plotted curve
+interval = 1.0 / num_points
+curve_precision = [precision[-1]]
+curve_recall = [recall[-1]]
+idx = recall.size - 1
+for p in range(1, num_points):
+    while recall[idx] < p * interval:
+        idx -= 1
+    curve_precision.append(precision[idx])
+    curve_recall.append(recall[idx])
+curve_precision.append(precision[0])
+curve_recall.append(recall[0])
+del precision, recall
+
+if tps.size == 0 or fps[0] != 0 or tps[0] != 0:
+    # Add an extra threshold position if necessary
+    # to make sure that the curve starts at (0, 0)
+    tps = np.r_[0., tps]
+    fps = np.r_[0., fps]
+
+# Compute TPR and FPR
+tpr = tps / tps[-1]
+del tps
+fpr = fps / fps[-1]
+del fps
+
+# Compute AUROC
+auroc = np.trapz(tpr, fpr)
+
+# Compute FPR@95%TPR
+fpr_tpr95 = fpr[np.searchsorted(tpr, 0.95)]
+results = {
+    'auroc': auroc,
+    'AP': average_precision,
+    'FPR@95%TPR': fpr_tpr95,
+    'recall': np.array(curve_recall),
+    'precision': np.array(curve_precision),
+    }
+
+print("roc_auc_score : " + str(results['auroc']))
+print("mAP: " + str(results['AP']))
+print("FPR@95%TPR : " + str(results['FPR@95%TPR']))
 
 plt.figure()
 lw = 2
 plt.plot(fpr, tpr, color='darkorange',
-         lw=lw, label='ROC curve (area = %0.2f)' % roc_auc)
+         lw=lw, label='ROC curve (area = %0.2f)' % results['auroc'])
 plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
 plt.xlim([0.0, 1.0])
 plt.ylim([0.0, 1.0])
