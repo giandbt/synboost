@@ -20,6 +20,7 @@ class DissimNet(nn.Module):
         # all the 3x3 convolutions
         if correlation:
             self.conv1 = nn.Sequential(nn.Conv2d(513, 256, kernel_size=3, padding=1), nn.SELU())
+            self.conv12 = nn.Sequential(nn.Conv2d(513, 256, kernel_size=3, padding=1), nn.SELU())
             self.conv3 = nn.Sequential(nn.Conv2d(385, 128, kernel_size=3, padding=1), nn.SELU())
             self.conv5 = nn.Sequential(nn.Conv2d(193, 64, kernel_size=3, padding=1), nn.SELU())
             
@@ -30,10 +31,12 @@ class DissimNet(nn.Module):
             self.corr4 = nn.Conv2d(64, 1, kernel_size=1, padding=0)
         else:
             self.conv1 = nn.Sequential(nn.Conv2d(512, 256, kernel_size=3, padding=1), nn.SELU())
+            self.conv12 = nn.Sequential(nn.Conv2d(512, 256, kernel_size=3, padding=1), nn.SELU())
             self.conv3 = nn.Sequential(nn.Conv2d(384, 128, kernel_size=3, padding=1), nn.SELU())
             self.conv5 = nn.Sequential(nn.Conv2d(192, 64, kernel_size=3, padding=1), nn.SELU())
             
         self.conv2 = nn.Sequential(nn.Conv2d(256, 256, kernel_size=3, padding=1), nn.SELU())
+        self.conv13 = nn.Sequential(nn.Conv2d(256, 256, kernel_size=3, padding=1), nn.SELU())
         self.conv4 = nn.Sequential(nn.Conv2d(128, 128, kernel_size=3, padding=1), nn.SELU())
         self.conv6 = nn.Sequential(nn.Conv2d(64, 64, kernel_size=3, padding=1), nn.SELU())
 
@@ -101,8 +104,8 @@ class DissimNet(nn.Module):
         x = self.tconv1(x)
         
         x = torch.cat((x, layer3_cat), dim=1)
-        x = self.conv1(x)
-        x = self.conv2(x)
+        x = self.conv12(x)
+        x = self.conv13(x)
         x = self.tconv1(x)
 
         x = torch.cat((x, layer2_cat), dim=1)

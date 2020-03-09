@@ -1,5 +1,5 @@
 # Name of the experiment for saving files
-experiment_name: final_baseline
+experiment_name: final_baseline_2
 save_folder: results/
 
 # Define training strategy
@@ -16,6 +16,7 @@ model:
   # Define accordingly, e.g.
   parameters:
     pretrained: True
+    correlation: True
 
 # logger options
 logger:
