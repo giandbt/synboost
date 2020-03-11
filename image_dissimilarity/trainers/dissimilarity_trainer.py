@@ -51,7 +51,11 @@ class DissimilarityTrainer():
         
         if config['training_strategy']['class_weight']:
             if not config['training_strategy']['class_weight_cityscapes']:
-                label_path = os.path.join(config['train_dataloader']['dataset_args']['dataroot'], 'labels/')
+                if config['train_dataloader']['dataset_args']['void']:
+                    label_path = os.path.join(config['train_dataloader']['dataset_args']['dataroot'], 'labels_with_void/')
+                else:
+                    label_path = os.path.join(config['train_dataloader']['dataset_args']['dataroot'], 'labels/')
+                    
                 full_loader = trainer_util.loader(label_path, batch_size='all')
                 print('Getting class weights for cross entropy loss. This might take some time.')
                 class_weights = trainer_util.get_class_weights(full_loader, num_classes=2)
