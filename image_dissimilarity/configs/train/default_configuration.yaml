@@ -1,5 +1,5 @@
 # Name of the experiment for saving files
-experiment_name: baseline
+experiment_name: baseline_void
 save_folder: results/
 
 # Define training strategy
@@ -60,19 +60,21 @@ train_dataloader:
     aspect_ratio: 2
     image_set: train
     no_flip: false
+    void: True
   dataloader_args:
     batch_size: 4
     num_workers: 2
     shuffle: True
 val_dataloader:
   dataset_args:
-    dataroot: /home/giancarlo/data/innosuisse/fs_lost_and_found
+    dataroot: /home/giancarlo/data/innosuisse/epfl/val
     preprocess_mode: fixed
     load_size: 1024
     crop_size: 512
     aspect_ratio: 2
     image_set: val
     no_flip: True
+    void: True
   dataloader_args:
     batch_size: 1
     num_workers: 1

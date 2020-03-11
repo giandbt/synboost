@@ -21,7 +21,7 @@ INVALID_LABELED_FRAMES = [17,  37,  55,  72,  91, 110, 129, 153, 174, 197, 218, 
 class CityscapesDataset(Dataset):
     
     def __init__(self, dataroot, preprocess_mode, image_set, load_size=1024, crop_size=512, 
-                 aspect_ratio= 0.5, no_flip=False, only_valid = False, roi = False):
+                 aspect_ratio= 0.5, no_flip=False, only_valid = False, roi = False, void = False):
         self.original_paths = [os.path.join(dataroot, 'original', image)
                                for image in os.listdir(os.path.join(dataroot, 'original'))]
         self.semantic_paths = [os.path.join(dataroot, 'semantic', image)
@@ -31,6 +31,9 @@ class CityscapesDataset(Dataset):
         if roi:
             self.label_paths = [os.path.join(dataroot, 'labels_with_ROI', image)
                                 for image in os.listdir(os.path.join(dataroot, 'labels_with_ROI'))]
+        elif void:
+            self.label_paths = [os.path.join(dataroot, 'labels_with_void', image)
+                                for image in os.listdir(os.path.join(dataroot, 'labels_with_void'))]
         else:
             self.label_paths = [os.path.join(dataroot, 'labels', image)
                                 for image in os.listdir(os.path.join(dataroot, 'labels'))]
