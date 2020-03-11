@@ -2,17 +2,24 @@ import torch.nn as nn
 import torch
 
 from models.semantic_encoder import SemanticEncoder
-from models.vgg_features import VGGFeatures
+from models.vgg_features import VGGFeatures, VGG_SPADE
 
 class DissimNet(nn.Module):
-    def __init__(self, architecture='vgg16', semantic=True, pretrained=True, correlation = True):
+    def __init__(self, architecture='vgg16', semantic=True, pretrained=True, correlation = True, spade=True):
         super(DissimNet, self).__init__()
         
+        #get initialization parameters
         self.correlation = correlation
-        self.semantic = semantic
+        self.spade = spade
+        self.semantic = False if self.spade else semantic
+        
         
         # generate encoders
-        self.vgg_encoder = VGGFeatures(architecture=architecture, pretrained=pretrained)
+        if spade:
+            self.vgg_encoder = VGG_SPADE()
+        else:
+            self.vgg_encoder = VGGFeatures(architecture=architecture, pretrained=pretrained)
+            
         if self.semantic:
             self.semantic_encoder = SemanticEncoder(architecture=architecture)
         
@@ -76,8 +83,13 @@ class DissimNet(nn.Module):
 
     def forward(self, original_img, synthesis_img, semantic_img, softmax_out=False):
         # get all the image encodings
-        self.encoding_og = self.vgg_encoder(original_img)
-        self.encoding_syn = self.vgg_encoder(synthesis_img)
+        if self.spade:
+            self.encoding_og = self.vgg_encoder(original_img, semantic_img)
+            self.encoding_syn = self.vgg_encoder(synthesis_img, semantic_img)
+        else:
+            self.encoding_og = self.vgg_encoder(original_img)
+            self.encoding_syn = self.vgg_encoder(synthesis_img)
+        
         if self.semantic:
             self.encoding_sem = self.semantic_encoder(semantic_img)
             # concatenate the output of each encoder

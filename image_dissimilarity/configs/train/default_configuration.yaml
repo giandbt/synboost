@@ -16,9 +16,10 @@ model:
   semantic: True
   pretrained: True
   correlation: True
+  spade: True
 
 # logger options
-logger:git
+logger:
   results_dir: ./logs
   save_epoch_freq: 1 #frequency of saving checkpoints at the end of epochs
 

@@ -1,5 +1,9 @@
 import torch.nn as nn
 import torchvision.models
+import torch
+import sys
+sys.path.append("..")
+from models.normalization import SPADE
 
 class VGGFeatures(nn.Module):
 
@@ -42,6 +46,79 @@ def make_layers(cfg, batch_norm=False):
 				layers += [conv2d, nn.ReLU(inplace=True)]
 			in_channels = v
 	return nn.Sequential(*layers)
+
+
+class VGG_SPADE(torch.nn.Module):
+	def __init__(self, label_nc=19):
+		
+		super(VGG_SPADE, self).__init__()
+		vgg_pretrained_features = torchvision.models.vgg16_bn(pretrained=True).features
+		
+		self.norm_layer_1 = SPADE(norm_nc=64, label_nc=label_nc)
+		self.norm_layer_2 = SPADE(norm_nc=64, label_nc=label_nc)
+		self.norm_layer_3 = SPADE(norm_nc=128, label_nc=label_nc)
+		self.norm_layer_4 = SPADE(norm_nc=128, label_nc=label_nc)
+		self.norm_layer_5 = SPADE(norm_nc=256, label_nc=label_nc)
+		self.norm_layer_6 = SPADE(norm_nc=256, label_nc=label_nc)
+		self.norm_layer_7 = SPADE(norm_nc=256, label_nc=label_nc)
+		self.norm_layer_8 = SPADE(norm_nc=512, label_nc=label_nc)
+		self.norm_layer_9 = SPADE(norm_nc=512, label_nc=label_nc)
+		self.norm_layer_10 = SPADE(norm_nc=512, label_nc=label_nc)
+		
+		# TODO Reformat to make it more efficient/clean code
+		self.slice1 = nn.Sequential()
+		self.slice2 = nn.Sequential()
+		self.slice3 = nn.Sequential()
+		self.slice4 = nn.Sequential()
+		self.slice5 = nn.Sequential()
+		self.slice6 = nn.Sequential()
+		self.slice7 = nn.Sequential()
+		self.slice8 = nn.Sequential()
+		self.slice9 = nn.Sequential()
+		self.slice10 = nn.Sequential()
+		self.slice11 = nn.Sequential()
+		self.slice12 = nn.Sequential()
+		self.slice13 = nn.Sequential()
+		self.slice14 = nn.Sequential()
+		
+		for x in range(1):
+			self.slice1.add_module(str(x), vgg_pretrained_features[x])
+		for x in range(2, 4):
+			self.slice2.add_module(str(x), vgg_pretrained_features[x])
+		for x in range(5, 6):
+			self.slice3.add_module(str(x), vgg_pretrained_features[x])
+		for x in range(6, 8):
+			self.slice4.add_module(str(x), vgg_pretrained_features[x])
+		for x in range(9, 11):
+			self.slice5.add_module(str(x), vgg_pretrained_features[x])
+		for x in range(12, 13):
+			self.slice6.add_module(str(x), vgg_pretrained_features[x])
+		for x in range(13, 15):
+			self.slice7.add_module(str(x), vgg_pretrained_features[x])
+		for x in range(16, 18):
+			self.slice8.add_module(str(x), vgg_pretrained_features[x])
+		for x in range(19, 21):
+			self.slice9.add_module(str(x), vgg_pretrained_features[x])
+		for x in range(22, 23):
+			self.slice10.add_module(str(x), vgg_pretrained_features[x])
+		for x in range(23, 25):
+			self.slice11.add_module(str(x), vgg_pretrained_features[x])
+		for x in range(26, 28):
+			self.slice12.add_module(str(x), vgg_pretrained_features[x])
+		for x in range(29, 31):
+			self.slice13.add_module(str(x), vgg_pretrained_features[x])
+		for x in range(32, 33):
+			self.slice14.add_module(str(x), vgg_pretrained_features[x])
+	
+	def forward(self, img, semantic_img):
+		h_relu1 = self.slice3(self.norm_layer_2(self.slice2(self.norm_layer_1(self.slice1(img), semantic_img)), semantic_img))
+		h_relu2 = self.slice6(self.norm_layer_4(self.slice5(self.norm_layer_3(self.slice4(h_relu1), semantic_img)), semantic_img))
+		h_relu3 = self.slice10(self.norm_layer_7(self.slice9(self.norm_layer_6(self.slice8(self.norm_layer_5(self.slice7(h_relu2), semantic_img)), semantic_img)), semantic_img))
+		h_relu4 = self.slice14(self.norm_layer_10(self.slice13(self.norm_layer_9(self.slice12(self.norm_layer_8(self.slice11(h_relu3), semantic_img)), semantic_img)), semantic_img))
+		
+		out = [h_relu1, h_relu2, h_relu3, h_relu4]
+		
+		return out
 
 if __name__ == "__main__":
 	from PIL import Image

@@ -11,6 +11,7 @@ model:
   semantic: True
   pretrained: True
   correlation: True
+  spade: True
 
 # parameters for dataset
 dataset:
