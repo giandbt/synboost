@@ -23,7 +23,7 @@ test_dataloader:
     dataroot: /home/giancarlo/data/innosuisse/road_anomaly
     preprocess_mode: fixed
     load_size: 1024
-    crop_size: 1024
+    crop_size: 512
     aspect_ratio: 2
     image_set: val
     no_flip: False

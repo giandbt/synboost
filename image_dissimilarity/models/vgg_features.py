@@ -1,14 +1,25 @@
 import torch.nn as nn
+import torchvision.models
 
 class VGGFeatures(nn.Module):
 
-	def __init__(self, original_model):
+	def __init__(self, architecture='vgg16', pretrained=True):
 		super(VGGFeatures, self).__init__()
-		self.layer1 = nn.Sequential(*list(original_model.children())[0][:4])
-		self.layer2 = nn.Sequential(*list(original_model.children())[0][4:9])
-		self.layer3 = nn.Sequential(*list(original_model.children())[0][9:16])
-		self.layer4 = nn.Sequential(*list(original_model.children())[0][16:23])
-
+		
+		if 'bn' not in architecture:
+			vgg16 = torchvision.models.vgg16(pretrained=pretrained)
+			
+			self.layer1 = nn.Sequential(*list(vgg16.children())[0][:4])
+			self.layer2 = nn.Sequential(*list(vgg16.children())[0][4:9])
+			self.layer3 = nn.Sequential(*list(vgg16.children())[0][9:16])
+			self.layer4 = nn.Sequential(*list(vgg16.children())[0][16:23])
+		else:
+			vgg16_bn = torchvision.models.vgg16_bn(pretrained=pretrained)
+			self.layer1 = nn.Sequential(*list(vgg16_bn.children())[0][:6])
+			self.layer2 = nn.Sequential(*list(vgg16_bn.children())[0][6:13])
+			self.layer3 = nn.Sequential(*list(vgg16_bn.children())[0][13:23])
+			self.layer4 = nn.Sequential(*list(vgg16_bn.children())[0][23:33])
+			
 	def forward(self, x):
 		x1 = self.layer1(x)
 		x2 = self.layer2(x1)
@@ -38,8 +49,7 @@ if __name__ == "__main__":
 	import torchvision.transforms as transforms
 	
 	img = Image.open('../../sample_images/zm0002_100000.png')
-	vgg16 = models.vgg16()
-	vgg_features = VGGFeatures(original_model=vgg16)
+	vgg_features = VGGFeatures(architecture='vgg16', pretrained=True)
 	img_transform = transforms.Compose([transforms.ToTensor()])
 	img_tensor = img_transform(img)
 	outputs = vgg_features(img_tensor.unsqueeze(0))

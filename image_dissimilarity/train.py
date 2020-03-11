@@ -3,7 +3,7 @@ import yaml
 import os
 from tqdm import tqdm
 import numpy as np
-from sklearn import metrics
+import shutil
 
 import torch.backends.cudnn as cudnn
 import torch
@@ -38,6 +38,9 @@ if not os.path.isdir(logs_fdr):
 train_writer = SummaryWriter(os.path.join(logs_fdr, exp_name, 'train'), flush_secs=30)
 val_writer = SummaryWriter(os.path.join(logs_fdr, exp_name, 'validation'), flush_secs=30)
 test_writer = SummaryWriter(os.path.join(logs_fdr, exp_name, 'test'), flush_secs=30)
+
+# Save config file use for experiment
+shutil.copy(opts.config, os.path.join(logs_fdr, exp_name, 'config.yaml'))
 
 # Activate GPUs
 config['gpu_ids'] = opts.gpu_ids

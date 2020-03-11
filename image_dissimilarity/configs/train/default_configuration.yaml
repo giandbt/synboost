@@ -1,33 +1,30 @@
 # Name of the experiment for saving files
-experiment_name: default
+experiment_name: baseline
 save_folder: results/
 
 # Define training strategy
 training_strategy:
-  niter: 25 # of iter at starting learning rate. Total #epochs is niter + niter_decay'
-  niter_decay: 25 # of iter to linearly decay learning rate to zero
+  niter: 50 # of iter at starting learning rate. Total #epochs is niter + niter_decay'
+  niter_decay: 0 # of iter to linearly decay learningd rate to zero
   is_train: True
   class_weight: True
-  class_weight_cityscapes: False
+  class_weight_cityscapes: True
 
 # model options
 model:
-  architecture: vgg16 #[options: 'vgg16']
+  architecture: vgg16_bn #[options: 'vgg16', vgg16_bn]
   # Define accordingly, e.g.
   parameters:
     pretrained: True
+    correlation: True
 
 # logger options
 logger:
-  experiment_name: default
-  train_log_iter: 100             # How often do you want to log the training stats
-  val_log_iter: 1000              # How often do you want to log the validation stats
-  image_log_iter: 1000            # How often do you want to display output images during training
-  results_dir: ./checkpoints
-  save_epoch_freq: 5 #frequency of saving checkpoints at the end of epochs
+  results_dir: ./logs
+  save_epoch_freq: 1 #frequency of saving checkpoints at the end of epochs
 
 # loss options (remove tasks not needed)
-loss:  BCEWithLogitsLoss
+loss:  CrossEntropyLoss
 
 # optimization options
 optimizer:
@@ -55,24 +52,69 @@ dataset:
 # parameters for dataloaders
 train_dataloader:
   dataset_args:
-    dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/dissimilarity_model/epfl/train
+    dataroot: /home/giancarlo/data/innosuisse/epfl/train
+    #dataroot: /home/giancarlo/data/innosuisse/road_anomaly (only for quick debugging)
     preprocess_mode: fixed
     load_size: 1024
-    crop_size: 1024
+    crop_size: 512
+    aspect_ratio: 2
     image_set: train
     no_flip: false
+  dataloader_args:
+    batch_size: 4
+    num_workers: 2
+    shuffle: True
+val_dataloader:
+  dataset_args:
+    dataroot: /home/giancarlo/data/innosuisse/fs_lost_and_found
+    preprocess_mode: fixed
+    load_size: 1024
+    crop_size: 512
+    aspect_ratio: 2
+    image_set: val
+    no_flip: True
   dataloader_args:
     batch_size: 1
     num_workers: 1
     shuffle: False
-val_dataloader:
+test_dataloader1:
   dataset_args:
-    dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/dissimilarity_model/epfl/val
+    dataroot: /home/giancarlo/data/innosuisse/road_anomaly
     preprocess_mode: fixed
     load_size: 1024
-    crop_size: 1024
-    image_set: val
-    no_flip: false
+    crop_size: 512
+    aspect_ratio: 2
+    image_set: test
+    no_flip: True
+    roi: False
+  dataloader_args:
+    batch_size: 1
+    num_workers: 1
+    shuffle: False
+test_dataloader2:
+  dataset_args:
+    dataroot: /home/giancarlo/data/innosuisse/fs_static
+    preprocess_mode: fixed
+    load_size: 1024
+    crop_size: 512
+    aspect_ratio: 2
+    image_set: test
+    no_flip: True
+    roi: True
+  dataloader_args:
+    batch_size: 1
+    num_workers: 1
+    shuffle: False
+test_dataloader3:
+  dataset_args:
+    dataroot: /home/giancarlo/data/innosuisse/fs_lost_and_found
+    preprocess_mode: fixed
+    load_size: 1024
+    crop_size: 512
+    aspect_ratio: 2
+    image_set: test
+    no_flip: True
+    roi: True
   dataloader_args:
     batch_size: 1
     num_workers: 1

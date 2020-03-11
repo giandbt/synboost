@@ -1,20 +1,18 @@
 import torch.nn as nn
-import torchvision.models
 import torch
 
 from models.semantic_encoder import SemanticEncoder
 from models.vgg_features import VGGFeatures
 
 class DissimNet(nn.Module):
-    def __init__(self, pretrained=True, correlation = True):
+    def __init__(self, architecture='vgg16', pretrained=True, correlation = True):
         super(DissimNet, self).__init__()
         
         self.correlation = correlation
         
         # generate encoders
-        vgg16 = torchvision.models.vgg16(pretrained=pretrained)
-        self.vgg_encoder = VGGFeatures(original_model=vgg16)
-        self.semantic_encoder = SemanticEncoder()
+        self.vgg_encoder = VGGFeatures(architecture=architecture, pretrained=pretrained)
+        self.semantic_encoder = SemanticEncoder(architecture=architecture)
         
         # layers for decoder
         # all the 3x3 convolutions
