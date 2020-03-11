@@ -13,13 +13,12 @@ training_strategy:
 # model options
 model:
   architecture: vgg16_bn #[options: 'vgg16', vgg16_bn]
-  # Define accordingly, e.g.
-  parameters:
-    pretrained: True
-    correlation: True
+  semantic: True
+  pretrained: True
+  correlation: True
 
 # logger options
-logger:
+logger:git
   results_dir: ./logs
   save_epoch_freq: 1 #frequency of saving checkpoints at the end of epochs
 

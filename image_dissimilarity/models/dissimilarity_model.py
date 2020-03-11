@@ -5,14 +5,16 @@ from models.semantic_encoder import SemanticEncoder
 from models.vgg_features import VGGFeatures
 
 class DissimNet(nn.Module):
-    def __init__(self, architecture='vgg16', pretrained=True, correlation = True):
+    def __init__(self, architecture='vgg16', semantic=True, pretrained=True, correlation = True):
         super(DissimNet, self).__init__()
         
         self.correlation = correlation
+        self.semantic = semantic
         
         # generate encoders
         self.vgg_encoder = VGGFeatures(architecture=architecture, pretrained=pretrained)
-        self.semantic_encoder = SemanticEncoder(architecture=architecture)
+        if self.semantic:
+            self.semantic_encoder = SemanticEncoder(architecture=architecture)
         
         # layers for decoder
         # all the 3x3 convolutions
@@ -43,11 +45,18 @@ class DissimNet(nn.Module):
         self.tconv2 = nn.ConvTranspose2d(128, 128, kernel_size=2, stride=2, padding=0)
 
         # all the other 1x1 convolutions
-        self.conv7 = nn.Conv2d(1280, 512, kernel_size=1, padding=0)
-        self.conv8 = nn.Conv2d(640, 256, kernel_size=1, padding=0)
-        self.conv9 = nn.Conv2d(320, 128, kernel_size=1, padding=0)
-        self.conv10 = nn.Conv2d(160, 64, kernel_size=1, padding=0)
-        self.conv11 = nn.Conv2d(64, 2, kernel_size=1, padding=0)
+        if self.semantic:
+            self.conv7 = nn.Conv2d(1280, 512, kernel_size=1, padding=0)
+            self.conv8 = nn.Conv2d(640, 256, kernel_size=1, padding=0)
+            self.conv9 = nn.Conv2d(320, 128, kernel_size=1, padding=0)
+            self.conv10 = nn.Conv2d(160, 64, kernel_size=1, padding=0)
+            self.conv11 = nn.Conv2d(64, 2, kernel_size=1, padding=0)
+        else:
+            self.conv7 = nn.Conv2d(1024, 512, kernel_size=1, padding=0)
+            self.conv8 = nn.Conv2d(512, 256, kernel_size=1, padding=0)
+            self.conv9 = nn.Conv2d(256, 128, kernel_size=1, padding=0)
+            self.conv10 = nn.Conv2d(128, 64, kernel_size=1, padding=0)
+            self.conv11 = nn.Conv2d(64, 2, kernel_size=1, padding=0)
         
         #self._initialize_weights()
 
@@ -69,13 +78,18 @@ class DissimNet(nn.Module):
         # get all the image encodings
         self.encoding_og = self.vgg_encoder(original_img)
         self.encoding_syn = self.vgg_encoder(synthesis_img)
-        self.encoding_sem = self.semantic_encoder(semantic_img)
-        
-        # concatenate the output of each encoder
-        layer1_cat = torch.cat((self.encoding_og[0], self.encoding_syn[0], self.encoding_sem[0]), dim=1)
-        layer2_cat = torch.cat((self.encoding_og[1], self.encoding_syn[1], self.encoding_sem[1]), dim=1)
-        layer3_cat = torch.cat((self.encoding_og[2], self.encoding_syn[2], self.encoding_sem[2]), dim=1)
-        layer4_cat = torch.cat((self.encoding_og[3], self.encoding_syn[3], self.encoding_sem[3]), dim=1)
+        if self.semantic:
+            self.encoding_sem = self.semantic_encoder(semantic_img)
+            # concatenate the output of each encoder
+            layer1_cat = torch.cat((self.encoding_og[0], self.encoding_syn[0], self.encoding_sem[0]), dim=1)
+            layer2_cat = torch.cat((self.encoding_og[1], self.encoding_syn[1], self.encoding_sem[1]), dim=1)
+            layer3_cat = torch.cat((self.encoding_og[2], self.encoding_syn[2], self.encoding_sem[2]), dim=1)
+            layer4_cat = torch.cat((self.encoding_og[3], self.encoding_syn[3], self.encoding_sem[3]), dim=1)
+        else:
+            layer1_cat = torch.cat((self.encoding_og[0], self.encoding_syn[0]), dim=1)
+            layer2_cat = torch.cat((self.encoding_og[1], self.encoding_syn[1]), dim=1)
+            layer3_cat = torch.cat((self.encoding_og[2], self.encoding_syn[2]), dim=1)
+            layer4_cat = torch.cat((self.encoding_og[3], self.encoding_syn[3]), dim=1)
                 
         # use 1x1 convolutions to reduce dimensions of concatenations
         layer4_cat = self.conv7(layer4_cat)

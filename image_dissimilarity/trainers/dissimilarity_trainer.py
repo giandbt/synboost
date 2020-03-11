@@ -28,7 +28,7 @@ class DissimilarityTrainer():
             self.gpu = 'cpu'
         
         if 'vgg' in config['model']['architecture']:
-            self.diss_model = DissimNet(config['model']['architecture'], **config['model']['parameters']).cuda(self.gpu)
+            self.diss_model = DissimNet(**config['model']).cuda(self.gpu)
         else:
             NotImplementedError()
         
