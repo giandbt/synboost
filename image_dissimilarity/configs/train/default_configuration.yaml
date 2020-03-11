@@ -12,7 +12,7 @@ training_strategy:
 
 # model options
 model:
-  architecture: vgg16_bn #[options: 'vgg16', vgg16_bn]
+  architecture: vgg16_guided #[options: 'vgg16', 'vgg16_bn', 'vgg16_guided']
   semantic: True
   pretrained: True
   correlation: True

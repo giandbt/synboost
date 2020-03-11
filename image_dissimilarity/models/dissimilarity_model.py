@@ -2,7 +2,10 @@ import torch.nn as nn
 import torch
 
 from models.semantic_encoder import SemanticEncoder
-from models.vgg_features import VGGFeatures, VGG_SPADE
+from models.vgg_features import VGGFeatures, VGGSPADE
+import sys
+sys.path.append("..")
+from models.normalization import SPADE, FILM
 
 class DissimNet(nn.Module):
     def __init__(self, architecture='vgg16', semantic=True, pretrained=True, correlation = True, spade=True):
@@ -13,10 +16,9 @@ class DissimNet(nn.Module):
         self.spade = spade
         self.semantic = False if self.spade else semantic
         
-        
         # generate encoders
         if spade:
-            self.vgg_encoder = VGG_SPADE()
+            self.vgg_encoder = VGGSPADE()
         else:
             self.vgg_encoder = VGGFeatures(architecture=architecture, pretrained=pretrained)
             
@@ -145,6 +147,258 @@ class DissimNet(nn.Module):
         self.final_prediction = x
 
         return self.final_prediction
+
+
+class GuidedDissimNet(nn.Module):
+    def __init__(self, architecture='vgg16', semantic=True, pretrained=True, correlation = True, spade=True):
+        super(GuidedDissimNet, self).__init__()
+        
+        vgg_pretrained_features = models.vgg16_bn(pretrained=pretrained).features
+        
+        # Encoder
+        self.norm_layer_1 = FILM(nc=64, guide_nc=64)
+        self.norm_layer_2 = FILM(nc=64, guide_nc=64)
+        self.norm_layer_3 = FILM(nc=128, guide_nc=128)
+        self.norm_layer_4 = FILM(nc=128, guide_nc=128)
+        self.norm_layer_5 = FILM(nc=256, guide_nc=256)
+        self.norm_layer_6 = FILM(nc=256, guide_nc=256)
+        self.norm_layer_7 = FILM(nc=256, guide_nc=256)
+        self.norm_layer_8 = FILM(nc=512, guide_nc=512)
+        self.norm_layer_9 = FILM(nc=512, guide_nc=512)
+        self.norm_layer_10 = FILM(nc=512, guide_nc=512)
+        self.norm_layer_11 = FILM(nc=64, guide_nc=64)
+        self.norm_layer_12 = FILM(nc=64, guide_nc=64)
+        self.norm_layer_13 = FILM(nc=128, guide_nc=128)
+        self.norm_layer_14 = FILM(nc=128, guide_nc=128)
+        self.norm_layer_15 = FILM(nc=256, guide_nc=256)
+        self.norm_layer_16 = FILM(nc=256, guide_nc=256)
+        self.norm_layer_17 = FILM(nc=256, guide_nc=256)
+        self.norm_layer_18 = FILM(nc=512, guide_nc=512)
+        self.norm_layer_19 = FILM(nc=512, guide_nc=512)
+        self.norm_layer_20 = FILM(nc=512, guide_nc=512)
+        
+        # TODO Reformat to make it more efficient/clean code
+        self.slice1 = nn.Sequential()
+        self.slice2 = nn.Sequential()
+        self.slice3 = nn.Sequential()
+        self.slice4 = nn.Sequential()
+        self.slice5 = nn.Sequential()
+        self.slice6 = nn.Sequential()
+        self.slice7 = nn.Sequential()
+        self.slice8 = nn.Sequential()
+        self.slice9 = nn.Sequential()
+        self.slice10 = nn.Sequential()
+        self.slice11 = nn.Sequential()
+        self.slice12 = nn.Sequential()
+        self.slice13 = nn.Sequential()
+        self.slice14 = nn.Sequential()
+        self.slice15 = nn.Sequential()
+        self.slice16 = nn.Sequential()
+        self.slice17 = nn.Sequential()
+        self.slice18 = nn.Sequential()
+        self.slice19 = nn.Sequential()
+        self.slice20 = nn.Sequential()
+        self.slice21 = nn.Sequential()
+        self.slice22 = nn.Sequential()
+        self.slice23 = nn.Sequential()
+        self.slice24 = nn.Sequential()
+        self.slice25 = nn.Sequential()
+        self.slice26 = nn.Sequential()
+        self.slice27 = nn.Sequential()
+        self.slice28 = nn.Sequential()
+        
+        for x in range(1):
+            self.slice1.add_module(str(x), vgg_pretrained_features[x])
+            self.slice15.add_module(str(x), vgg_pretrained_features[x])
+        for x in range(2, 4):
+            self.slice2.add_module(str(x), vgg_pretrained_features[x])
+            self.slice16.add_module(str(x), vgg_pretrained_features[x])
+        for x in range(5, 6):
+            self.slice3.add_module(str(x), vgg_pretrained_features[x])
+            self.slice17.add_module(str(x), vgg_pretrained_features[x])
+        for x in range(6, 8):
+            self.slice4.add_module(str(x), vgg_pretrained_features[x])
+            self.slice18.add_module(str(x), vgg_pretrained_features[x])
+        for x in range(9, 11):
+            self.slice5.add_module(str(x), vgg_pretrained_features[x])
+            self.slice19.add_module(str(x), vgg_pretrained_features[x])
+        for x in range(12, 13):
+            self.slice6.add_module(str(x), vgg_pretrained_features[x])
+            self.slice20.add_module(str(x), vgg_pretrained_features[x])
+        for x in range(13, 15):
+            self.slice7.add_module(str(x), vgg_pretrained_features[x])
+            self.slice21.add_module(str(x), vgg_pretrained_features[x])
+        for x in range(16, 18):
+            self.slice8.add_module(str(x), vgg_pretrained_features[x])
+            self.slice22.add_module(str(x), vgg_pretrained_features[x])
+        for x in range(19, 21):
+            self.slice9.add_module(str(x), vgg_pretrained_features[x])
+            self.slice23.add_module(str(x), vgg_pretrained_features[x])
+        for x in range(22, 23):
+            self.slice10.add_module(str(x), vgg_pretrained_features[x])
+            self.slice24.add_module(str(x), vgg_pretrained_features[x])
+        for x in range(23, 25):
+            self.slice11.add_module(str(x), vgg_pretrained_features[x])
+            self.slice25.add_module(str(x), vgg_pretrained_features[x])
+        for x in range(26, 28):
+            self.slice12.add_module(str(x), vgg_pretrained_features[x])
+            self.slice26.add_module(str(x), vgg_pretrained_features[x])
+        for x in range(29, 31):
+            self.slice13.add_module(str(x), vgg_pretrained_features[x])
+            self.slice27.add_module(str(x), vgg_pretrained_features[x])
+        for x in range(32, 33):
+            self.slice14.add_module(str(x), vgg_pretrained_features[x])
+            self.slice28.add_module(str(x), vgg_pretrained_features[x])
+        
+        # layers for decoder
+        # all the 3x3 convolutions
+        self.conv1 = nn.Sequential(nn.Conv2d(512, 256, kernel_size=3, padding=1), nn.SELU())
+        self.conv12 = nn.Sequential(nn.Conv2d(512, 256, kernel_size=3, padding=1), nn.SELU())
+        self.conv3 = nn.Sequential(nn.Conv2d(384, 128, kernel_size=3, padding=1), nn.SELU())
+        self.conv5 = nn.Sequential(nn.Conv2d(192, 64, kernel_size=3, padding=1), nn.SELU())
+        
+        # spade decoder
+        self.conv2 = SPADEDecoderLayer(nc=256, label_nc=19)
+        self.conv13 = SPADEDecoderLayer(nc=256, label_nc=19)
+        self.conv4 = SPADEDecoderLayer(nc=128, label_nc=19)
+        self.conv6 = SPADEDecoderLayer(nc=64, label_nc=19)
+        
+        # all the tranposed convolutions
+        self.tconv1 = nn.ConvTranspose2d(256, 256, kernel_size=2, stride=2, padding=0)
+        self.tconv2 = nn.ConvTranspose2d(128, 128, kernel_size=2, stride=2, padding=0)
+        
+        # all the other 1x1 convolutions
+        self.conv7 = nn.Conv2d(1024, 512, kernel_size=1, padding=0)
+        self.conv8 = nn.Conv2d(512, 256, kernel_size=1, padding=0)
+        self.conv9 = nn.Conv2d(256, 128, kernel_size=1, padding=0)
+        self.conv10 = nn.Conv2d(128, 64, kernel_size=1, padding=0)
+        self.conv11 = nn.Conv2d(64, 2, kernel_size=1, padding=0)
+
+        # self._initialize_weights()
+    
+    def _initialize_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.BatchNorm2d):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.Linear):
+                nn.init.normal_(m.weight, 0, 0.01)
+                nn.init.constant_(m.bias, 0)
+    
+    def forward(self, original_img, synthesis_img, semantic_img):
+        # get all the image encodings
+        og_1 = self.slice1(original_img)
+        syn_1 = self.slice15(synthesis_img)
+        
+        og_2 = self.norm_layer_1(og_1, syn_1)
+        syn_2 = self.norm_layer_11(og_1, syn_1)
+        
+        og_1 = self.slice2(og_2)
+        syn_1 = self.slice16(syn_2)
+        
+        layer1_og = self.slice3(self.norm_layer_2(og_1, syn_1))
+        layer1_syn = self.slice17(self.norm_layer_12(og_1, syn_1))
+        
+        og_1 = self.slice4(layer1_og)
+        syn_1 = self.slice18(layer1_syn)
+        
+        og_2 = self.norm_layer_3(og_1, syn_1)
+        syn_2 = self.norm_layer_13(og_1, syn_1)
+        
+        og_1 = self.slice5(og_2)
+        syn_1 = self.slice19(syn_2)
+        
+        layer2_og = self.slice6(self.norm_layer_4(og_1, syn_1))
+        layer2_syn = self.slice20(self.norm_layer_14(og_1, syn_1))
+        
+        og_1 = self.slice7(layer2_og)
+        syn_1 = self.slice21(layer2_syn)
+        
+        og_2 = self.norm_layer_5(og_1, syn_1)
+        syn_2 = self.norm_layer_15(og_1, syn_1)
+        
+        og_1 = self.slice8(og_2)
+        syn_1 = self.slice22(syn_2)
+        
+        og_2 = self.norm_layer_6(og_1, syn_1)
+        syn_2 = self.norm_layer_16(og_1, syn_1)
+        
+        og_1 = self.slice9(og_2)
+        syn_1 = self.slice23(syn_2)
+        
+        layer3_og = self.slice10(self.norm_layer_7(og_1, syn_1))
+        layer3_syn = self.slice24(self.norm_layer_17(og_1, syn_1))
+        
+        og_1 = self.slice11(layer3_og)
+        syn_1 = self.slice25(layer3_syn)
+        
+        og_2 = self.norm_layer_8(og_1, syn_1)
+        syn_2 = self.norm_layer_18(og_1, syn_1)
+        
+        og_1 = self.slice12(og_2)
+        syn_1 = self.slice26(syn_2)
+        
+        og_2 = self.norm_layer_9(og_1, syn_1)
+        syn_2 = self.norm_layer_19(og_1, syn_1)
+        
+        og_1 = self.slice13(og_2)
+        syn_1 = self.slice27(syn_2)
+        
+        layer4_og = self.slice14(self.norm_layer_10(og_1, syn_1))
+        layer4_syn = self.slice28(self.norm_layer_20(og_1, syn_1))
+        
+        # concatenate the output of each encoder
+        layer1_cat = torch.cat((layer1_og, layer1_syn), dim=1)
+        layer2_cat = torch.cat((layer2_og, layer2_syn), dim=1)
+        layer3_cat = torch.cat((layer3_og, layer3_syn), dim=1)
+        layer4_cat = torch.cat((layer4_og, layer4_syn), dim=1)
+        
+        # use 1x1 convolutions to reduce dimensions of concatenations
+        layer4_cat = self.conv7(layer4_cat)
+        layer3_cat = self.conv8(layer3_cat)
+        layer2_cat = self.conv9(layer2_cat)
+        layer1_cat = self.conv10(layer1_cat)
+        
+        # Run Decoder
+        x = self.conv1(layer4_cat)
+        x = self.conv2(x, semantic_img)
+        x = self.tconv1(x)
+        
+        x = torch.cat((x, layer3_cat), dim=1)
+        x = self.conv12(x)
+        x = self.conv13(x, semantic_img)
+        x = self.tconv1(x)
+        
+        x = torch.cat((x, layer2_cat), dim=1)
+        x = self.conv3(x)
+        x = self.conv4(x, semantic_img)
+        x = self.tconv2(x)
+        
+        x = torch.cat((x, layer1_cat), dim=1)
+        x = self.conv5(x)
+        x = self.conv6(x, semantic_img)
+        x = self.conv11(x)
+        
+        self.final_prediction = x
+        
+        return self.final_prediction
+    
+class SPADEDecoderLayer(nn.Module):
+    def __init__(self, nc=256, label_nc=19):
+        super(SPADEDecoderLayer, self).__init__()
+
+        # create conv layers
+        self.conv = nn.Conv2d(nc, nc, kernel_size=3, padding=1)
+        self.norm = SPADE(norm_nc=nc, label_nc=label_nc)
+        self.selu = nn.SELU()
+
+    def forward(self, x, seg):
+        out = self.selu(self.norm(self.conv(x), seg))
+        return out
 
 if __name__ == "__main__":
     from PIL import Image
