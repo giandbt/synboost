@@ -1,5 +1,6 @@
 import torch.nn as nn
 import torch
+import torchvision.models
 
 from models.semantic_encoder import SemanticEncoder
 from models.vgg_features import VGGFeatures, VGGSPADE
@@ -153,7 +154,7 @@ class GuidedDissimNet(nn.Module):
     def __init__(self, architecture='vgg16', semantic=True, pretrained=True, correlation = True, spade=True):
         super(GuidedDissimNet, self).__init__()
         
-        vgg_pretrained_features = models.vgg16_bn(pretrained=pretrained).features
+        vgg_pretrained_features = torchvision.models.vgg16_bn(pretrained=pretrained).features
         
         # Encoder
         self.norm_layer_1 = FILM(nc=64, guide_nc=64)
