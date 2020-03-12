@@ -12,7 +12,7 @@ training_strategy:
 
 # model options
 model:
-  architecture: resnet18 #[options: 'vgg16', 'vgg16_bn', 'vgg16_guided', resnet18]
+  architecture: vgg16_correlated #[options: 'vgg16', 'vgg16_bn', 'vgg16_guided', resnet18]
   semantic: True
   pretrained: True
   correlation: True
