@@ -75,7 +75,7 @@ print('Starting Training...')
 best_val_loss = float('inf')
 iter = 0
 for epoch in iter_counter.training_epochs():
-    print('Starting Epoch #%i'%epoch)
+    print('Starting Epoch #%i for experiment %s'% (epoch, exp_name))
     iter_counter.record_epoch_start(epoch)
     train_loss = 0 
     for i, data_i in enumerate(tqdm(train_loader), start=iter_counter.epoch_iter):

@@ -6,7 +6,7 @@ import torch.backends.cudnn as cudnn
 import sys
 sys.path.append("..")
 from util import trainer_util
-from models.dissimilarity_model import DissimNet, GuidedDissimNet
+from models.dissimilarity_model import DissimNet, GuidedDissimNet, ResNetDissimNet
 
 class DissimilarityTrainer():
     """
@@ -32,9 +32,12 @@ class DissimilarityTrainer():
         elif 'vgg' in config['model']['architecture']:
             self.diss_model = DissimNet(**config['model']).cuda(self.gpu)
         elif 'resnet' in config['model']['architecture']:
-            NotImplementedError()
+            self.diss_model = ResNetDissimNet(**config['model']).cuda(self.gpu)
         else:
-            NotImplementedError()
+            raise NotImplementedError()
+            
+        #print('Printing Model Parameters')
+        #print(self.diss_model.parameters)
         
         lr_config = config['optimizer']
         lr_options = lr_config['parameters']

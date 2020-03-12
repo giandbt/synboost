@@ -8,15 +8,15 @@ training_strategy:
   niter_decay: 0 # of iter to linearly decay learningd rate to zero
   is_train: True
   class_weight: True
-  class_weight_cityscapes: False
+  class_weight_cityscapes: True
 
 # model options
 model:
-  architecture: vgg16 #[options: 'vgg16', 'vgg16_bn', 'vgg16_guided']
+  architecture: resnet18 #[options: 'vgg16', 'vgg16_bn', 'vgg16_guided', resnet18]
   semantic: True
   pretrained: True
   correlation: True
-  spade: both #[options: 'encoder', 'decoder', 'both']
+  spade: 'decoder' #[options: 'encoder', 'decoder', 'both', '']
 
 # logger options
 logger:
