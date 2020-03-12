@@ -31,6 +31,8 @@ class DissimilarityTrainer():
             self.diss_model = GuidedDissimNet(**config['model']).cuda(self.gpu)
         elif 'vgg' in config['model']['architecture']:
             self.diss_model = DissimNet(**config['model']).cuda(self.gpu)
+        elif 'resnet' in config['model']['architecture']:
+            NotImplementedError()
         else:
             NotImplementedError()
         
@@ -60,7 +62,10 @@ class DissimilarityTrainer():
                 print('Getting class weights for cross entropy loss. This might take some time.')
                 class_weights = trainer_util.get_class_weights(full_loader, num_classes=2)
             else:
-                class_weights = [1.46494611, 16.90304619]
+                if config['train_dataloader']['dataset_args']['void']:
+                    class_weights = [1.54843156, 8.03912212]
+                else:
+                    class_weights = [1.46494611, 16.90304619]
             print('Using the following weights for each respective class [0,1]:', class_weights)
             self.criterion = nn.CrossEntropyLoss(ignore_index=255, weight=torch.FloatTensor(class_weights).to("cuda")).cuda(self.gpu)
         else:

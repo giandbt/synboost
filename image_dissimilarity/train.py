@@ -67,7 +67,6 @@ w = int(dataset['crop_size'])
 print('Loading Model')
 trainer = DissimilarityTrainer(config)
 
-
 # create tool for counting iterations
 batch_size = config['train_dataloader']['dataloader_args']['batch_size']
 iter_counter = IterationCounter(config, len(train_loader), batch_size)

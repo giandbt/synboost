@@ -9,16 +9,16 @@ sys.path.append("..")
 from models.normalization import SPADE, FILM
 
 class DissimNet(nn.Module):
-    def __init__(self, architecture='vgg16', semantic=True, pretrained=True, correlation = True, spade=True):
+    def __init__(self, architecture='vgg16', semantic=True, pretrained=True, correlation = True, spade=''):
         super(DissimNet, self).__init__()
         
         #get initialization parameters
         self.correlation = correlation
         self.spade = spade
-        self.semantic = False if self.spade else semantic
+        self.semantic = False if spade else semantic
         
         # generate encoders
-        if spade:
+        if self.spade == 'encoder' or self.spade == 'both':
             self.vgg_encoder = VGGSPADE()
         else:
             self.vgg_encoder = VGGFeatures(architecture=architecture, pretrained=pretrained)
@@ -44,11 +44,17 @@ class DissimNet(nn.Module):
             self.conv12 = nn.Sequential(nn.Conv2d(512, 256, kernel_size=3, padding=1), nn.SELU())
             self.conv3 = nn.Sequential(nn.Conv2d(384, 128, kernel_size=3, padding=1), nn.SELU())
             self.conv5 = nn.Sequential(nn.Conv2d(192, 64, kernel_size=3, padding=1), nn.SELU())
-            
-        self.conv2 = nn.Sequential(nn.Conv2d(256, 256, kernel_size=3, padding=1), nn.SELU())
-        self.conv13 = nn.Sequential(nn.Conv2d(256, 256, kernel_size=3, padding=1), nn.SELU())
-        self.conv4 = nn.Sequential(nn.Conv2d(128, 128, kernel_size=3, padding=1), nn.SELU())
-        self.conv6 = nn.Sequential(nn.Conv2d(64, 64, kernel_size=3, padding=1), nn.SELU())
+
+        if self.spade == 'decoder' or self.spade == 'both':
+            self.conv2 = SPADEDecoderLayer(nc=256, label_nc=19)
+            self.conv13 = SPADEDecoderLayer(nc=256, label_nc=19)
+            self.conv4 = SPADEDecoderLayer(nc=128, label_nc=19)
+            self.conv6 = SPADEDecoderLayer(nc=64, label_nc=19)
+        else:
+            self.conv2 = nn.Sequential(nn.Conv2d(256, 256, kernel_size=3, padding=1), nn.SELU())
+            self.conv13 = nn.Sequential(nn.Conv2d(256, 256, kernel_size=3, padding=1), nn.SELU())
+            self.conv4 = nn.Sequential(nn.Conv2d(128, 128, kernel_size=3, padding=1), nn.SELU())
+            self.conv6 = nn.Sequential(nn.Conv2d(64, 64, kernel_size=3, padding=1), nn.SELU())
 
         # all the tranposed convolutions
         self.tconv1 = nn.ConvTranspose2d(256, 256, kernel_size=2, stride=2, padding=0)
@@ -127,22 +133,34 @@ class DissimNet(nn.Module):
 
         # Run Decoder
         x = self.conv1(layer4_cat)
-        x = self.conv2(x)
+        if self.spade == 'decoder' or self.spade == 'both':
+            x = self.conv2(x, semantic_img)
+        else:
+            x = self.conv2(x)
         x = self.tconv1(x)
         
         x = torch.cat((x, layer3_cat), dim=1)
         x = self.conv12(x)
-        x = self.conv13(x)
+        if self.spade == 'decoder' or self.spade == 'both':
+            x = self.conv13(x, semantic_img)
+        else:
+            x = self.conv13(x)
         x = self.tconv1(x)
 
         x = torch.cat((x, layer2_cat), dim=1)
         x = self.conv3(x)
-        x = self.conv4(x)
+        if self.spade == 'decoder' or self.spade == 'both':
+            x = self.conv4(x, semantic_img)
+        else:
+            x = self.conv4(x)
         x = self.tconv2(x)
 
         x = torch.cat((x, layer1_cat), dim=1)
         x = self.conv5(x)
-        x = self.conv6(x)
+        if self.spade == 'decoder' or self.spade == 'both':
+            x = self.conv6(x, semantic_img)
+        else:
+            x = self.conv6(x)
         x = self.conv11(x)
         
         self.final_prediction = x
@@ -393,12 +411,14 @@ class SPADEDecoderLayer(nn.Module):
         super(SPADEDecoderLayer, self).__init__()
 
         # create conv layers
+        self.norm1 = SPADE(norm_nc=nc, label_nc=label_nc)
+        self.selu1 = nn.SELU()
         self.conv = nn.Conv2d(nc, nc, kernel_size=3, padding=1)
-        self.norm = SPADE(norm_nc=nc, label_nc=label_nc)
-        self.selu = nn.SELU()
+        self.norm2 = SPADE(norm_nc=nc, label_nc=label_nc)
+        self.selu2 = nn.SELU()
 
     def forward(self, x, seg):
-        out = self.selu(self.norm(self.conv(x), seg))
+        out = self.selu2(self.norm2(self.conv(self.selu1(self.norm1(x, seg))), seg))
         return out
 
 if __name__ == "__main__":

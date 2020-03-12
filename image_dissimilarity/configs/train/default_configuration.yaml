@@ -1,5 +1,5 @@
 # Name of the experiment for saving files
-experiment_name: baseline_void_val
+experiment_name: spade_both
 save_folder: results/
 
 # Define training strategy
@@ -16,7 +16,7 @@ model:
   semantic: True
   pretrained: True
   correlation: True
-  spade: False
+  spade: both #[options: 'encoder', 'decoder', 'both']
 
 # logger options
 logger:
@@ -52,8 +52,9 @@ dataset:
 # parameters for dataloaders
 train_dataloader:
   dataset_args:
-    dataroot: /home/giancarlo/data/innosuisse/epfl/train
-    #dataroot: /home/giancarlo/data/innosuisse/road_anomaly (only for quick debugging)
+    #dataroot: /home/giancarlo/data/innosuisse/epfl/train
+    dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/dissimilarity_model/epfl_our/train # (for workstation debugging)
+    #dataroot: /home/giancarlo/data/innosuisse/road_anomaly #(only for quick debugging)
     preprocess_mode: fixed
     load_size: 1024
     crop_size: 512
@@ -62,12 +63,13 @@ train_dataloader:
     no_flip: false
     void: True
   dataloader_args:
-    batch_size: 4
-    num_workers: 2
+    batch_size: 1
+    num_workers: 1
     shuffle: True
 val_dataloader:
   dataset_args:
-    dataroot: /home/giancarlo/data/innosuisse/fs_lost_and_found
+    #dataroot: /home/giancarlo/data/innosuisse/fs_lost_and_found
+    dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/fs_lost_and_found # (for workstation debugging)
     preprocess_mode: fixed
     load_size: 1024
     crop_size: 512
@@ -80,7 +82,8 @@ val_dataloader:
     shuffle: False
 test_dataloader1:
   dataset_args:
-    dataroot: /home/giancarlo/data/innosuisse/road_anomaly
+    #dataroot: /home/giancarlo/data/innosuisse/road_anomaly
+    dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/road_anomaly #(for workstation debugging)
     preprocess_mode: fixed
     load_size: 1024
     crop_size: 512
@@ -94,7 +97,8 @@ test_dataloader1:
     shuffle: False
 test_dataloader2:
   dataset_args:
-    dataroot: /home/giancarlo/data/innosuisse/fs_static
+    #dataroot: /home/giancarlo/data/innosuisse/fs_static
+    dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/fs_static # (for workstation debugging)
     preprocess_mode: fixed
     load_size: 1024
     crop_size: 512
@@ -108,7 +112,8 @@ test_dataloader2:
     shuffle: False
 test_dataloader3:
   dataset_args:
-    dataroot: /home/giancarlo/data/innosuisse/fs_lost_and_found
+    #dataroot: /home/giancarlo/data/innosuisse/fs_lost_and_found
+    dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/fs_lost_and_found # (for workstation debugging)
     preprocess_mode: fixed
     load_size: 1024
     crop_size: 512
