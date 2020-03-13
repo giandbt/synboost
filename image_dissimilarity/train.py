@@ -222,7 +222,8 @@ for epoch in iter_counter.training_epochs():
           (epoch, iter_counter.total_steps_so_far))
     trainer.save(save_fdr, 'latest', exp_name)
     
-    trainer.update_learning_rate(epoch)
+    #trainer.update_learning_rate(epoch) TODO (Giancarlo): Have a more permanent solution, currently we have ReduceonPlateu and Manually modification of LR
+    trainer.update_learning_rate_schedule(avg_val_loss)
     iter_counter.record_epoch_end()
     
     if (epoch % config['logger']['save_epoch_freq'] == 0 or epoch == iter_counter.total_epochs):

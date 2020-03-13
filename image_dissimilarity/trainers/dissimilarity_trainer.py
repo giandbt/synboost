@@ -2,6 +2,7 @@ import torch
 import os
 import torch.nn as nn
 import torch.backends.cudnn as cudnn
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 import sys
 sys.path.append("..")
@@ -54,6 +55,11 @@ class DissimilarityTrainer():
         else:
             raise NotImplementedError
         
+        if lr_options['lr_policy'] == 'ReduceLROnPlateau':
+            self.scheduler = ReduceLROnPlateau(self.optimizer, 'min', patience=lr_options['patience'])
+        else:
+            raise NotImplementedError
+        
         self.old_lr = lr_options['lr']
         
         if config['training_strategy']['class_weight']:
@@ -91,7 +97,6 @@ class DissimilarityTrainer():
     def run_validation(self, original, synthesis, semantic, label):
         predictions = self.diss_model(original, synthesis, semantic)
         model_loss = self.criterion(predictions, label.type(torch.LongTensor).squeeze(dim=1).cuda())
-            
         return model_loss, predictions
 
     def get_latest_losses(self):
@@ -124,6 +129,11 @@ class DissimilarityTrainer():
                 param_group['lr'] = new_lr
             print('update learning rate: %f -> %f' % (self.old_lr, new_lr))
             self.old_lr = new_lr
+            
+    def update_learning_rate_schedule(self, val_loss):
+        self.scheduler.step(val_loss)
+        lr = [group['lr'] for group in self.optimizer.param_groups][0]
+        print('Current learning rate is set for %f' %lr)
 
 if __name__ == "__main__":
     import yaml
