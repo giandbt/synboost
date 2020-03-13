@@ -1,5 +1,5 @@
 # Name of the experiment for saving files
-experiment_name: spade_both_1
+experiment_name: spade_both_instance_low_lr
 save_folder: results/
 
 # Define training strategy
@@ -12,9 +12,9 @@ training_strategy:
 
 # model options
 model:
-  architecture: vgg16 #[options: 'vgg16', 'vgg16_bn', 'vgg16_guided', 'resnet18', 'vgg16_correlated']
+  architecture: vgg16_bn #[options: 'vgg16', 'vgg16_bn', 'vgg16_guided', 'resnet18', 'vgg16_correlated']
   semantic: True
-  pretrained: False
+  pretrained: True
   correlation: True
   spade: 'both' #[options: 'encoder', 'decoder', 'both', '']
 
@@ -31,9 +31,10 @@ optimizer:
   algorithm: Adam # ['Adam' or 'SGD']
   # Define accordingly, e.g.
   parameters:
-    lr: 1.e-4 # 1.e-4
+    lr: 1.e-5 # 1.e-4
     lr_policy: ReduceLROnPlateau
-    patience: 2
+    patience: 3
+    factor: 0.75
     weight_decay: 0.0000
     beta1: 0.5 # momentum term of adam
     beta2: 0.999 # momentum term of adam
@@ -53,11 +54,11 @@ train_dataloader:
     crop_size: 512
     aspect_ratio: 2
     image_set: train
-    no_flip: false
+    no_flip: False
     void: False
   dataloader_args:
-    batch_size: 1
-    num_workers: 1
+    batch_size: 4
+    num_workers: 2
     shuffle: True
 val_dataloader:
   dataset_args:

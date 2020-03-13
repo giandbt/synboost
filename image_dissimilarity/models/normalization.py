@@ -14,7 +14,7 @@ class SPADE(nn.Module):
         super().__init__()
         
         ks = 3
-        self.param_free_norm = nn.BatchNorm2d(norm_nc, affine=False)
+        self.param_free_norm = nn.InstanceNorm2d(norm_nc, affine=False)
         
         # The dimension of the intermediate embedding space. Yes, hardcoded.
         nhidden = 128
@@ -102,7 +102,7 @@ class GuideNormalization(nn.Module):
     def __init__(self, nc):
         super().__init__()
         
-        self.param_free_norm = nn.BatchNorm2d(nc, affine=False)
+        self.param_free_norm = nn.InstanceNorm2d(nc, affine=False)
     
     def forward(self, x, gamma1, beta1, gamma2, beta2):
         normalized = self.param_free_norm(x)

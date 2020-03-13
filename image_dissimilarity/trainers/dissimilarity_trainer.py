@@ -56,7 +56,7 @@ class DissimilarityTrainer():
             raise NotImplementedError
         
         if lr_options['lr_policy'] == 'ReduceLROnPlateau':
-            self.scheduler = ReduceLROnPlateau(self.optimizer, 'min', patience=lr_options['patience'])
+            self.scheduler = ReduceLROnPlateau(self.optimizer, 'min', patience=lr_options['patience'], factor=lr_options['factor'])
         else:
             raise NotImplementedError
         
