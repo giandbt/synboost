@@ -1,5 +1,5 @@
 # Name of the experiment for saving files
-experiment_name: guided_correlation
+experiment_name: spade_both_1
 save_folder: results/
 
 # Define training strategy
@@ -12,11 +12,11 @@ training_strategy:
 
 # model options
 model:
-  architecture: vgg16_correlated #[options: 'vgg16', 'vgg16_bn', 'vgg16_guided', 'resnet18', 'vgg16_correlated']
+  architecture: vgg16 #[options: 'vgg16', 'vgg16_bn', 'vgg16_guided', 'resnet18', 'vgg16_correlated']
   semantic: True
-  pretrained: True
+  pretrained: False
   correlation: True
-  spade: 'decoder' #[options: 'encoder', 'decoder', 'both', '']
+  spade: 'both' #[options: 'encoder', 'decoder', 'both', '']
 
 # logger options
 logger:

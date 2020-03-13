@@ -49,10 +49,10 @@ def make_layers(cfg, batch_norm=False):
 
 
 class VGGSPADE(torch.nn.Module):
-	def __init__(self, label_nc=19):
+	def __init__(self, pretrained=True, label_nc=19):
 		
 		super(VGGSPADE, self).__init__()
-		vgg_pretrained_features = torchvision.models.vgg16_bn(pretrained=True).features
+		vgg_pretrained_features = torchvision.models.vgg16_bn(pretrained=pretrained).features
 		
 		self.norm_layer_1 = SPADE(norm_nc=64, label_nc=label_nc)
 		self.norm_layer_2 = SPADE(norm_nc=64, label_nc=label_nc)

@@ -20,7 +20,7 @@ class DissimNet(nn.Module):
         
         # generate encoders
         if self.spade == 'encoder' or self.spade == 'both':
-            self.vgg_encoder = VGGSPADE()
+            self.vgg_encoder = VGGSPADE(pretrained=pretrained)
         else:
             self.vgg_encoder = VGGFeatures(architecture=architecture, pretrained=pretrained)
             
