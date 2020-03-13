@@ -29,6 +29,8 @@ exp_name = config['experiment_name']
 save_fdr = config['save_folder']
 logs_fdr = config['logger']['results_dir']
 
+print('Starting experiment named: %s'%exp_name)
+
 if not os.path.isdir(save_fdr):
     os.mkdir(save_fdr)
 

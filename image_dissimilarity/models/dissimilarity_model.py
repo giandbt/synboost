@@ -575,6 +575,8 @@ class GuidedDissimNet(nn.Module):
 class CorrelatedDissimNet(nn.Module):
     def __init__(self, architecture='vgg16', semantic=True, pretrained=True, correlation=True, spade=True):
         super(CorrelatedDissimNet, self).__init__()
+
+        self.spade = spade
         
         # layers for encoder
         self.og_gel1 = GuideEncoderLayer(nc_in=3, nc_out=64)
