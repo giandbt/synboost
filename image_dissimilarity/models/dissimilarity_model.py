@@ -59,6 +59,7 @@ class DissimNet(nn.Module):
 
         # all the tranposed convolutions
         self.tconv1 = nn.ConvTranspose2d(256, 256, kernel_size=2, stride=2, padding=0)
+        self.tconv3 = nn.ConvTranspose2d(256, 256, kernel_size=2, stride=2, padding=0)
         self.tconv2 = nn.ConvTranspose2d(128, 128, kernel_size=2, stride=2, padding=0)
 
         # all the other 1x1 convolutions
@@ -146,7 +147,7 @@ class DissimNet(nn.Module):
             x = self.conv13(x, semantic_img)
         else:
             x = self.conv13(x)
-        x = self.tconv1(x)
+        x = self.tconv3(x)
 
         x = torch.cat((x, layer2_cat), dim=1)
         x = self.conv3(x)
@@ -219,6 +220,7 @@ class ResNetDissimNet(nn.Module):
         
         # all the tranposed convolutions
         self.tconv1 = nn.ConvTranspose2d(256, 256, kernel_size=2, stride=2, padding=0)
+        self.tconv5 = nn.ConvTranspose2d(256, 256, kernel_size=2, stride=2, padding=0)
         self.tconv2 = nn.ConvTranspose2d(128, 128, kernel_size=2, stride=2, padding=0)
         self.tconv3 = nn.ConvTranspose2d(64, 64, kernel_size=2, stride=2, padding=0)
         self.tconv4 = nn.ConvTranspose2d(64, 32, kernel_size=2, stride=2, padding=0)
@@ -307,7 +309,7 @@ class ResNetDissimNet(nn.Module):
             x = self.conv13(x, semantic_img)
         else:
             x = self.conv13(x)
-        x = self.tconv1(x)
+        x = self.tconv5(x)
         
         x = torch.cat((x, layer2_cat), dim=1)
         x = self.conv3(x)
@@ -649,13 +651,20 @@ class CorrelatedDissimNet(nn.Module):
         self.conv5 = nn.Sequential(nn.Conv2d(192, 64, kernel_size=3, padding=1), nn.SELU())
         
         # spade decoder
-        self.conv2 = SPADEDecoderLayer(nc=256, label_nc=19)
-        self.conv13 = SPADEDecoderLayer(nc=256, label_nc=19)
-        self.conv4 = SPADEDecoderLayer(nc=128, label_nc=19)
-        self.conv6 = SPADEDecoderLayer(nc=64, label_nc=19)
+        if self.spade == 'decoder' or self.spade == 'both':
+            self.conv2 = SPADEDecoderLayer(nc=256, label_nc=19)
+            self.conv13 = SPADEDecoderLayer(nc=256, label_nc=19)
+            self.conv4 = SPADEDecoderLayer(nc=128, label_nc=19)
+            self.conv6 = SPADEDecoderLayer(nc=64, label_nc=19)
+        else:
+            self.conv2 = nn.Sequential(nn.Conv2d(256, 256, kernel_size=3, padding=1), nn.SELU())
+            self.conv13 = nn.Sequential(nn.Conv2d(256, 256, kernel_size=3, padding=1), nn.SELU())
+            self.conv4 = nn.Sequential(nn.Conv2d(128, 128, kernel_size=3, padding=1), nn.SELU())
+            self.conv6 = nn.Sequential(nn.Conv2d(64, 64, kernel_size=3, padding=1), nn.SELU())
         
         # all the tranposed convolutions
         self.tconv1 = nn.ConvTranspose2d(256, 256, kernel_size=2, stride=2, padding=0)
+        self.tconv3 = nn.ConvTranspose2d(256, 256, kernel_size=2, stride=2, padding=0)
         self.tconv2 = nn.ConvTranspose2d(128, 128, kernel_size=2, stride=2, padding=0)
         
         # all the other 1x1 convolutions
@@ -760,22 +769,34 @@ class CorrelatedDissimNet(nn.Module):
         
         # Run Decoder
         x = self.conv1(layer4_cat)
-        x = self.conv2(x, semantic_img)
+        if self.spade == 'decoder' or self.spade == 'both':
+            x = self.conv2(x, semantic_img)
+        else:
+            x = self.conv2(x)
         x = self.tconv1(x)
-        
+
         x = torch.cat((x, layer3_cat), dim=1)
         x = self.conv12(x)
-        x = self.conv13(x, semantic_img)
-        x = self.tconv1(x)
-        
+        if self.spade == 'decoder' or self.spade == 'both':
+            x = self.conv13(x, semantic_img)
+        else:
+            x = self.conv13(x)
+        x = self.tconv3(x)
+
         x = torch.cat((x, layer2_cat), dim=1)
         x = self.conv3(x)
-        x = self.conv4(x, semantic_img)
+        if self.spade == 'decoder' or self.spade == 'both':
+            x = self.conv4(x, semantic_img)
+        else:
+            x = self.conv4(x)
         x = self.tconv2(x)
-        
+
         x = torch.cat((x, layer1_cat), dim=1)
         x = self.conv5(x)
-        x = self.conv6(x, semantic_img)
+        if self.spade == 'decoder' or self.spade == 'both':
+            x = self.conv6(x, semantic_img)
+        else:
+            x = self.conv6(x)
         x = self.conv11(x)
         
         self.final_prediction = x
