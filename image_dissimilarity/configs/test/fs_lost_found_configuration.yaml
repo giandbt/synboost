@@ -12,6 +12,7 @@ model:
   pretrained: True
   correlation: True
   spade: 'both' #[options: 'encoder', 'decoder', 'both', '']
+  num_semantic_classes: 19 # Actual training labels
 
 # parameters for dataset
 dataset:
@@ -28,6 +29,7 @@ test_dataloader:
     image_set: val
     no_flip: True
     roi: False
+    num_semantic_classes: 19
   dataloader_args:
     batch_size: 1
     num_workers: 1

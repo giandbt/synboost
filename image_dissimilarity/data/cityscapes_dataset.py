@@ -21,7 +21,8 @@ INVALID_LABELED_FRAMES = [17,  37,  55,  72,  91, 110, 129, 153, 174, 197, 218, 
 class CityscapesDataset(Dataset):
     
     def __init__(self, dataroot, preprocess_mode, image_set, load_size=1024, crop_size=512, 
-                 aspect_ratio= 0.5, no_flip=False, only_valid = False, roi = False, void = False):
+                 aspect_ratio= 0.5, no_flip=False, only_valid = False, roi = False, void = False,
+                 num_semantic_classes = 19):
         self.original_paths = [os.path.join(dataroot, 'original', image)
                                for image in os.listdir(os.path.join(dataroot, 'original'))]
         self.semantic_paths = [os.path.join(dataroot, 'semantic', image)
@@ -64,6 +65,7 @@ class CityscapesDataset(Dataset):
         self.no_flip = no_flip
         self.aspect_ratio = aspect_ratio
         self.is_train = True if image_set == 'train' else False
+        self.num_semantic_classes = num_semantic_classes
         
     def __getitem__(self, index):
         
@@ -97,8 +99,9 @@ class CityscapesDataset(Dataset):
         semantic_path = self.semantic_paths[index]
         semantic = Image.open(semantic_path)
         semantic_tensor = transform_label(semantic) * 255.0
-        semantic_tensor[semantic_tensor == 255] = 20  # 'ignore label is 20' 
-        semantic_tensor = one_hot_encoding(semantic_tensor, 20)
+        if self.num_semantic_classes == 19:
+            semantic_tensor[semantic_tensor == 255] = self.num_semantic_classes + 1  # 'ignore label is 20'
+        semantic_tensor = one_hot_encoding(semantic_tensor, self.num_semantic_classes + 1)
 
         input_dict = {'label': label_tensor,
                       'original': image_tensor,
