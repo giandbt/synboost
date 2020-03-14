@@ -1,5 +1,5 @@
 # Name of the experiment for saving files
-experiment_name: spade_both_instance_low_lr
+experiment_name: spade_both_instance_8_final
 save_folder: results/
 
 # Define training strategy
@@ -31,7 +31,7 @@ optimizer:
   algorithm: Adam # ['Adam' or 'SGD']
   # Define accordingly, e.g.
   parameters:
-    lr: 1.e-5 # 1.e-4
+    lr: 1.e-4 # 1.e-4
     lr_policy: ReduceLROnPlateau
     patience: 3
     factor: 0.75
@@ -57,8 +57,8 @@ train_dataloader:
     no_flip: False
     void: False
   dataloader_args:
-    batch_size: 4
-    num_workers: 2
+    batch_size: 8
+    num_workers: 4
     shuffle: True
 val_dataloader:
   dataset_args:

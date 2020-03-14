@@ -73,6 +73,9 @@ trainer = DissimilarityTrainer(config)
 batch_size = config['train_dataloader']['dataloader_args']['batch_size']
 iter_counter = IterationCounter(config, len(train_loader), batch_size)
 
+# Softmax layer for testing
+softmax = torch.nn.Softmax(dim=1)
+
 print('Starting Training...')
 best_val_loss = float('inf')
 iter = 0
@@ -133,6 +136,7 @@ for epoch in iter_counter.training_epochs():
         
             # Evaluating
             loss, outputs = trainer.run_validation(original, synthesis, semantic, label)
+            outputs = softmax(outputs)
             (softmax_pred, predictions) = torch.max(outputs, dim=1)
             flat_pred[i * w * h:i * w * h + w * h] = torch.flatten(outputs[:, 1, :, :]).detach().cpu().numpy()
             flat_labels[i * w * h:i * w * h + w * h] = torch.flatten(label).detach().cpu().numpy()
@@ -164,6 +168,7 @@ for epoch in iter_counter.training_epochs():
     
             # Evaluating
             loss, outputs = trainer.run_validation(original, synthesis, semantic, label)
+            outputs = softmax(outputs)
             (softmax_pred, predictions) = torch.max(outputs, dim=1)
             flat_pred[i * w * h:i * w * h + w * h] = torch.flatten(outputs[:, 1, :, :]).detach().cpu().numpy()
             flat_labels[i * w * h:i * w * h + w * h] = torch.flatten(label).detach().cpu().numpy()
@@ -198,6 +203,7 @@ for epoch in iter_counter.training_epochs():
     
             # Evaluating
             loss, outputs = trainer.run_validation(original, synthesis, semantic, label)
+            outputs = softmax(outputs)
             (softmax_pred, predictions) = torch.max(outputs, dim=1)
             flat_pred[i * w * h:i * w * h + w * h] = torch.flatten(outputs[:, 1, :, :]).detach().cpu().numpy()
             flat_labels[i * w * h:i * w * h + w * h] = torch.flatten(label).detach().cpu().numpy()
@@ -223,8 +229,7 @@ for epoch in iter_counter.training_epochs():
     print('saving the latest model (epoch %d, total_steps %d)' %
           (epoch, iter_counter.total_steps_so_far))
     trainer.save(save_fdr, 'latest', exp_name)
-    
-    #trainer.update_learning_rate(epoch) TODO (Giancarlo): Have a more permanent solution, currently we have ReduceonPlateu and Manually modification of LR
+
     trainer.update_learning_rate_schedule(avg_val_loss)
     iter_counter.record_epoch_end()
     

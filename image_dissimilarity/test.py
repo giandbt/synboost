@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 from util import trainer_util, metrics
 from util.iter_counter import IterationCounter
-from models.dissimilarity_model import DissimNet
+from models.dissimilarity_model import DissimNet, GuidedDissimNet, ResNetDissimNet, CorrelatedDissimNet
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', type=str, help='Path to the config file.')
@@ -28,13 +28,18 @@ exp_name = config['experiment_name']
 save_fdr = config['save_folder']
 epoch = config['which_epoch']
 store_fdr = config['store_results']
+store_fdr_exp = os.path.join(config['store_results'],exp_name)
+
 
 if not os.path.isdir(store_fdr):
     os.mkdir(store_fdr)
 
-if not os.path.isdir(os.path.join(store_fdr, 'pred')):
-    os.mkdir(os.path.join(store_fdr, 'label'))
-    os.mkdir(os.path.join(store_fdr, 'pred'))
+if not os.path.isdir(store_fdr_exp):
+    os.mkdir(store_fdr_exp)
+
+if not os.path.isdir(os.path.join(store_fdr_exp, 'pred')):
+    os.mkdir(os.path.join(store_fdr_exp, 'label'))
+    os.mkdir(os.path.join(store_fdr_exp, 'pred'))
 
 # Activate GPUs
 config['gpu_ids'] = opts.gpu_ids
@@ -45,7 +50,17 @@ cfg_test_loader = config['test_dataloader']
 test_loader = trainer_util.get_dataloader(cfg_test_loader['dataset_args'], cfg_test_loader['dataloader_args'])
 
 # get model
-diss_model = DissimNet(**config['model']['parameters']).cuda()
+if 'vgg' in config['model']['architecture'] and 'guided' in config['model']['architecture']:
+    diss_model = GuidedDissimNet(**config['model']).cuda()
+if 'vgg' in config['model']['architecture'] and 'correlated' in config['model']['architecture']:
+    diss_model = CorrelatedDissimNet(**config['model']).cuda()
+elif 'vgg' in config['model']['architecture']:
+    diss_model = DissimNet(**config['model']).cuda()
+elif 'resnet' in config['model']['architecture']:
+    diss_model = ResNetDissimNet(**config['model']).cuda()
+else:
+    raise NotImplementedError()
+
 diss_model.eval()
 model_path = os.path.join(save_fdr, exp_name, '%s_net_%s.pth' %(epoch, exp_name))
 model_weights = torch.load(model_path)
@@ -80,8 +95,8 @@ with torch.no_grad():
         file_name = os.path.basename(data_i['original_path'][0])
         label_img = Image.fromarray(label_tensor.squeeze().cpu().numpy().astype(np.uint8)).convert('RGB')
         predicted_img = Image.fromarray(predicted_tensor.squeeze().cpu().numpy().astype(np.uint8)).convert('RGB')
-        predicted_img.save(os.path.join(store_fdr, 'pred', file_name))
-        label_img.save(os.path.join(store_fdr, 'label', file_name))
+        predicted_img.save(os.path.join(store_fdr_exp, 'pred', file_name))
+        label_img.save(os.path.join(store_fdr_exp, 'label', file_name))
 
 print('Calculating metric scores')
 if config['test_dataloader']['dataset_args']['roi']:
@@ -107,4 +122,4 @@ if config['visualize']:
     plt.ylabel('True Positive Rate')
     plt.title('Receiver Operating Characteristic Curve')
     plt.legend(loc="lower right")
-    plt.savefig(os.path.join(store_fdr,'roc_curve.png'))
+    plt.savefig(os.path.join(store_fdr_exp,'roc_curve.png'))
