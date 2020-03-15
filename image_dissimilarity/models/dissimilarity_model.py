@@ -18,15 +18,15 @@ class DissimNet(nn.Module):
         self.correlation = correlation
         self.spade = spade
         self.semantic = False if spade else semantic
-        
+
         # generate encoders
         if self.spade == 'encoder' or self.spade == 'both':
-            self.vgg_encoder = VGGSPADE(pretrained=pretrained)
+            self.vgg_encoder = VGGSPADE(pretrained=pretrained, label_nc=num_semantic_classes)
         else:
             self.vgg_encoder = VGGFeatures(architecture=architecture, pretrained=pretrained)
-            
+
         if self.semantic:
-            self.semantic_encoder = SemanticEncoder(architecture=architecture)
+            self.semantic_encoder = SemanticEncoder(architecture=architecture, in_channels=num_semantic_classes)
         
         # layers for decoder
         # all the 3x3 convolutions
