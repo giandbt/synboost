@@ -72,9 +72,10 @@ if not opt.no_segmentation:
         os.makedirs(original_fdr)
         
     # creates temporary folder to adapt format to image synthesis
-    os.makedirs(os.path.join(opt.results_dir, 'temp'))
-    os.makedirs(os.path.join(opt.results_dir, 'temp', 'gtFine', 'val'))
-    os.makedirs(os.path.join(opt.results_dir, 'temp', 'leftImg8bit', 'val'))
+    if not os.path.exists(os.path.join(opt.results_dir, 'temp')):
+        os.makedirs(os.path.join(opt.results_dir, 'temp'))
+        os.makedirs(os.path.join(opt.results_dir, 'temp', 'gtFine', 'val'))
+        os.makedirs(os.path.join(opt.results_dir, 'temp', 'leftImg8bit', 'val'))
     
     # Loop around all figures
     for img_id, img_name in enumerate(images):

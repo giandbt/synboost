@@ -1,5 +1,5 @@
 #!/bin/bash
-CUDA_VISIBLE_DEVICES=7 python train.py --config configs/train/default_configuration.yaml --gpu_ids 0
+CUDA_VISIBLE_DEVICES=8 python train.py --config configs/train/default_configuration.yaml --gpu_ids 0
 #CUDA_VISIBLE_DEVICES=14 python train.py --config configs/train/epfl_configuration.yaml --gpu_ids 0
 #CUDA_VISIBLE_DEVICES=14 python train.py --config configs/train/batch_norm_configuration.yaml --gpu_ids 0
 #CUDA_VISIBLE_DEVICES=14 python train.py --config configs/train/spade_configuration.yaml --gpu_ids 0
