@@ -1,5 +1,5 @@
 # Name of the experiment for saving files
-experiment_name: spade_both_new_void
+experiment_name: spade_both_void_new
 save_folder: results/
 
 # Define training strategy

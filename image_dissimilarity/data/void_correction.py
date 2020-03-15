@@ -52,7 +52,7 @@ def include_void_to_labels(label_path, semantic_path, save_dir, include_ego_vehi
         else:
             mask_img.save(os.path.join(save_dir, 'labels_with_void_no_ego', label_name))
 
-def convert_trainIds_to_labelsIds(semantic_path, labels_path, semantic_path_pred, save_dir_semantic, save_dir_semantic_train, save_dir_inst):
+def create_void_semantic(semantic_path, labels_path, semantic_path_pred, save_dir_semantic, save_dir_semantic_train, save_dir_inst):
     if not os.path.isdir(save_dir_semantic):
         os.mkdir(save_dir_semantic)
     if not os.path.isdir(save_dir_semantic_train):
@@ -121,6 +121,46 @@ def change_name(semantic_path_pred, save_dir):
         shutil.copyfile(original, target1)
         shutil.copyfile(original, target2)
 
+def create_void_semantic_original(semantic_path, semantic_path_pred, save_dir_semantic, save_dir_semantic_train, save_dir_inst):
+    if not os.path.isdir(save_dir_semantic):
+        os.mkdir(save_dir_semantic)
+    if not os.path.isdir(save_dir_semantic_train):
+        os.mkdir(save_dir_semantic_train)
+    if not os.path.isdir(save_dir_inst):
+        os.mkdir(save_dir_inst)
+
+    semantic_paths = [os.path.join(semantic_path, image)
+                      for image in os.listdir(semantic_path)]
+    pred_paths = [os.path.join(semantic_path_pred, image)
+                      for image in os.listdir(semantic_path_pred)]
+
+    semantic_paths = natsorted(semantic_paths)
+    pred_paths = natsorted(pred_paths)
+
+    for idx, (semantic, pred) in enumerate(zip(semantic_paths, pred_paths)):
+        print('Generating image %i our of %i' % (idx + 1, len(semantic_paths)))
+        new_semantic_name = os.path.basename(semantic).replace('fakeTrainIds', 'labelIds')
+        new_instance_name = os.path.basename(semantic).replace('fakeTrainIds', 'instanceIds')
+
+        semantic_train = Image.open(os.path.join(semantic_path, semantic))
+        pred_img = Image.open(os.path.join(semantic_path_pred, pred))
+        pred_img = np.array(pred_img.resize(semantic_train.size, Image.NEAREST))
+        semantic_train = np.array(semantic_train)
+
+        semantic_out = np.zeros_like(semantic_train)
+        for label_id, train_id in id_to_trainid.items():
+            semantic_out[np.where(semantic_train == train_id)] = label_id
+
+        syn_semantic = np.copy(semantic_out)
+        mask = (semantic_train==255)
+        syn_semantic[mask] = pred_img[mask]
+
+        cv2.imwrite(os.path.join(save_dir_semantic, new_semantic_name), syn_semantic)
+        cv2.imwrite(os.path.join(save_dir_inst, new_instance_name), syn_semantic)
+        semantic_out = np.zeros_like(semantic_train)
+        for label_id, train_id in id_to_trainid.items():
+            semantic_out[np.where(syn_semantic == label_id)] = train_id
+        cv2.imwrite(os.path.join(save_dir_semantic_train, new_semantic_name), semantic_out)
 
 if __name__ == '__main__':
 
@@ -130,7 +170,7 @@ if __name__ == '__main__':
     semantic_path = '/home/giandbt/Documents/labels_processing/semantic_epfl'
     semantic_path_pred = '/home/giandbt/Documents/labels_processing/semantic_predictions'
     labels_path = '/home/giandbt/Documents/labels_processing/labels'
-    convert_trainIds_to_labelsIds(semantic_path, labels_path, semantic_path_pred, save_dir_sema, save_dir_sema_train, save_dir_inst)
+    #create_void_semantic(semantic_path, labels_path, semantic_path_pred, save_dir_sema, save_dir_sema_train, save_dir_inst)
 
     save_dir = '/home/giandbt/Documents/labels_processing/'
     semantic_path = '/home/giandbt/Documents/labels_processing/semantic_org'
@@ -139,3 +179,8 @@ if __name__ == '__main__':
     save_dir = '/home/giandbt/Documents/labels_processing/gtFine/val'
     semantic_path_pred = '/home/giandbt/Documents/labels_processing/semantic_predictions'
     #change_name(semantic_path_pred, save_dir)
+
+    semantic_path = '/home/giandbt/Documents/labels_processing/semantic_epfl'
+    semantic_path_pred = '/home/giandbt/Documents/labels_processing/semantic_predictions'
+    create_void_semantic_original(semantic_path, semantic_path_pred, save_dir_sema, save_dir_sema_train,
+                                  save_dir_inst)
