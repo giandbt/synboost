@@ -1,5 +1,5 @@
 # Name of the experiment for saving files
-experiment_name: spade_both_void_new
+experiment_name: spade_decoder_8
 save_folder: results/
 
 # Define training strategy
@@ -16,7 +16,7 @@ model:
   semantic: True
   pretrained: True
   correlation: True
-  spade: 'both' #[options: 'encoder', 'decoder', 'both', '']
+  spade: 'decoder' #[options: 'encoder', 'decoder', 'both', '']
   num_semantic_classes: 19 # Actual training labels
 
 # logger options
@@ -52,7 +52,7 @@ train_dataloader:
     aspect_ratio: 2
     image_set: train
     no_flip: False
-    void: True
+    void: False
     num_semantic_classes: 19
   dataloader_args:
     batch_size: 8

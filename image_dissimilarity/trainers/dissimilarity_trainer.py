@@ -7,7 +7,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 import sys
 sys.path.append("..")
 from util import trainer_util
-from models.dissimilarity_model import DissimNet, GuidedDissimNet, ResNetDissimNet, CorrelatedDissimNet
+from models.dissimilarity_model import DissimNet, GuidedDissimNet, ResNetDissimNet, CorrelatedDissimNet, CorrelatedDissimNetGuide
 
 class DissimilarityTrainer():
     """
@@ -31,7 +31,7 @@ class DissimilarityTrainer():
         if 'vgg' in config['model']['architecture'] and 'guided' in config['model']['architecture']:
             self.diss_model = GuidedDissimNet(**config['model']).cuda(self.gpu)
         if 'vgg' in config['model']['architecture'] and 'correlated' in config['model']['architecture']:
-            self.diss_model = CorrelatedDissimNet(**config['model']).cuda(self.gpu)
+            self.diss_model = CorrelatedDissimNetGuide(**config['model']).cuda(self.gpu)
         elif 'vgg' in config['model']['architecture']:
             self.diss_model = DissimNet(**config['model']).cuda(self.gpu)
         elif 'resnet' in config['model']['architecture']:

@@ -808,7 +808,213 @@ class CorrelatedDissimNet(nn.Module):
         self.final_prediction = x
         
         return self.final_prediction
-    
+
+class CorrelatedDissimNetGuide(nn.Module):
+    def __init__(self, architecture='vgg16', semantic=True, pretrained=True, correlation=True, spade='decoder',
+                 num_semantic_classes=19):
+        super(CorrelatedDissimNetGuide, self).__init__()
+
+        self.spade = spade
+
+        # layers for encoder
+        self.og_gel1 = GuideEncoderLayer(nc_in=3, nc_out=64)
+        self.syn_gel1 = GuideEncoderLayer(nc_in=3, nc_out=64)
+
+        self.og_conv1 = nn.Conv2d(64, 64, kernel_size=3, padding=1)
+        self.syn_conv1 = nn.Conv2d(64, 64, kernel_size=3, padding=1)
+        self.og_gc1 = SPADE(norm_nc=64, label_nc=64)
+        self.og_relu1 = nn.ReLU(inplace=True)
+        self.syn_gc1 = SPADE(norm_nc=64, label_nc=64)
+        self.syn_relu1 = nn.ReLU(inplace=True)
+        self.og_max1 = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.syn_max1 = nn.MaxPool2d(kernel_size=2, stride=2)
+
+        self.og_gel2 = GuideEncoderLayer(nc_in=64, nc_out=128)
+        self.syn_gel2 = GuideEncoderLayer(nc_in=64, nc_out=128)
+
+        self.og_conv2 = nn.Conv2d(128, 128, kernel_size=3, padding=1)
+        self.syn_conv2 = nn.Conv2d(128, 128, kernel_size=3, padding=1)
+        self.og_gc2 = SPADE(norm_nc=128, label_nc=128)
+        self.og_relu2 = nn.ReLU(inplace=True)
+        self.syn_gc2 = SPADE(norm_nc=128, label_nc=128)
+        self.syn_relu2 = nn.ReLU(inplace=True)
+        self.og_max2 = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.syn_max2 = nn.MaxPool2d(kernel_size=2, stride=2)
+
+        self.og_gel3 = GuideEncoderLayer(nc_in=128, nc_out=256)
+        self.syn_gel3 = GuideEncoderLayer(nc_in=128, nc_out=256)
+        self.og_gel4 = GuideEncoderLayer(nc_in=256, nc_out=256)
+        self.syn_gel4 = GuideEncoderLayer(nc_in=256, nc_out=256)
+
+        self.og_conv3 = nn.Conv2d(256, 256, kernel_size=3, padding=1)
+        self.syn_conv3 = nn.Conv2d(256, 256, kernel_size=3, padding=1)
+        self.og_gc3 = SPADE(norm_nc=256, label_nc=256)
+        self.og_relu3 = nn.ReLU(inplace=True)
+        self.syn_gc3 = SPADE(norm_nc=256, label_nc=256)
+        self.syn_relu3 = nn.ReLU(inplace=True)
+        self.og_max3 = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.syn_max3 = nn.MaxPool2d(kernel_size=2, stride=2)
+
+        self.og_gel5 = GuideEncoderLayer(nc_in=256, nc_out=512)
+        self.syn_gel5 = GuideEncoderLayer(nc_in=256, nc_out=512)
+        self.og_gel6 = GuideEncoderLayer(nc_in=512, nc_out=512)
+        self.syn_gel6 = GuideEncoderLayer(nc_in=512, nc_out=512)
+
+        self.og_conv4 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
+        self.syn_conv4 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
+        self.og_gc4 = SPADE(norm_nc=512, label_nc=512)
+        self.og_relu4 = nn.ReLU(inplace=True)
+        self.syn_gc4 = SPADE(norm_nc=512, label_nc=512)
+        self.syn_relu4 = nn.ReLU(inplace=True)
+
+        # layers for decoder
+        # all the 3x3 convolutions
+        self.conv1 = nn.Sequential(nn.Conv2d(512, 256, kernel_size=3, padding=1), nn.SELU())
+        self.conv12 = nn.Sequential(nn.Conv2d(512, 256, kernel_size=3, padding=1), nn.SELU())
+        self.conv3 = nn.Sequential(nn.Conv2d(384, 128, kernel_size=3, padding=1), nn.SELU())
+        self.conv5 = nn.Sequential(nn.Conv2d(192, 64, kernel_size=3, padding=1), nn.SELU())
+
+        # spade decoder
+        if self.spade == 'decoder' or self.spade == 'both':
+            self.conv2 = SPADEDecoderLayer(nc=256, label_nc=num_semantic_classes)
+            self.conv13 = SPADEDecoderLayer(nc=256, label_nc=num_semantic_classes)
+            self.conv4 = SPADEDecoderLayer(nc=128, label_nc=num_semantic_classes)
+            self.conv6 = SPADEDecoderLayer(nc=64, label_nc=num_semantic_classes)
+        else:
+            self.conv2 = nn.Sequential(nn.Conv2d(256, 256, kernel_size=3, padding=1), nn.SELU())
+            self.conv13 = nn.Sequential(nn.Conv2d(256, 256, kernel_size=3, padding=1), nn.SELU())
+            self.conv4 = nn.Sequential(nn.Conv2d(128, 128, kernel_size=3, padding=1), nn.SELU())
+            self.conv6 = nn.Sequential(nn.Conv2d(64, 64, kernel_size=3, padding=1), nn.SELU())
+
+        # all the tranposed convolutions
+        self.tconv1 = nn.ConvTranspose2d(256, 256, kernel_size=2, stride=2, padding=0)
+        self.tconv3 = nn.ConvTranspose2d(256, 256, kernel_size=2, stride=2, padding=0)
+        self.tconv2 = nn.ConvTranspose2d(128, 128, kernel_size=2, stride=2, padding=0)
+
+        # all the other 1x1 convolutions
+        self.conv7 = nn.Conv2d(1024, 512, kernel_size=1, padding=0)
+        self.conv8 = nn.Conv2d(512, 256, kernel_size=1, padding=0)
+        self.conv9 = nn.Conv2d(256, 128, kernel_size=1, padding=0)
+        self.conv10 = nn.Conv2d(128, 64, kernel_size=1, padding=0)
+        self.conv11 = nn.Conv2d(64, 2, kernel_size=1, padding=0)
+
+        # self._initialize_weights()
+
+    def _initialize_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.BatchNorm2d):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.Linear):
+                nn.init.normal_(m.weight, 0, 0.01)
+                nn.init.constant_(m.bias, 0)
+
+    def forward(self, original_img, synthesis_img, semantic_img):
+        # get all the image encodings
+        og = self.og_gel1(original_img)
+        syn = self.syn_gel1(synthesis_img)
+
+        og_1 = self.og_conv1(og)
+        syn_1 = self.syn_conv1(syn)
+
+        og_2 = self.og_gc1(og_1, syn_1)
+        syn_2 = self.syn_gc1(syn_1, og_1)
+
+        layer1_og = self.og_relu1(og_2)
+        layer1_syn = self.syn_relu1(syn_2)
+
+        og = self.og_gel2(self.og_max1(layer1_og))
+        syn = self.syn_gel2(self.syn_max1(layer1_syn))
+
+        og_1 = self.og_conv2(og)
+        syn_1 = self.syn_conv2(syn)
+
+        og_2 = self.og_gc2(og_1, syn_1)
+        syn_2 = self.syn_gc2(syn_1, og_1)
+
+        layer2_og = self.og_relu2(og_2)
+        layer2_syn = self.syn_relu2(syn_2)
+
+        og = self.og_gel3(self.og_max2(layer2_og))
+        syn = self.syn_gel3(self.syn_max2(layer2_syn))
+        og = self.og_gel4(og)
+        syn = self.syn_gel4(syn)
+
+        og_1 = self.og_conv3(og)
+        syn_1 = self.syn_conv3(syn)
+
+        og_2 = self.og_gc3(og_1, syn_1)
+        syn_2 = self.syn_gc3(syn_1, og_1)
+
+        layer3_og = self.og_relu3(og_2)
+        layer3_syn = self.syn_relu3(syn_2)
+
+        og = self.og_gel5(self.og_max3(layer3_og))
+        syn = self.syn_gel5(self.syn_max3(layer3_syn))
+        og = self.og_gel6(og)
+        syn = self.syn_gel6(syn)
+
+        og_1 = self.og_conv4(og)
+        syn_1 = self.syn_conv4(syn)
+
+        og_2 = self.og_gc4(og_1, syn_1)
+        syn_2 = self.syn_gc4(syn_1, og_1)
+
+        layer4_og = self.og_relu4(og_2)
+        layer4_syn = self.syn_relu4(syn_2)
+
+        # concatenate the output of each encoder
+        layer1_cat = torch.cat((layer1_og, layer1_syn), dim=1)
+        layer2_cat = torch.cat((layer2_og, layer2_syn), dim=1)
+        layer3_cat = torch.cat((layer3_og, layer3_syn), dim=1)
+        layer4_cat = torch.cat((layer4_og, layer4_syn), dim=1)
+
+        # use 1x1 convolutions to reduce dimensions of concatenations
+        layer4_cat = self.conv7(layer4_cat)
+        layer3_cat = self.conv8(layer3_cat)
+        layer2_cat = self.conv9(layer2_cat)
+        layer1_cat = self.conv10(layer1_cat)
+
+        # Run Decoder
+        x = self.conv1(layer4_cat)
+        if self.spade == 'decoder' or self.spade == 'both':
+            x = self.conv2(x, semantic_img)
+        else:
+            x = self.conv2(x)
+        x = self.tconv1(x)
+
+        x = torch.cat((x, layer3_cat), dim=1)
+        x = self.conv12(x)
+        if self.spade == 'decoder' or self.spade == 'both':
+            x = self.conv13(x, semantic_img)
+        else:
+            x = self.conv13(x)
+        x = self.tconv3(x)
+
+        x = torch.cat((x, layer2_cat), dim=1)
+        x = self.conv3(x)
+        if self.spade == 'decoder' or self.spade == 'both':
+            x = self.conv4(x, semantic_img)
+        else:
+            x = self.conv4(x)
+        x = self.tconv2(x)
+
+        x = torch.cat((x, layer1_cat), dim=1)
+        x = self.conv5(x)
+        if self.spade == 'decoder' or self.spade == 'both':
+            x = self.conv6(x, semantic_img)
+        else:
+            x = self.conv6(x)
+        x = self.conv11(x)
+
+        self.final_prediction = x
+
+        return self.final_prediction
+
 class SPADEDecoderLayer(nn.Module):
     def __init__(self, nc=256, label_nc=19):
         super(SPADEDecoderLayer, self).__init__()

@@ -97,7 +97,6 @@ class GuideCorrelation(nn.Module):
         
         return gamma, beta
 
-
 class GuideNormalization(nn.Module):
     def __init__(self, nc):
         super().__init__()
