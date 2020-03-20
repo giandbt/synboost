@@ -197,6 +197,22 @@ def create_labels(semantic_folder,save_dir):
         semantic_out = np.zeros_like(semantic)
         cv2.imwrite(os.path.join(save_dir, new_semantic_name), semantic_out)
 
+
+def create_labels_fake(semantic_folder,save_dir):
+    if not os.path.isdir(save_dir):
+        os.mkdir(save_dir)
+
+    semantic_paths = [os.path.join(semantic_folder, image)
+                      for image in os.listdir(semantic_folder)]
+
+    semantic_paths = natsorted(semantic_paths)
+
+    for idx, semantic in enumerate(semantic_paths):
+        print('Generating image %i our of %i' % (idx + 1, len(semantic_paths)))
+        new_semantic_name = os.path.basename(semantic)
+        semantic = np.array(Image.open(os.path.join(semantic_path, semantic)))
+        semantic_out = np.ones_like(semantic)
+        cv2.imwrite(os.path.join(save_dir, new_semantic_name), semantic_out)
 if __name__ == '__main__':
 
     save_dir_sema = '/home/giandbt/Documents/labels_processing/semantic_label_ids'
@@ -225,4 +241,8 @@ if __name__ == '__main__':
 
     semantic_folder = '/home/giandbt/Documents/data/master_thesis/dissimilarity_model/epfl_combined/semantc'
     save_dir = '/home/giandbt/Documents/data/master_thesis/dissimilarity_model/epfl_combined/labels'
-    create_labels(semantic_folder, save_dir)
+    #create_labels(semantic_folder, save_dir)
+
+    semantic_folder = '/home/giandbt/Documents/data/master_thesis/dissimilarity_model/indoorCVPR_09_post-process/semantic'
+    save_dir = '/home/giandbt/Documents/data/master_thesis/dissimilarity_model/indoorCVPR_09_post-process/labels'
+    create_labels_fake(semantic_folder, save_dir)

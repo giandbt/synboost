@@ -71,7 +71,7 @@ def get_class_weights(loader, num_classes, c=1.02):
     return class_weights
 
 
-def loader(segmented_path, batch_size, h=512, w=512):
+def loader(segmented_path, batch_size, h=256, w=512):
     """
     The Loader to generate inputs and labels from the Image and Segmented Directory
     Arguments:
@@ -97,12 +97,7 @@ def loader(segmented_path, batch_size, h=512, w=512):
         for jj in batch_idxs:
             img = Image.open(segmented_path + filenames_s[jj])
             img = np.array(img)
-            
-            # Correct Labels to Train IDs
-            img_copy = img.copy()
-            img_copy[img == 255] = 1
-            img = img_copy.astype(np.uint8)
-            
+
             img = cv2.resize(img, (h, w), cv2.INTER_NEAREST)
             labels.append(img)
         labels = torch.tensor(labels)

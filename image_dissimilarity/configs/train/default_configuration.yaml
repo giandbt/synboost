@@ -1,5 +1,5 @@
 # Name of the experiment for saving files
-experiment_name: baseline_data_double
+experiment_name: baseline_all
 save_folder: results/
 
 # Define training strategy
@@ -43,17 +43,15 @@ optimizer:
 # parameters for dataloaders
 train_dataloader:
   dataset_args:
-    dataroot: /home/giancarlo/data/innosuisse/epfl_combined/train
+    dataroot: /home/giancarlo/data/innosuisse/epfl/train
     #dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/road_anomaly # (for workstation debugging)
     #dataroot: /home/giancarlo/data/innosuisse/road_anomaly #(only for quick debugging)
-    preprocess_mode: fixed
-    load_size: 1024
+    preprocess_mode: none
     crop_size: 512
     aspect_ratio: 2
-    image_set: train
-    no_flip: False
     void: True
     num_semantic_classes: 19
+    is_train: True
   dataloader_args:
     batch_size: 8
     num_workers: 4
@@ -62,13 +60,11 @@ val_dataloader:
   dataset_args:
     dataroot: /home/giancarlo/data/innosuisse/fs_lost_and_found
     #dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/fs_lost_and_found # (for workstation debugging)
-    preprocess_mode: fixed
-    load_size: 1024
+    preprocess_mode: none
     crop_size: 512
     aspect_ratio: 2
-    image_set: val
-    no_flip: True
     num_semantic_classes: 19
+    is_train: False
   dataloader_args:
     batch_size: 1
     num_workers: 1
@@ -77,14 +73,12 @@ test_dataloader1:
   dataset_args:
     dataroot: /home/giancarlo/data/innosuisse/road_anomaly
     #dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/road_anomaly #(for workstation debugging)
-    preprocess_mode: fixed
-    load_size: 1024
+    preprocess_mode: none
     crop_size: 512
     aspect_ratio: 2
-    image_set: test
-    no_flip: True
     roi: False
     num_semantic_classes: 19
+    is_train: False
   dataloader_args:
     batch_size: 1
     num_workers: 1
@@ -93,14 +87,12 @@ test_dataloader2:
   dataset_args:
     dataroot: /home/giancarlo/data/innosuisse/fs_static
     #dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/fs_static # (for workstation debugging)
-    preprocess_mode: fixed
-    load_size: 1024
+    preprocess_mode: none
     crop_size: 512
     aspect_ratio: 2
-    image_set: test
-    no_flip: True
     roi: True
     num_semantic_classes: 19
+    is_train: False
   dataloader_args:
     batch_size: 1
     num_workers: 1
@@ -109,14 +101,12 @@ test_dataloader3:
   dataset_args:
     dataroot: /home/giancarlo/data/innosuisse/fs_lost_and_found
     #dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/fs_lost_and_found # (for workstation debugging)
-    preprocess_mode: fixed
-    load_size: 1024
+    preprocess_mode: none
     crop_size: 512
     aspect_ratio: 2
-    image_set: test
-    no_flip: True
     roi: True
     num_semantic_classes: 19
+    is_train: False
   dataloader_args:
     batch_size: 1
     num_workers: 1

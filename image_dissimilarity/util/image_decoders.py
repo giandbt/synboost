@@ -1,20 +1,18 @@
 import numpy as np
 
 class DenormalizeImage(object):
-    """Denormalize image based on imagenet values
+    def __init__(self, mean, std):
+        self.mean = mean
+        self.std = std
 
-    Returns:
-        img: Denormalized image
-    """
-    def __init__(self):
+    def __call__(self, tensor):
         """
+        Args:
+            tensor (Tensor): Tensor image of size (C, H, W) to be normalized.
+        Returns:
+            Tensor: Normalized image.
         """
-        self.mean = np.array([0.5, 0.5, 0.5]).reshape(-1,1,1)
-        self.std = np.array([0.5, 0.5, 0.5]).reshape(-1,1,1)
-
-    def __call__(self, img):
-        """
-        """
-        img = self.std * img + self.mean
-        img = np.clip(img, 0, 1)
-        return img
+        for t, m, s in zip(tensor, self.mean, self.std):
+            t.mul_(s).add_(m)
+            # The normalize code -> t.sub_(m).div_(s)
+        return tensor
