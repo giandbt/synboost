@@ -15,12 +15,13 @@ id_to_trainid = cityscapes_labels.label2trainid
 
 def include_void_to_labels(label_path, semantic_path, save_dir, include_ego_vehicle = True):
 
+    # we only include void labels that are borders, static or big objects
     if include_ego_vehicle:
-        void_labels = [0, 1, 2, 3, 4, 5, 6, 9, 10, 14, 15, 16, 18, 29, 30]
+        void_labels = [0, 1, 2, 3, 4,  29, 30]
         if not os.path.isdir(os.path.join(save_dir, 'labels_with_void')):
             os.mkdir(os.path.join(save_dir, 'labels_with_void'))
     else:
-        void_labels = [0, 2, 3, 4, 5, 6, 9, 10, 14, 15, 16, 18, 29, 30]  # without ego vehicle
+        void_labels = [0, 2, 3, 4,  29, 30]  # without ego vehicle
         if not os.path.isdir(os.path.join(save_dir, 'labels_with_void_no_ego')):
             os.mkdir(os.path.join(save_dir, 'labels_with_void_no_ego'))
 
@@ -44,7 +45,7 @@ def include_void_to_labels(label_path, semantic_path, save_dir, include_ego_vehi
             mask_unknown = np.where(semantic_img == void_label, 1, 0).astype(np.uint8)
             label_img += mask_unknown
 
-        final_mask = np.where(label_img != 0, 1, 0).astype(np.uint8)
+        final_mask = np.where(label_img != 1, 0, 1).astype(np.uint8)
         mask_img = Image.fromarray((final_mask).astype(np.uint8))
         label_name = os.path.basename(label)
         if include_ego_vehicle:
@@ -91,9 +92,6 @@ def create_void_semantic(semantic_path, labels_path, semantic_path_pred, save_di
         mask = (label_img==1)
         syn_semantic[mask] = semantic_out[mask]
 
-        #syn_semantic = Image.fromarray(syn_semantic).resize(pred_img_og.size)
-        #syn_semantic.save(os.path.join(save_dir_semantic, new_semantic_name))
-        #syn_semantic.save(os.path.join(save_dir_inst, new_instance_name))
         cv2.imwrite(os.path.join(save_dir_semantic, new_semantic_name), syn_semantic)
         cv2.imwrite(os.path.join(save_dir_inst, new_instance_name), syn_semantic)
         semantic_out = np.zeros_like(semantic_train)
@@ -162,6 +160,43 @@ def create_void_semantic_original(semantic_path, semantic_path_pred, save_dir_se
             semantic_out[np.where(syn_semantic == label_id)] = train_id
         cv2.imwrite(os.path.join(save_dir_semantic_train, new_semantic_name), semantic_out)
 
+def change_labelIds_to_trainIds(semantic_folder,save_dir):
+    if not os.path.isdir(save_dir):
+        os.mkdir(save_dir)
+
+    semantic_paths = [os.path.join(semantic_folder, image)
+                      for image in os.listdir(semantic_folder)]
+
+    semantic_paths = natsorted(semantic_paths)
+
+    for idx, semantic in enumerate(semantic_paths):
+        print('Generating image %i our of %i' % (idx + 1, len(semantic_paths)))
+        new_semantic_name = os.path.basename(semantic).replace('labelIds', 'TrainIds_known')
+
+        semantic = np.array(Image.open(os.path.join(semantic_path, semantic)))
+        semantic_out = np.zeros_like(semantic)
+        for label_id, train_id in id_to_trainid.items():
+            semantic_out[np.where(semantic == label_id)] = train_id
+
+        cv2.imwrite(os.path.join(save_dir, new_semantic_name), semantic_out)
+
+def create_labels(semantic_folder,save_dir):
+    if not os.path.isdir(save_dir):
+        os.mkdir(save_dir)
+
+    semantic_paths = [os.path.join(semantic_folder, image)
+                      for image in os.listdir(semantic_folder)]
+
+    semantic_paths = natsorted(semantic_paths)
+
+    for idx, semantic in enumerate(semantic_paths):
+        print('Generating image %i our of %i' % (idx + 1, len(semantic_paths)))
+        new_semantic_name = os.path.basename(semantic).replace('trainlIds', 'label')
+
+        semantic = np.array(Image.open(os.path.join(semantic_path, semantic)))
+        semantic_out = np.zeros_like(semantic)
+        cv2.imwrite(os.path.join(save_dir, new_semantic_name), semantic_out)
+
 if __name__ == '__main__':
 
     save_dir_sema = '/home/giandbt/Documents/labels_processing/semantic_label_ids'
@@ -174,7 +209,7 @@ if __name__ == '__main__':
 
     save_dir = '/home/giandbt/Documents/labels_processing/'
     semantic_path = '/home/giandbt/Documents/labels_processing/semantic_org'
-    #include_void_to_labels(labels_path, semantic_path, save_dir, include_ego_vehicle=False)
+    #include_void_to_labels(labels_path, semantic_path, save_dir, include_ego_vehicle=True)
 
     save_dir = '/home/giandbt/Documents/labels_processing/gtFine/val'
     semantic_path_pred = '/home/giandbt/Documents/labels_processing/semantic_predictions'
@@ -182,5 +217,12 @@ if __name__ == '__main__':
 
     semantic_path = '/home/giandbt/Documents/labels_processing/semantic_epfl'
     semantic_path_pred = '/home/giandbt/Documents/labels_processing/semantic_predictions'
-    create_void_semantic_original(semantic_path, semantic_path_pred, save_dir_sema, save_dir_sema_train,
-                                  save_dir_inst)
+    #create_void_semantic_original(semantic_path, semantic_path_pred, save_dir_sema, save_dir_sema_train,  save_dir_inst)
+
+    semantic_folder = '/home/giandbt/Documents/data/master_thesis/dissimilarity_model/epfl_combined/semantic_label'
+    save_dir = '/home/giandbt/Documents/data/master_thesis/dissimilarity_model/epfl_combined/semantc'
+    #change_labelIds_to_trainIds(semantic_folder, save_dir)
+
+    semantic_folder = '/home/giandbt/Documents/data/master_thesis/dissimilarity_model/epfl_combined/semantc'
+    save_dir = '/home/giandbt/Documents/data/master_thesis/dissimilarity_model/epfl_combined/labels'
+    create_labels(semantic_folder, save_dir)

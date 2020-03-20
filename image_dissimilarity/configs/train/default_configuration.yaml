@@ -1,5 +1,5 @@
 # Name of the experiment for saving files
-experiment_name: spade_decoder_8
+experiment_name: baseline_data_double
 save_folder: results/
 
 # Define training strategy
@@ -12,17 +12,17 @@ training_strategy:
 
 # model options
 model:
-  architecture: vgg16_bn #[options: 'vgg16', 'vgg16_bn', 'vgg16_guided', 'resnet18', 'vgg16_correlated']
+  architecture: vgg16 #[options: 'vgg16', 'vgg16_bn', 'vgg16_guided', 'resnet18', 'vgg16_correlated']
   semantic: True
   pretrained: True
   correlation: True
-  spade: 'decoder' #[options: 'encoder', 'decoder', 'both', '']
+  spade: '' #[options: 'encoder', 'decoder', 'both', '']
   num_semantic_classes: 19 # Actual training labels
 
 # logger options
 logger:
-  results_dir: ./logs
-  save_epoch_freq: 1 #frequency of saving checkpoints at the end of epochs
+  results_dir: ./data_logs
+  save_epoch_freq: 50 #frequency of saving checkpoints at the end of epochs
 
 # loss options (remove tasks not needed)
 loss:  CrossEntropyLoss
@@ -43,7 +43,7 @@ optimizer:
 # parameters for dataloaders
 train_dataloader:
   dataset_args:
-    dataroot: /home/giancarlo/data/innosuisse/epfl/train
+    dataroot: /home/giancarlo/data/innosuisse/epfl_combined/train
     #dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/road_anomaly # (for workstation debugging)
     #dataroot: /home/giancarlo/data/innosuisse/road_anomaly #(only for quick debugging)
     preprocess_mode: fixed
@@ -52,7 +52,7 @@ train_dataloader:
     aspect_ratio: 2
     image_set: train
     no_flip: False
-    void: False
+    void: True
     num_semantic_classes: 19
   dataloader_args:
     batch_size: 8

@@ -89,7 +89,6 @@ for epoch in iter_counter.training_epochs():
         semantic = data_i['semantic'].cuda()
         synthesis = data_i['synthesis'].cuda()
         label = data_i['label'].cuda()
-        
         # Training
         model_loss, _ = trainer.run_model_one_step(original, synthesis, semantic, label)
         train_loss += model_loss
@@ -128,6 +127,7 @@ for epoch in iter_counter.training_epochs():
         print('Starting Testing For %s' % os.path.basename(cfg_test_loader1['dataset_args']['dataroot']))
         flat_pred = np.zeros(w * h * len(test_loader1))
         flat_labels = np.zeros(w * h * len(test_loader1))
+        val_loss = 0
         for i, data_i in enumerate(tqdm(test_loader1)):
             original = data_i['original'].cuda()
             semantic = data_i['semantic'].cuda()
@@ -136,6 +136,7 @@ for epoch in iter_counter.training_epochs():
         
             # Evaluating
             loss, outputs = trainer.run_validation(original, synthesis, semantic, label)
+            val_loss += loss
             outputs = softmax(outputs)
             (softmax_pred, predictions) = torch.max(outputs, dim=1)
             flat_pred[i * w * h:i * w * h + w * h] = torch.flatten(outputs[:, 1, :, :]).detach().cpu().numpy()
@@ -151,15 +152,18 @@ for epoch in iter_counter.training_epochs():
         print('AU_ROC: %f' % results['auroc'])
         print('mAP: %f' % results['AP'])
         print('FPR@95TPR: %f' % results['FPR@95%TPR'])
-    
+
+        avg_val_loss = val_loss / len(test_loader1)
         test_writer.add_scalar('%s AUC_ROC' % os.path.basename(cfg_test_loader1['dataset_args']['dataroot']), results['auroc'], epoch)
         test_writer.add_scalar('%s mAP' % os.path.basename(cfg_test_loader1['dataset_args']['dataroot']), results['AP'], epoch)
         test_writer.add_scalar('%s FPR@95TPR' % os.path.basename(cfg_test_loader1['dataset_args']['dataroot']), results['FPR@95%TPR'], epoch)
+        test_writer.add_scalar('val_loss_%s' % os.path.basename(cfg_test_loader1['dataset_args']['dataroot']), avg_val_loss, epoch)
 
         # Starts Testing (Test Set 2)
         print('Starting Testing For %s' % os.path.basename(cfg_test_loader2['dataset_args']['dataroot']))
         flat_pred = np.zeros(w * h * len(test_loader2))
         flat_labels = np.zeros(w * h * len(test_loader2))
+        val_loss = 0
         for i, data_i in enumerate(tqdm(test_loader2)):
             original = data_i['original'].cuda()
             semantic = data_i['semantic'].cuda()
@@ -168,6 +172,7 @@ for epoch in iter_counter.training_epochs():
     
             # Evaluating
             loss, outputs = trainer.run_validation(original, synthesis, semantic, label)
+            val_loss += loss
             outputs = softmax(outputs)
             (softmax_pred, predictions) = torch.max(outputs, dim=1)
             flat_pred[i * w * h:i * w * h + w * h] = torch.flatten(outputs[:, 1, :, :]).detach().cpu().numpy()
@@ -177,6 +182,8 @@ for epoch in iter_counter.training_epochs():
             invalid_indices = np.argwhere(flat_labels == 255)
             flat_labels = np.delete(flat_labels, invalid_indices)
             flat_pred = np.delete(flat_pred, invalid_indices)
+
+        avg_val_loss = val_loss / len(test_loader2)
 
         print('Calculating metrics')
         results = metrics.get_metrics(flat_labels, flat_pred)
@@ -190,11 +197,14 @@ for epoch in iter_counter.training_epochs():
                                epoch)
         test_writer.add_scalar('%s FPR@95TPR' % os.path.basename(cfg_test_loader2['dataset_args']['dataroot']),
                                results['FPR@95%TPR'], epoch)
+        test_writer.add_scalar('val_loss_%s' % os.path.basename(cfg_test_loader2['dataset_args']['dataroot']),
+                               avg_val_loss, epoch)
         
         # Starts Testing (Test Set 3)
         print('Starting Testing For %s' % os.path.basename(cfg_test_loader3['dataset_args']['dataroot']))
         flat_pred = np.zeros(w * h * len(test_loader3))
         flat_labels = np.zeros(w * h * len(test_loader3))
+        val_loss = 0
         for i, data_i in enumerate(tqdm(test_loader3)):
             original = data_i['original'].cuda()
             semantic = data_i['semantic'].cuda()
@@ -203,6 +213,7 @@ for epoch in iter_counter.training_epochs():
     
             # Evaluating
             loss, outputs = trainer.run_validation(original, synthesis, semantic, label)
+            val_loss += loss
             outputs = softmax(outputs)
             (softmax_pred, predictions) = torch.max(outputs, dim=1)
             flat_pred[i * w * h:i * w * h + w * h] = torch.flatten(outputs[:, 1, :, :]).detach().cpu().numpy()
@@ -219,12 +230,16 @@ for epoch in iter_counter.training_epochs():
         print('mAP: %f' % results['AP'])
         print('FPR@95TPR: %f' % results['FPR@95%TPR'])
 
+        avg_val_loss = val_loss / len(test_loader3)
+
         test_writer.add_scalar('%s AUC_ROC' % os.path.basename(cfg_test_loader3['dataset_args']['dataroot']),
                                results['auroc'], epoch)
         test_writer.add_scalar('%s mAP' % os.path.basename(cfg_test_loader3['dataset_args']['dataroot']), results['AP'],
                                epoch)
         test_writer.add_scalar('%s FPR@95TPR' % os.path.basename(cfg_test_loader3['dataset_args']['dataroot']),
                                results['FPR@95%TPR'], epoch)
+        test_writer.add_scalar('val_loss_%s' % os.path.basename(cfg_test_loader3['dataset_args']['dataroot']),
+                               avg_val_loss, epoch)
     
     print('saving the latest model (epoch %d, total_steps %d)' %
           (epoch, iter_counter.total_steps_so_far))

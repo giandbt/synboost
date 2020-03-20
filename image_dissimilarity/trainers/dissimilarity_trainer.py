@@ -39,8 +39,8 @@ class DissimilarityTrainer():
         else:
             raise NotImplementedError()
             
-        #print('Printing Model Parameters')
-        #print(self.diss_model.parameters)
+        print('Printing Model Parameters')
+        print(self.diss_model.parameters)
         
         lr_config = config['optimizer']
         lr_options = lr_config['parameters']

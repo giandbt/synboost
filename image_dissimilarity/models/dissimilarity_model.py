@@ -35,12 +35,7 @@ class DissimNet(nn.Module):
             self.conv12 = nn.Sequential(nn.Conv2d(513, 256, kernel_size=3, padding=1), nn.SELU())
             self.conv3 = nn.Sequential(nn.Conv2d(385, 128, kernel_size=3, padding=1), nn.SELU())
             self.conv5 = nn.Sequential(nn.Conv2d(193, 64, kernel_size=3, padding=1), nn.SELU())
-            
-            # all correlations 1x1
-            self.corr1 = nn.Conv2d(512, 1, kernel_size=1, padding=0)
-            self.corr2 = nn.Conv2d(256, 1, kernel_size=1, padding=0)
-            self.corr3 = nn.Conv2d(128, 1, kernel_size=1, padding=0)
-            self.corr4 = nn.Conv2d(64, 1, kernel_size=1, padding=0)
+
         else:
             self.conv1 = nn.Sequential(nn.Conv2d(512, 256, kernel_size=3, padding=1), nn.SELU())
             self.conv12 = nn.Sequential(nn.Conv2d(512, 256, kernel_size=3, padding=1), nn.SELU())
@@ -197,12 +192,7 @@ class ResNetDissimNet(nn.Module):
             self.conv12 = nn.Sequential(nn.Conv2d(513, 256, kernel_size=3, padding=1), nn.SELU())
             self.conv3 = nn.Sequential(nn.Conv2d(385, 128, kernel_size=3, padding=1), nn.SELU())
             self.conv5 = nn.Sequential(nn.Conv2d(193, 64, kernel_size=3, padding=1), nn.SELU())
-            
-            # all correlations 1x1
-            self.corr1 = nn.Conv2d(512, 1, kernel_size=1, padding=0)
-            self.corr2 = nn.Conv2d(256, 1, kernel_size=1, padding=0)
-            self.corr3 = nn.Conv2d(128, 1, kernel_size=1, padding=0)
-            self.corr4 = nn.Conv2d(64, 1, kernel_size=1, padding=0)
+
         else:
             self.conv1 = nn.Sequential(nn.Conv2d(512, 256, kernel_size=3, padding=1), nn.SELU())
             self.conv12 = nn.Sequential(nn.Conv2d(512, 256, kernel_size=3, padding=1), nn.SELU())

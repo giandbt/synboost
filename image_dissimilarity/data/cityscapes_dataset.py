@@ -6,7 +6,7 @@ import torchvision.transforms as transforms
 import numpy as np
 import random
 from natsort import natsorted
-import torch 
+import torch
 
 import sys
 sys.path.append("..")
@@ -20,7 +20,7 @@ INVALID_LABELED_FRAMES = [17,  37,  55,  72,  91, 110, 129, 153, 174, 197, 218, 
 
 class CityscapesDataset(Dataset):
     
-    def __init__(self, dataroot, preprocess_mode, image_set, load_size=1024, crop_size=512, 
+    def __init__(self, dataroot, preprocess_mode, image_set, load_size=1024, crop_size=512,
                  aspect_ratio= 0.5, no_flip=False, only_valid = False, roi = False, void = False,
                  num_semantic_classes = 19):
         self.original_paths = [os.path.join(dataroot, 'original', image)
