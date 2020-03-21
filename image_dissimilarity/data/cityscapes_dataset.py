@@ -5,6 +5,7 @@ from PIL import Image
 import numpy as np
 from natsort import natsorted
 from torchvision import transforms
+import torch
 
 import sys
 sys.path.append("..")
@@ -61,6 +62,7 @@ class CityscapesDataset(Dataset):
         self.aspect_ratio = aspect_ratio
         self.num_semantic_classes = num_semantic_classes
         self.is_train = is_train
+        self.void = void
 
     def __getitem__(self, index):
         
@@ -95,14 +97,19 @@ class CityscapesDataset(Dataset):
         syn_image_tensor = base_transforms(syn_image)
 
         # apply augmentations
-        if self.is_train or self.preprocess_mode is not 'none':
+        if self.is_train and self.preprocess_mode != 'none':
+            print(self.preprocess_mode)
             image_tensor = augmentations(transforms.ToPILImage()(image_tensor))
             syn_image_tensor = augmentations(transforms.ToPILImage()(syn_image_tensor))
 
-        ## post processing for semantic labels
-        #if self.num_semantic_classes == 19:
-        #    semantic_tensor[semantic_tensor == 255] = self.num_semantic_classes + 1  # 'ignore label is 20'
-        #semantic_tensor = one_hot_encoding(semantic_tensor, self.num_semantic_classes + 1)
+        # ignore labels classify as void if void is not use for training
+        #if not self.void:
+        #    label_tensor[semantic_tensor == 255] = 255
+
+        # post processing for semantic labels
+        if self.num_semantic_classes == 19:
+            semantic_tensor[semantic_tensor == 255] = self.num_semantic_classes + 1  # 'ignore label is 20'
+        semantic_tensor = one_hot_encoding(semantic_tensor, self.num_semantic_classes + 1)
 
         input_dict = {'label': label_tensor,
                       'original': image_tensor,
@@ -146,14 +153,14 @@ def test(dataset_args, dataloader_args, save_imgs=False, path='./visualization')
             enumerate(zip(sample['original'], sample['label'], sample['semantic'], sample['synthesis'])):
                 # get original image
                 original = original.squeeze().cpu()
-                original = decoder(original)
+                #original = decoder(original)
                 original = np.asarray(transform(original))
                 original = Image.fromarray(original)
                 original.save(os.path.join(path, 'Original_%i_%i' % (counter, idx) + '.png'))
 
                 # get label image
                 label = label.squeeze().cpu().numpy()
-                label = np.asarray(transform(label))*255
+                label = np.asarray(transform(label))
                 label = Image.fromarray(label).convert('RGB')
                 label.save(os.path.join(path, 'Label_%i_%i' % (counter, idx) + '.png'))
 
@@ -166,7 +173,7 @@ def test(dataset_args, dataloader_args, save_imgs=False, path='./visualization')
 
                 # get original image
                 synthesis = synthesis.squeeze().cpu()
-                synthesis = decoder(synthesis)
+                #synthesis = decoder(synthesis)
                 synthesis = np.asarray(transform(synthesis))
                 synthesis = Image.fromarray(synthesis)
                 synthesis.save(os.path.join(path, 'Synthesis_%i_%i' % (counter, idx) + '.png'))
@@ -182,7 +189,7 @@ if __name__ == '__main__':
     from util import visualization
     
     dataset_args = {
-        'dataroot': '/home/giancarlo/data/innosuisse/epfl/train',
+        'dataroot': '/home/giancarlo/data/innosuisse/fs_lost_and_found',
         'preprocess_mode': 'none',
         'crop_size': 512,
         'aspect_ratio': 2,

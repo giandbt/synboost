@@ -82,8 +82,6 @@ class DissimilarityTrainer():
         else:
             self.criterion = nn.CrossEntropyLoss(ignore_index=255).cuda(self.gpu)
         
-        
-
     def run_model_one_step(self, original, synthesis, semantic, label):
         self.optimizer.zero_grad()
         predictions = self.diss_model(original, synthesis, semantic)

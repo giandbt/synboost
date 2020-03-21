@@ -1,11 +1,11 @@
 # Name of the experiment for saving files
-experiment_name: baseline_all
+experiment_name: baseline_none_normal
 save_folder: results/
 
 # Define training strategy
 training_strategy:
   niter: 50 # of iter at starting learning rate. Total #epochs is niter + niter_decay'
-  niter_decay: 0 # of iter to linearly decay learningd rate to zero
+  niter_decay: 0 # of iter to linearly decay learning rate to zero
   is_train: True
   class_weight: True
   class_weight_cityscapes: False
@@ -45,15 +45,15 @@ train_dataloader:
   dataset_args:
     dataroot: /home/giancarlo/data/innosuisse/epfl/train
     #dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/road_anomaly # (for workstation debugging)
-    #dataroot: /home/giancarlo/data/innosuisse/road_anomaly #(only for quick debugging)
+    #dataroot: /home/giancarlo/data/innosuisse/fs_lost_and_found  #(only for quick debugging)
     preprocess_mode: none
     crop_size: 512
     aspect_ratio: 2
-    void: True
+    void: False
     num_semantic_classes: 19
     is_train: True
   dataloader_args:
-    batch_size: 8
+    batch_size: 1
     num_workers: 4
     shuffle: True
 val_dataloader:
@@ -63,6 +63,7 @@ val_dataloader:
     preprocess_mode: none
     crop_size: 512
     aspect_ratio: 2
+    void: False
     num_semantic_classes: 19
     is_train: False
   dataloader_args:

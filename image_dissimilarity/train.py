@@ -104,10 +104,10 @@ for epoch in iter_counter.training_epochs():
         val_loss = 0
         for i, data_i in enumerate(tqdm(val_loader)):
             original = data_i['original'].cuda()
-            semantic = data_i['semantic'].cuda()
+            oemantic = data_i['semantic'].cuda()
             synthesis = data_i['synthesis'].cuda()
             label = data_i['label'].cuda()
-        
+
             # Evaluating
             loss, _ = trainer.run_validation(original, synthesis, semantic, label)
             val_loss += loss

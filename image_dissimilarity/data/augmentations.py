@@ -65,7 +65,7 @@ class OnlyApplyBlursAggressive:
 class OnlyChangeContrast:
     def __init__(self):
         self.aug = iaa.Sequential(
-            [iaa.Sometimes(0.25, iaa.OneOf([iaa.ContrastNormalization(alpha=iap.Choice(np.arange(0, 3, 0.5).tolist())),
+            [iaa.Sometimes(0.25, iaa.OneOf([iaa.contrast.LinearContrast(alpha=iap.Choice(np.arange(0, 3, 0.5).tolist())),
                                             iaa.SigmoidContrast(gain=iap.Choice(np.arange(0, 3, 1).tolist()),
                                                                 cutoff=iap.Choice(np.arange(0, 0.6, 0.10).tolist()))])),
              ])
@@ -186,7 +186,8 @@ def __flip(img, flip):
 
 def get_base_transform(image_size, transform_name='base_train'):
     my_transforms = dict()
-    common_transforms = [transforms.Resize(size=image_size),transforms.ToTensor()]
+    #common_transforms = [transforms.ToTensor()]
+    common_transforms = [transforms.Resize(size=image_size, interpolation=Image.NEAREST),transforms.ToTensor()]
 
     my_transforms['base_train'] = transforms.Compose([transforms.RandomHorizontalFlip(p=0.5)] + common_transforms)
     my_transforms['base_test'] = transforms.Compose(common_transforms)
@@ -200,6 +201,7 @@ def get_transform(transform_name='blurs'):
     my_transforms = dict()
     common_transforms = [transforms.Normalize(norm_mean, norm_std)]
     my_transforms['none'] = []
+    my_transforms['normalization'] = transforms.Compose(common_transforms)
     my_transforms['blurs'] = transforms.Compose([OnlyApplyBlurs(), lambda x: Image.fromarray(x)] + common_transforms)
     my_transforms['contrast'] = transforms.Compose(
         [OnlyChangeContrast(), lambda x: Image.fromarray(x)] + common_transforms)
