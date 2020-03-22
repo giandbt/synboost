@@ -102,10 +102,6 @@ class CityscapesDataset(Dataset):
             image_tensor = augmentations(transforms.ToPILImage()(image_tensor))
             syn_image_tensor = augmentations(transforms.ToPILImage()(syn_image_tensor))
 
-        # ignore labels classify as void if void is not use for training
-        #if not self.void:
-        #    label_tensor[semantic_tensor == 255] = 255
-
         # post processing for semantic labels
         if self.num_semantic_classes == 19:
             semantic_tensor[semantic_tensor == 255] = self.num_semantic_classes + 1  # 'ignore label is 20'

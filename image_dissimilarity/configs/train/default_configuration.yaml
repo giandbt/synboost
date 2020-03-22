@@ -1,5 +1,5 @@
 # Name of the experiment for saving files
-experiment_name: baseline_none_normal
+experiment_name: baseline
 save_folder: results/
 
 # Define training strategy
@@ -8,7 +8,7 @@ training_strategy:
   niter_decay: 0 # of iter to linearly decay learning rate to zero
   is_train: True
   class_weight: True
-  class_weight_cityscapes: False
+  class_weight_cityscapes: True
 
 # model options
 model:
@@ -21,7 +21,7 @@ model:
 
 # logger options
 logger:
-  results_dir: ./data_logs
+  results_dir: ./data_augmentations
   save_epoch_freq: 50 #frequency of saving checkpoints at the end of epochs
 
 # loss options (remove tasks not needed)
@@ -45,7 +45,7 @@ train_dataloader:
   dataset_args:
     dataroot: /home/giancarlo/data/innosuisse/epfl/train
     #dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/road_anomaly # (for workstation debugging)
-    #dataroot: /home/giancarlo/data/innosuisse/fs_lost_and_found  #(only for quick debugging)
+    #dataroot: /home/giancarlo/data/innosuisse/road_anomaly  #(only for quick debugging)
     preprocess_mode: none
     crop_size: 512
     aspect_ratio: 2
@@ -53,7 +53,7 @@ train_dataloader:
     num_semantic_classes: 19
     is_train: True
   dataloader_args:
-    batch_size: 1
+    batch_size: 8
     num_workers: 4
     shuffle: True
 val_dataloader:
@@ -111,4 +111,16 @@ test_dataloader3:
   dataloader_args:
     batch_size: 1
     num_workers: 1
+    shuffle: False
+img_dataloader:
+  dataset_args:
+    dataroot: /home/giancarlo/data/innosuisse/visualization_imgs
+    preprocess_mode: none
+    crop_size: 512
+    aspect_ratio: 2
+    num_semantic_classes: 19
+    is_train: False
+  dataloader_args:
+    batch_size: 8
+    num_workers: 4
     shuffle: False

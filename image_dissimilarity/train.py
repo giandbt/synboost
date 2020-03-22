@@ -4,15 +4,20 @@ import os
 from tqdm import tqdm
 import numpy as np
 import shutil
+from PIL import Image
 
 import torch.backends.cudnn as cudnn
 import torch
 from torch.utils.tensorboard import SummaryWriter
+from torchvision.utils import make_grid
+from torchvision.transforms import ToPILImage, ToTensor
 
 from trainers.dissimilarity_trainer import DissimilarityTrainer
 from util import trainer_util
 from util import trainer_util, metrics
 from util.iter_counter import IterationCounter
+from util.image_logging import ImgLogging
+from util import visualization
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', type=str, help='Path to the config file.')
@@ -40,6 +45,7 @@ if not os.path.isdir(logs_fdr):
 train_writer = SummaryWriter(os.path.join(logs_fdr, exp_name, 'train'), flush_secs=30)
 val_writer = SummaryWriter(os.path.join(logs_fdr, exp_name, 'validation'), flush_secs=30)
 test_writer = SummaryWriter(os.path.join(logs_fdr, exp_name, 'test'), flush_secs=30)
+image_writer = SummaryWriter(os.path.join(logs_fdr, exp_name, 'images'), flush_secs=30)
 
 # Save config file use for experiment
 shutil.copy(opts.config, os.path.join(logs_fdr, exp_name, 'config.yaml'))
@@ -54,11 +60,17 @@ cfg_val_loader = config['val_dataloader']
 cfg_test_loader1 = config['test_dataloader1']
 cfg_test_loader2 = config['test_dataloader2']
 cfg_test_loader3 = config['test_dataloader3']
+cfg_image_loader = config['img_dataloader']
+
 train_loader = trainer_util.get_dataloader(cfg_train_loader['dataset_args'], cfg_train_loader['dataloader_args'])
 val_loader = trainer_util.get_dataloader(cfg_val_loader['dataset_args'], cfg_val_loader['dataloader_args'])
 test_loader1 = trainer_util.get_dataloader(cfg_test_loader1['dataset_args'], cfg_test_loader1['dataloader_args'])
 test_loader2 = trainer_util.get_dataloader(cfg_test_loader2['dataset_args'], cfg_test_loader2['dataloader_args'])
 test_loader3 = trainer_util.get_dataloader(cfg_test_loader3['dataset_args'], cfg_test_loader3['dataloader_args'])
+image_loader = trainer_util.get_dataloader(cfg_image_loader['dataset_args'], cfg_image_loader['dataloader_args'])
+
+# Start Image Logger
+image_logger = ImgLogging(cfg_image_loader['dataset_args']['preprocess_mode'])
 
 # Getting parameters for test
 dataset = cfg_test_loader1['dataset_args']
@@ -104,7 +116,7 @@ for epoch in iter_counter.training_epochs():
         val_loss = 0
         for i, data_i in enumerate(tqdm(val_loader)):
             original = data_i['original'].cuda()
-            oemantic = data_i['semantic'].cuda()
+            semantic = data_i['semantic'].cuda()
             synthesis = data_i['synthesis'].cuda()
             label = data_i['label'].cuda()
 
@@ -133,7 +145,7 @@ for epoch in iter_counter.training_epochs():
             semantic = data_i['semantic'].cuda()
             synthesis = data_i['synthesis'].cuda()
             label = data_i['label'].cuda()
-        
+
             # Evaluating
             loss, outputs = trainer.run_validation(original, synthesis, semantic, label)
             val_loss += loss
@@ -146,7 +158,7 @@ for epoch in iter_counter.training_epochs():
             invalid_indices = np.argwhere(flat_labels == 255)
             flat_labels = np.delete(flat_labels, invalid_indices)
             flat_pred = np.delete(flat_pred, invalid_indices)
-            
+
         print('Calculating metrics')
         results = metrics.get_metrics(flat_labels, flat_pred)
         print('AU_ROC: %f' % results['auroc'])
@@ -169,7 +181,7 @@ for epoch in iter_counter.training_epochs():
             semantic = data_i['semantic'].cuda()
             synthesis = data_i['synthesis'].cuda()
             label = data_i['label'].cuda()
-    
+
             # Evaluating
             loss, outputs = trainer.run_validation(original, synthesis, semantic, label)
             val_loss += loss
@@ -199,7 +211,7 @@ for epoch in iter_counter.training_epochs():
                                results['FPR@95%TPR'], epoch)
         test_writer.add_scalar('val_loss_%s' % os.path.basename(cfg_test_loader2['dataset_args']['dataroot']),
                                avg_val_loss, epoch)
-        
+
         # Starts Testing (Test Set 3)
         print('Starting Testing For %s' % os.path.basename(cfg_test_loader3['dataset_args']['dataroot']))
         flat_pred = np.zeros(w * h * len(test_loader3))
@@ -210,7 +222,7 @@ for epoch in iter_counter.training_epochs():
             semantic = data_i['semantic'].cuda()
             synthesis = data_i['synthesis'].cuda()
             label = data_i['label'].cuda()
-    
+
             # Evaluating
             loss, outputs = trainer.run_validation(original, synthesis, semantic, label)
             val_loss += loss
@@ -240,7 +252,55 @@ for epoch in iter_counter.training_epochs():
                                results['FPR@95%TPR'], epoch)
         test_writer.add_scalar('val_loss_%s' % os.path.basename(cfg_test_loader3['dataset_args']['dataroot']),
                                avg_val_loss, epoch)
-    
+
+        # Starts Image Visualization Module
+        print('Starting Visualization For %s' % os.path.basename(cfg_image_loader['dataset_args']['dataroot']))
+        for i, data_i in enumerate(tqdm(image_loader)):
+            original = data_i['original'].cuda()
+            semantic = data_i['semantic'].cuda()
+            synthesis = data_i['synthesis'].cuda()
+            label = data_i['label'].cuda()
+
+            # Evaluating
+            loss, outputs = trainer.run_validation(original, synthesis, semantic, label)
+            val_loss += loss
+            outputs = softmax(outputs)
+            (softmax_pred, predictions) = torch.max(outputs, dim=1)
+
+            # post processing for semantic, label and prediction
+            semantic_post = torch.zeros([8, 3, 256, 512])
+            for idx, semantic_ in enumerate(semantic):
+                (_, semantic_) = torch.max(semantic_, dim = 0)
+                semantic_ = 256 - np.asarray(ToPILImage()(semantic_.type(torch.FloatTensor).cpu()))
+                semantic_[semantic_ == 256] = 0
+                semantic_ = visualization.colorize_mask(semantic_)
+                semantic_ = ToTensor()(semantic_.convert('RGB'))
+                semantic_post[idx, :, :, :] = semantic_
+
+            label_post = torch.zeros([8, 3, 256, 512])
+            for idx, label_ in enumerate(label):
+                label_ = np.asarray(ToPILImage()(label_.type(torch.FloatTensor).cpu()))
+                label_ = ToTensor()(Image.fromarray(label_).convert('RGB'))
+                label_post[idx, :, :, :] = label_
+
+            predictions_post = torch.zeros([8, 3, 256, 512])
+            for idx, predictions_ in enumerate(predictions):
+                import pdb; pdb.set_trace()
+                predictions_ = np.asarray(ToPILImage()(predictions_.type(torch.FloatTensor).cpu()))
+                predictions_ = ToTensor()(Image.fromarray(predictions_).convert('RGB'))
+                predictions_post[idx, :, :, :] = predictions_
+
+            grid_original = make_grid(original, 2)
+            grid_semantic = make_grid(semantic_post, 2)
+            grid_synthesis = make_grid(synthesis, 2)
+            grid_label = make_grid(label_post, 2)
+            grid_predictions = make_grid(predictions_post, 2)
+        image_writer.add_image('original', grid_original, epoch)
+        image_writer.add_image('semantic', grid_semantic, epoch)
+        image_writer.add_image('synthesis', grid_synthesis, epoch)
+        image_writer.add_image('label', grid_label, epoch)
+        image_writer.add_image('predictions', grid_predictions, epoch)
+
     print('saving the latest model (epoch %d, total_steps %d)' %
           (epoch, iter_counter.total_steps_so_far))
     trainer.save(save_fdr, 'latest', exp_name)

@@ -213,36 +213,65 @@ def create_labels_fake(semantic_folder,save_dir):
         semantic = np.array(Image.open(os.path.join(semantic_path, semantic)))
         semantic_out = np.ones_like(semantic)
         cv2.imwrite(os.path.join(save_dir, new_semantic_name), semantic_out)
+
+
+def update_labels_to_ignore_void(semantic_path, labels_path, save_dir):
+    if not os.path.isdir(save_dir):
+        os.mkdir(save_dir)
+
+    semantic_paths = [os.path.join(semantic_path, image)
+                      for image in os.listdir(semantic_path)]
+    labels_paths = [os.path.join(labels_path, image)
+                      for image in os.listdir(labels_path)]
+
+    semantic_paths = natsorted(semantic_paths)
+    labels_paths = natsorted(labels_paths)
+
+    for idx, (label, semantic) in enumerate(zip(labels_paths, semantic_paths)):
+        print('Generating image %i our of %i' % (idx + 1, len(semantic_paths)))
+        label_name = os.path.basename(label)
+        semantic = np.array(Image.open(os.path.join(semantic_path, semantic)))
+        label = np.array(Image.open(os.path.join(labels_path, label)))
+        label[semantic == 255] = 255
+        cv2.imwrite(os.path.join(save_dir, label_name), label)
+
 if __name__ == '__main__':
 
-    save_dir_sema = '/home/giandbt/Documents/labels_processing/semantic_label_ids'
-    save_dir_sema_train = '/home/giandbt/Documents/labels_processing/semantic'
-    save_dir_inst = '/home/giandbt/Documents/labels_processing/instances'
-    semantic_path = '/home/giandbt/Documents/labels_processing/semantic_epfl'
-    semantic_path_pred = '/home/giandbt/Documents/labels_processing/semantic_predictions'
-    labels_path = '/home/giandbt/Documents/labels_processing/labels'
+    #save_dir_sema = '/home/giandbt/Documents/labels_processing/semantic_label_ids'
+    #save_dir_sema_train = '/home/giandbt/Documents/labels_processing/semantic'
+    #save_dir_inst = '/home/giandbt/Documents/labels_processing/instances'
+    #semantic_path = '/home/giandbt/Documents/labels_processing/semantic_epfl'
+    #semantic_path_pred = '/home/giandbt/Documents/labels_processing/semantic_predictions'
+    #labels_path = '/home/giandbt/Documents/labels_processing/labels'
     #create_void_semantic(semantic_path, labels_path, semantic_path_pred, save_dir_sema, save_dir_sema_train, save_dir_inst)
 
-    save_dir = '/home/giandbt/Documents/labels_processing/'
-    semantic_path = '/home/giandbt/Documents/labels_processing/semantic_org'
+    #save_dir = '/home/giandbt/Documents/labels_processing/'
+    #semantic_path = '/home/giandbt/Documents/labels_processing/semantic_org'
     #include_void_to_labels(labels_path, semantic_path, save_dir, include_ego_vehicle=True)
 
-    save_dir = '/home/giandbt/Documents/labels_processing/gtFine/val'
-    semantic_path_pred = '/home/giandbt/Documents/labels_processing/semantic_predictions'
+    #save_dir = '/home/giandbt/Documents/labels_processing/gtFine/val'
+    #semantic_path_pred = '/home/giandbt/Documents/labels_processing/semantic_predictions'
     #change_name(semantic_path_pred, save_dir)
 
-    semantic_path = '/home/giandbt/Documents/labels_processing/semantic_epfl'
-    semantic_path_pred = '/home/giandbt/Documents/labels_processing/semantic_predictions'
+    #semantic_path = '/home/giandbt/Documents/labels_processing/semantic_epfl'
+    #semantic_path_pred = '/home/giandbt/Documents/labels_processing/semantic_predictions'
     #create_void_semantic_original(semantic_path, semantic_path_pred, save_dir_sema, save_dir_sema_train,  save_dir_inst)
 
-    semantic_folder = '/home/giandbt/Documents/data/master_thesis/dissimilarity_model/epfl_combined/semantic_label'
-    save_dir = '/home/giandbt/Documents/data/master_thesis/dissimilarity_model/epfl_combined/semantc'
+    #semantic_folder = '/home/giandbt/Documents/data/master_thesis/dissimilarity_model/epfl_combined/semantic_label'
+    #save_dir = '/home/giandbt/Documents/data/master_thesis/dissimilarity_model/epfl_combined/semantc'
     #change_labelIds_to_trainIds(semantic_folder, save_dir)
 
-    semantic_folder = '/home/giandbt/Documents/data/master_thesis/dissimilarity_model/epfl_combined/semantc'
-    save_dir = '/home/giandbt/Documents/data/master_thesis/dissimilarity_model/epfl_combined/labels'
+    #semantic_folder = '/home/giandbt/Documents/data/master_thesis/dissimilarity_model/epfl_combined/semantc'
+    #save_dir = '/home/giandbt/Documents/data/master_thesis/dissimilarity_model/epfl_combined/labels'
     #create_labels(semantic_folder, save_dir)
 
-    semantic_folder = '/home/giandbt/Documents/data/master_thesis/dissimilarity_model/indoorCVPR_09_post-process/semantic'
-    save_dir = '/home/giandbt/Documents/data/master_thesis/dissimilarity_model/indoorCVPR_09_post-process/labels'
-    create_labels_fake(semantic_folder, save_dir)
+    #semantic_folder = '/home/giandbt/Documents/data/master_thesis/dissimilarity_model/indoorCVPR_09_post-process/semantic'
+    #save_dir = '/home/giandbt/Documents/data/master_thesis/dissimilarity_model/indoorCVPR_09_post-process/labels'
+    #create_labels_fake(semantic_folder, save_dir)
+
+    semantic_path = '/home/giandbt/Documents/data/master_thesis/dissimilarity_model/epfl_clean/train/semantic'
+    labels_path = '/home/giandbt/Documents/data/master_thesis/dissimilarity_model/epfl_clean/train/labels'
+    save_dir = '/home/giandbt/Documents/data/master_thesis/dissimilarity_model/epfl_clean/train/labels_ignore'
+    update_labels_to_ignore_void(semantic_path, labels_path, save_dir)
+
+
