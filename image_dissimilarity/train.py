@@ -285,7 +285,6 @@ for epoch in iter_counter.training_epochs():
 
             predictions_post = torch.zeros([8, 3, 256, 512])
             for idx, predictions_ in enumerate(predictions):
-                import pdb; pdb.set_trace()
                 predictions_ = np.asarray(ToPILImage()(predictions_.type(torch.FloatTensor).cpu()))
                 predictions_ = ToTensor()(Image.fromarray(predictions_).convert('RGB'))
                 predictions_post[idx, :, :, :] = predictions_
