@@ -184,23 +184,16 @@ def __flip(img, flip):
         return img.transpose(Image.FLIP_LEFT_RIGHT)
     return img
 
-def get_base_transform(image_size, transform_name='base_train'):
-    my_transforms = dict()
-    #common_transforms = [transforms.ToTensor()]
-    common_transforms = [transforms.Resize(size=image_size, interpolation=Image.NEAREST),transforms.ToTensor()]
-
-    my_transforms['base_train'] = transforms.Compose([transforms.RandomHorizontalFlip(p=0.5)] + common_transforms)
-    my_transforms['base_test'] = transforms.Compose(common_transforms)
-    return my_transforms[transform_name]
-
-def get_transform(transform_name='blurs'):
+def get_transform(image_size, transform_name='blurs'):
     # uses ImageNet mean and standard deviation to normalize images
     norm_mean = [0.485, 0.456, 0.406]
     norm_std = [0.229, 0.224, 0.225]
 
     my_transforms = dict()
-    common_transforms = [transforms.Normalize(norm_mean, norm_std)]
+    #common_transforms = [transforms.Normalize(norm_mean, norm_std)]
+    common_transforms = [transforms.Resize(size=image_size, interpolation=Image.NEAREST),transforms.ToTensor()]
     my_transforms['none'] = []
+    my_transforms['base'] = transforms.Compose(common_transforms)
     my_transforms['normalization'] = transforms.Compose(common_transforms)
     my_transforms['blurs'] = transforms.Compose([OnlyApplyBlurs(), lambda x: Image.fromarray(x)] + common_transforms)
     my_transforms['contrast'] = transforms.Compose(
@@ -285,4 +278,4 @@ def get_transform(transform_name='blurs'):
                                                    [transforms.ColorJitter(0.5, 0.5, 0.5)] +
                                                    common_transforms)
 
-    return my_transforms[transform_name]
+    return my_transforms['base'], my_transforms[transform_name]

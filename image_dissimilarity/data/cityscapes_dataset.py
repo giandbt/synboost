@@ -10,7 +10,7 @@ import torch
 import sys
 sys.path.append("..")
 import data.cityscapes_labels as cityscapes_labels
-from data.augmentations import get_transform, get_base_transform
+from data.augmentations import get_transform
 
 trainid_to_name = cityscapes_labels.trainId2name
 id_to_trainid = cityscapes_labels.label2trainid
@@ -83,24 +83,20 @@ class CityscapesDataset(Dataset):
         w = self.crop_size
         h = round(self.crop_size / self.aspect_ratio)
         image_size = (h, w)
-        if self.is_train:
-            base_transforms = get_base_transform(image_size, 'base_train')
-        else:
-            base_transforms = get_base_transform(image_size, 'base_test')
 
-        augmentations = get_transform(self.preprocess_mode)
+        # get augmentations
+        base_transforms, augmentations = get_transform(image_size, self.preprocess_mode)
 
         # apply base transformations
         label_tensor = base_transforms(label)*255
         semantic_tensor = base_transforms(semantic)*255
-        image_tensor = base_transforms(image)
         syn_image_tensor = base_transforms(syn_image)
 
-        # apply augmentations
         if self.is_train and self.preprocess_mode != 'none':
-            print(self.preprocess_mode)
-            image_tensor = augmentations(transforms.ToPILImage()(image_tensor))
-            syn_image_tensor = augmentations(transforms.ToPILImage()(syn_image_tensor))
+            image_tensor = augmentations(image)
+        else:
+            image_tensor = base_transforms(image)
+
 
         # post processing for semantic labels
         if self.num_semantic_classes == 19:
