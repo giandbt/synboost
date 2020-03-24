@@ -289,16 +289,16 @@ for epoch in iter_counter.training_epochs():
                 predictions_ = ToTensor()(Image.fromarray(predictions_).convert('RGB'))
                 predictions_post[idx, :, :, :] = predictions_
 
-            grid_original = make_grid(original, 2)
-            grid_semantic = make_grid(semantic_post, 2)
-            grid_synthesis = make_grid(synthesis, 2)
-            grid_label = make_grid(label_post, 2)
-            grid_predictions = make_grid(predictions_post, 2)
-        image_writer.add_image('original', grid_original, epoch)
-        image_writer.add_image('semantic', grid_semantic, epoch)
-        image_writer.add_image('synthesis', grid_synthesis, epoch)
-        image_writer.add_image('label', grid_label, epoch)
-        image_writer.add_image('predictions', grid_predictions, epoch)
+            all_images = torch.zeros([40, 3, 256, 512])
+            for idx, (original_img, semantic_img, synthesis_img, label_img, predictions_img) in \
+                    enumerate(zip(original, semantic_post, synthesis, label_post, predictions_post)):
+                all_images[idx*5, :, :, :] = original_img
+                all_images[idx*5+1, :, :, :] = semantic_img
+                all_images[idx*5+2, :, :, :] = synthesis_img
+                all_images[idx*5+3, :, :, :] = label_img
+                all_images[idx*5+4, :, :, :] = predictions_img
+            grid = make_grid(all_images, 5)
+        image_writer.add_image('results', grid, epoch)
 
     print('saving the latest model (epoch %d, total_steps %d)' %
           (epoch, iter_counter.total_steps_so_far))

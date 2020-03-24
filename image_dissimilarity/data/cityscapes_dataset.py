@@ -33,8 +33,8 @@ class CityscapesDataset(Dataset):
             self.label_paths = [os.path.join(dataroot, 'labels_with_ROI', image)
                                 for image in os.listdir(os.path.join(dataroot, 'labels_with_ROI'))]
         elif void:
-            self.label_paths = [os.path.join(dataroot, 'labels_with_void', image)
-                                for image in os.listdir(os.path.join(dataroot, 'labels_with_void'))]
+            self.label_paths = [os.path.join(dataroot, 'labels_with_void_no_ego', image)
+                                for image in os.listdir(os.path.join(dataroot, 'labels_with_void_no_ego'))]
         else:
             self.label_paths = [os.path.join(dataroot, 'labels', image)
                                 for image in os.listdir(os.path.join(dataroot, 'labels'))]

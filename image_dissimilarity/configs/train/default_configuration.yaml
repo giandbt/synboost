@@ -1,5 +1,5 @@
 # Name of the experiment for saving files
-experiment_name: spade_light_1
+experiment_name: baseline_void
 save_folder: results/
 
 # Define training strategy
@@ -8,15 +8,15 @@ training_strategy:
   niter_decay: 0 # of iter to linearly decay learning rate to zero
   is_train: True
   class_weight: True
-  class_weight_cityscapes: True
+  class_weight_cityscapes: False
 
 # model options
 model:
-  architecture: vgg16_bn #[options: 'vgg16', 'vgg16_bn', 'vgg16_guided', 'resnet18', 'vgg16_correlated']
+  architecture: vgg16 #[options: 'vgg16', 'vgg16_bn', 'vgg16_guided', 'resnet18', 'vgg16_correlated']
   semantic: True
   pretrained: True
   correlation: True
-  spade: 'both' #[options: 'encoder', 'decoder', 'both', '']
+  spade: '' #[options: 'encoder', 'decoder', 'both', '']
   num_semantic_classes: 19 # Actual training labels
 
 # logger options
@@ -46,10 +46,10 @@ train_dataloader:
     dataroot: /home/giancarlo/data/innosuisse/epfl/train
     #dataroot: /media/giancarlo/Samsung_T5/master_thesis/data/road_anomaly # (for workstation debugging)
     #dataroot: /home/giancarlo/data/innosuisse/road_anomaly  #(only for quick debugging)
-    preprocess_mode: light_1
+    preprocess_mode: none
     crop_size: 512
     aspect_ratio: 2
-    void: False
+    void: True
     num_semantic_classes: 19
     is_train: True
   dataloader_args:
@@ -115,9 +115,10 @@ test_dataloader3:
 img_dataloader:
   dataset_args:
     dataroot: /home/giancarlo/data/innosuisse/visualization_imgs
-    preprocess_mode: light_1
+    preprocess_mode: none
     crop_size: 512
     aspect_ratio: 2
+    void: True
     num_semantic_classes: 19
     is_train: True
   dataloader_args:

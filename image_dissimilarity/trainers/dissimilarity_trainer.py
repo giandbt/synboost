@@ -65,7 +65,7 @@ class DissimilarityTrainer():
         if config['training_strategy']['class_weight']:
             if not config['training_strategy']['class_weight_cityscapes']:
                 if config['train_dataloader']['dataset_args']['void']:
-                    label_path = os.path.join(config['train_dataloader']['dataset_args']['dataroot'], 'labels_with_void/')
+                    label_path = os.path.join(config['train_dataloader']['dataset_args']['dataroot'], 'labels_with_void_no_ego/')
                 else:
                     label_path = os.path.join(config['train_dataloader']['dataset_args']['dataroot'], 'labels/')
                     
