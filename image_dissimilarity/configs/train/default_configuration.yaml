@@ -1,5 +1,5 @@
 # Name of the experiment for saving files
-experiment_name: baseline_void
+experiment_name: test_delete
 save_folder: results/
 
 # Define training strategy
@@ -21,7 +21,7 @@ model:
 
 # logger options
 logger:
-  results_dir: ./data_augmentations
+  results_dir: ./data_analysis
   save_epoch_freq: 50 #frequency of saving checkpoints at the end of epochs
 
 # loss options (remove tasks not needed)
@@ -32,7 +32,7 @@ optimizer:
   algorithm: Adam # ['Adam' or 'SGD']
   # Define accordingly, e.g.
   parameters:
-    lr: 1.e-4 # 1.e-4
+    lr: 1.e-5 # 1.e-4
     lr_policy: ReduceLROnPlateau
     patience: 3
     factor: 0.75
@@ -63,7 +63,6 @@ val_dataloader:
     preprocess_mode: none
     crop_size: 512
     aspect_ratio: 2
-    void: False
     num_semantic_classes: 19
     is_train: False
   dataloader_args:

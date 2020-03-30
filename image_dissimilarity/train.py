@@ -268,7 +268,7 @@ for epoch in iter_counter.training_epochs():
             (softmax_pred, predictions) = torch.max(outputs, dim=1)
 
             # post processing for semantic, label and prediction
-            semantic_post = torch.zeros([8, 3, 256, 512])
+            semantic_post = torch.zeros([original.shape[0], 3, 256, 512])
             for idx, semantic_ in enumerate(semantic):
                 (_, semantic_) = torch.max(semantic_, dim = 0)
                 semantic_ = 256 - np.asarray(ToPILImage()(semantic_.type(torch.FloatTensor).cpu()))
@@ -277,19 +277,19 @@ for epoch in iter_counter.training_epochs():
                 semantic_ = ToTensor()(semantic_.convert('RGB'))
                 semantic_post[idx, :, :, :] = semantic_
 
-            label_post = torch.zeros([8, 3, 256, 512])
+            label_post = torch.zeros([original.shape[0], 3, 256, 512])
             for idx, label_ in enumerate(label):
                 label_ = np.asarray(ToPILImage()(label_.type(torch.FloatTensor).cpu()))
                 label_ = ToTensor()(Image.fromarray(label_).convert('RGB'))
                 label_post[idx, :, :, :] = label_
 
-            predictions_post = torch.zeros([8, 3, 256, 512])
+            predictions_post = torch.zeros([original.shape[0], 3, 256, 512])
             for idx, predictions_ in enumerate(predictions):
                 predictions_ = np.asarray(ToPILImage()(predictions_.type(torch.FloatTensor).cpu()))
                 predictions_ = ToTensor()(Image.fromarray(predictions_).convert('RGB'))
                 predictions_post[idx, :, :, :] = predictions_
 
-            all_images = torch.zeros([40, 3, 256, 512])
+            all_images = torch.zeros([original.shape[0]*5, 3, 256, 512])
             for idx, (original_img, semantic_img, synthesis_img, label_img, predictions_img) in \
                     enumerate(zip(original, semantic_post, synthesis, label_post, predictions_post)):
                 all_images[idx*5, :, :, :] = original_img
