@@ -14,14 +14,16 @@ trainid_to_name = cityscapes_labels.trainId2name
 id_to_trainid = cityscapes_labels.label2trainid
 
 def include_void_to_labels(label_path, semantic_path, save_dir, include_ego_vehicle = True):
-
+    print(include_ego_vehicle)
     # we only include void labels that are borders, static or big objects
     if include_ego_vehicle:
-        void_labels = [0, 1, 2, 3, 4,  29, 30]
+        #void_labels = [0, 1, 2, 3, 4,  29, 30]
+        void_labels = [4]
         if not os.path.isdir(os.path.join(save_dir, 'labels_with_void')):
             os.mkdir(os.path.join(save_dir, 'labels_with_void'))
     else:
-        void_labels = [0, 2, 3, 4,  29, 30]  # without ego vehicle
+        #void_labels = [0, 2, 3, 4,  29, 30]  # without ego vehicle
+        void_labels = [5]  # without ego vehicle
         if not os.path.isdir(os.path.join(save_dir, 'labels_with_void_no_ego')):
             os.mkdir(os.path.join(save_dir, 'labels_with_void_no_ego'))
 
@@ -42,10 +44,12 @@ def include_void_to_labels(label_path, semantic_path, save_dir, include_ego_vehi
         label_img = np.array(label_img).astype(np.uint8)
         # get mask where instance is located
         for void_label in void_labels:
-            mask_unknown = np.where(semantic_img == void_label, 1, 0).astype(np.uint8)
+            #mask_unknown = np.where(semantic_img == void_label, 1, 0).astype(np.uint8)
+            mask_unknown = np.where(semantic_img == void_label, 255, 0).astype(np.uint8)
             label_img += mask_unknown
 
-        final_mask = np.where(label_img != 1, 0, 1).astype(np.uint8)
+        #final_mask = np.where(label_img != 1, 0, 1).astype(np.uint8)
+        final_mask = np.where(label_img != 255, 0, 255).astype(np.uint8)
         mask_img = Image.fromarray((final_mask).astype(np.uint8))
         label_name = os.path.basename(label)
         if include_ego_vehicle:
@@ -197,7 +201,6 @@ def create_labels(semantic_folder,save_dir):
         semantic_out = np.zeros_like(semantic)
         cv2.imwrite(os.path.join(save_dir, new_semantic_name), semantic_out)
 
-
 def create_labels_fake(semantic_folder,save_dir):
     if not os.path.isdir(save_dir):
         os.mkdir(save_dir)
@@ -213,7 +216,6 @@ def create_labels_fake(semantic_folder,save_dir):
         semantic = np.array(Image.open(os.path.join(semantic_path, semantic)))
         semantic_out = np.ones_like(semantic)
         cv2.imwrite(os.path.join(save_dir, new_semantic_name), semantic_out)
-
 
 def update_labels_to_ignore_void(semantic_path, labels_path, save_dir):
     if not os.path.isdir(save_dir):
@@ -242,12 +244,12 @@ if __name__ == '__main__':
     #save_dir_inst = '/home/giandbt/Documents/labels_processing/instances'
     #semantic_path = '/home/giandbt/Documents/labels_processing/semantic_epfl'
     #semantic_path_pred = '/home/giandbt/Documents/labels_processing/semantic_predictions'
-    #labels_path = '/home/giandbt/Documents/labels_processing/labels'
+    labels_path = '/home/giandbt/Documents/labels_processing/labels'
     #create_void_semantic(semantic_path, labels_path, semantic_path_pred, save_dir_sema, save_dir_sema_train, save_dir_inst)
 
-    #save_dir = '/home/giandbt/Documents/labels_processing/'
-    #semantic_path = '/home/giandbt/Documents/labels_processing/semantic_org'
-    #include_void_to_labels(labels_path, semantic_path, save_dir, include_ego_vehicle=True)
+    save_dir = '/home/giandbt/Documents/labels_processing/'
+    semantic_path = '/home/giandbt/Documents/labels_processing/semantic_org'
+    include_void_to_labels(labels_path, semantic_path, save_dir, include_ego_vehicle=True)
 
     #save_dir = '/home/giandbt/Documents/labels_processing/gtFine/val'
     #semantic_path_pred = '/home/giandbt/Documents/labels_processing/semantic_predictions'

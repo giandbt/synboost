@@ -45,7 +45,6 @@ if not os.path.isdir(logs_fdr):
 train_writer = SummaryWriter(os.path.join(logs_fdr, exp_name, 'train'), flush_secs=30)
 val_writer = SummaryWriter(os.path.join(logs_fdr, exp_name, 'validation'), flush_secs=30)
 test_writer = SummaryWriter(os.path.join(logs_fdr, exp_name, 'test'), flush_secs=30)
-image_writer = SummaryWriter(os.path.join(logs_fdr, exp_name, 'images'), flush_secs=30)
 
 # Save config file use for experiment
 shutil.copy(opts.config, os.path.join(logs_fdr, exp_name, 'config.yaml'))
@@ -60,17 +59,20 @@ cfg_val_loader = config['val_dataloader']
 cfg_test_loader1 = config['test_dataloader1']
 cfg_test_loader2 = config['test_dataloader2']
 cfg_test_loader3 = config['test_dataloader3']
-cfg_image_loader = config['img_dataloader']
+cfg_test_loader4 = config['test_dataloader4']
 
 train_loader = trainer_util.get_dataloader(cfg_train_loader['dataset_args'], cfg_train_loader['dataloader_args'])
 val_loader = trainer_util.get_dataloader(cfg_val_loader['dataset_args'], cfg_val_loader['dataloader_args'])
 test_loader1 = trainer_util.get_dataloader(cfg_test_loader1['dataset_args'], cfg_test_loader1['dataloader_args'])
 test_loader2 = trainer_util.get_dataloader(cfg_test_loader2['dataset_args'], cfg_test_loader2['dataloader_args'])
 test_loader3 = trainer_util.get_dataloader(cfg_test_loader3['dataset_args'], cfg_test_loader3['dataloader_args'])
-image_loader = trainer_util.get_dataloader(cfg_image_loader['dataset_args'], cfg_image_loader['dataloader_args'])
+test_loader4 = trainer_util.get_dataloader(cfg_test_loader4['dataset_args'], cfg_test_loader4['dataloader_args'])
 
-# Start Image Logger
-image_logger = ImgLogging(cfg_image_loader['dataset_args']['preprocess_mode'])
+if config['training_strategy']['image_visualization']:
+    cfg_image_loader = config['img_dataloader']
+    image_writer = SummaryWriter(os.path.join(logs_fdr, exp_name, 'images'), flush_secs=30)
+    image_loader = trainer_util.get_dataloader(cfg_image_loader['dataset_args'], cfg_image_loader['dataloader_args'])
+    image_logger = ImgLogging(cfg_image_loader['dataset_args']['preprocess_mode'])
 
 # Getting parameters for test
 dataset = cfg_test_loader1['dataset_args']
@@ -253,9 +255,12 @@ for epoch in iter_counter.training_epochs():
         test_writer.add_scalar('val_loss_%s' % os.path.basename(cfg_test_loader3['dataset_args']['dataroot']),
                                avg_val_loss, epoch)
 
-        # Starts Image Visualization Module
-        print('Starting Visualization For %s' % os.path.basename(cfg_image_loader['dataset_args']['dataroot']))
-        for i, data_i in enumerate(tqdm(image_loader)):
+        # Starts Testing (Test Set 4)
+        print('Starting Testing For %s' % os.path.basename(cfg_test_loader4['dataset_args']['dataroot']))
+        flat_pred = np.zeros(w * h * len(test_loader4))
+        flat_labels = np.zeros(w * h * len(test_loader4))
+        val_loss = 0
+        for i, data_i in enumerate(tqdm(test_loader4)):
             original = data_i['original'].cuda()
             semantic = data_i['semantic'].cuda()
             synthesis = data_i['synthesis'].cuda()
@@ -266,39 +271,82 @@ for epoch in iter_counter.training_epochs():
             val_loss += loss
             outputs = softmax(outputs)
             (softmax_pred, predictions) = torch.max(outputs, dim=1)
+            flat_pred[i * w * h:i * w * h + w * h] = torch.flatten(outputs[:, 1, :, :]).detach().cpu().numpy()
+            flat_labels[i * w * h:i * w * h + w * h] = torch.flatten(label).detach().cpu().numpy()
 
-            # post processing for semantic, label and prediction
-            semantic_post = torch.zeros([original.shape[0], 3, 256, 512])
-            for idx, semantic_ in enumerate(semantic):
-                (_, semantic_) = torch.max(semantic_, dim = 0)
-                semantic_ = 256 - np.asarray(ToPILImage()(semantic_.type(torch.FloatTensor).cpu()))
-                semantic_[semantic_ == 256] = 0
-                semantic_ = visualization.colorize_mask(semantic_)
-                semantic_ = ToTensor()(semantic_.convert('RGB'))
-                semantic_post[idx, :, :, :] = semantic_
+        if config['test_dataloader4']['dataset_args']['roi']:
+            invalid_indices = np.argwhere(flat_labels == 255)
+            flat_labels = np.delete(flat_labels, invalid_indices)
+            flat_pred = np.delete(flat_pred, invalid_indices)
 
-            label_post = torch.zeros([original.shape[0], 3, 256, 512])
-            for idx, label_ in enumerate(label):
-                label_ = np.asarray(ToPILImage()(label_.type(torch.FloatTensor).cpu()))
-                label_ = ToTensor()(Image.fromarray(label_).convert('RGB'))
-                label_post[idx, :, :, :] = label_
+        print('Calculating metrics')
+        results = metrics.get_metrics(flat_labels, flat_pred)
+        print('AU_ROC: %f' % results['auroc'])
+        print('mAP: %f' % results['AP'])
+        print('FPR@95TPR: %f' % results['FPR@95%TPR'])
 
-            predictions_post = torch.zeros([original.shape[0], 3, 256, 512])
-            for idx, predictions_ in enumerate(predictions):
-                predictions_ = np.asarray(ToPILImage()(predictions_.type(torch.FloatTensor).cpu()))
-                predictions_ = ToTensor()(Image.fromarray(predictions_).convert('RGB'))
-                predictions_post[idx, :, :, :] = predictions_
+        avg_val_loss = val_loss / len(test_loader4)
 
-            all_images = torch.zeros([original.shape[0]*5, 3, 256, 512])
-            for idx, (original_img, semantic_img, synthesis_img, label_img, predictions_img) in \
-                    enumerate(zip(original, semantic_post, synthesis, label_post, predictions_post)):
-                all_images[idx*5, :, :, :] = original_img
-                all_images[idx*5+1, :, :, :] = semantic_img
-                all_images[idx*5+2, :, :, :] = synthesis_img
-                all_images[idx*5+3, :, :, :] = label_img
-                all_images[idx*5+4, :, :, :] = predictions_img
-            grid = make_grid(all_images, 5)
-        image_writer.add_image('results', grid, epoch)
+        test_writer.add_scalar('%s AUC_ROC' % os.path.basename(cfg_test_loader4['dataset_args']['dataroot']),
+                               results['auroc'], epoch)
+        test_writer.add_scalar('%s mAP' % os.path.basename(cfg_test_loader4['dataset_args']['dataroot']), results['AP'],
+                               epoch)
+        test_writer.add_scalar('%s FPR@95TPR' % os.path.basename(cfg_test_loader4['dataset_args']['dataroot']),
+                               results['FPR@95%TPR'], epoch)
+        test_writer.add_scalar('val_loss_%s' % os.path.basename(cfg_test_loader4['dataset_args']['dataroot']),
+                               avg_val_loss, epoch)
+
+        # Starts Image Visualization Module
+        if config['training_strategy']['image_visualization']:
+            print('Starting Visualization For %s' % os.path.basename(cfg_image_loader['dataset_args']['dataroot']))
+            for i, data_i in enumerate(tqdm(image_loader)):
+                original = data_i['original'].cuda()
+                semantic = data_i['semantic'].cuda()
+                synthesis = data_i['synthesis'].cuda()
+                label = data_i['label'].cuda()
+
+                # Evaluating
+                loss, outputs = trainer.run_validation(original, synthesis, semantic, label)
+                val_loss += loss
+                outputs = softmax(outputs)
+                (softmax_pred, predictions) = torch.max(outputs, dim=1)
+
+                # post processing for semantic, label and prediction
+                semantic_post = torch.zeros([original.shape[0], 3, 256, 512])
+                for idx, semantic_ in enumerate(semantic):
+                    (_, semantic_) = torch.max(semantic_, dim = 0)
+                    semantic_ = 256 - np.asarray(ToPILImage()(semantic_.type(torch.FloatTensor).cpu()))
+                    semantic_[semantic_ == 256] = 0
+                    semantic_ = visualization.colorize_mask(semantic_)
+                    semantic_ = ToTensor()(semantic_.convert('RGB'))
+                    semantic_post[idx, :, :, :] = semantic_
+
+                label_post = torch.zeros([original.shape[0], 3, 256, 512])
+                for idx, label_ in enumerate(label):
+                    label_ = 256 - np.asarray(ToPILImage()(label_.type(torch.FloatTensor).cpu()))
+                    # There must be a better way...
+                    label_[label_ == 256] = 0
+                    label_[label_ == 255] = 100
+                    label_[label_ == 1] = 255
+                    label_ = ToTensor()(Image.fromarray(label_).convert('RGB'))
+                    label_post[idx, :, :, :] = label_
+
+                predictions_post = torch.zeros([original.shape[0], 3, 256, 512])
+                for idx, predictions_ in enumerate(predictions):
+                    predictions_ = np.asarray(ToPILImage()(predictions_.type(torch.FloatTensor).cpu()))
+                    predictions_ = ToTensor()(Image.fromarray(predictions_).convert('RGB'))
+                    predictions_post[idx, :, :, :] = predictions_
+
+                all_images = torch.zeros([original.shape[0]*5, 3, 256, 512])
+                for idx, (original_img, semantic_img, synthesis_img, label_img, predictions_img) in \
+                        enumerate(zip(original, semantic_post, synthesis, label_post, predictions_post)):
+                    all_images[idx*5, :, :, :] = original_img
+                    all_images[idx*5+1, :, :, :] = semantic_img
+                    all_images[idx*5+2, :, :, :] = synthesis_img
+                    all_images[idx*5+3, :, :, :] = label_img
+                    all_images[idx*5+4, :, :, :] = predictions_img
+                grid = make_grid(all_images, 5)
+            image_writer.add_image('results', grid, epoch)
 
     print('saving the latest model (epoch %d, total_steps %d)' %
           (epoch, iter_counter.total_steps_so_far))
@@ -314,4 +362,7 @@ for epoch in iter_counter.training_epochs():
         
 train_writer.close()
 val_writer.close()
+test_writer.close()
+if config['training_strategy']['image_visualization']:
+    image_writer.close()
 print('Training was successfully finished.')

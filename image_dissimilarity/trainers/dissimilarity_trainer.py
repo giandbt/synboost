@@ -38,6 +38,19 @@ class DissimilarityTrainer():
             self.diss_model = ResNetDissimNet(**config['model']).cuda(self.gpu)
         else:
             raise NotImplementedError()
+
+        # get pre-trained model
+        pretrain_config = config['diss_pretrained']
+        if pretrain_config['load']:
+            epoch = pretrain_config['which_epoch']
+            save_ckpt_fdr = pretrain_config['save_folder']
+            ckpt_name = pretrain_config['experiment_name']
+
+            print('Loading pretrained weights from %s (epoch: %s)' % (ckpt_name, epoch))
+            model_path = os.path.join(save_ckpt_fdr, ckpt_name, '%s_net_%s.pth' % (epoch, ckpt_name))
+            model_weights = torch.load(model_path)
+            self.diss_model.load_state_dict(model_weights, strict=False)
+            # NOTE: For old models, there were some correlation weights created that were not used in the foward pass. That's the reason to include strict=False
             
         print('Printing Model Parameters')
         print(self.diss_model.parameters)
