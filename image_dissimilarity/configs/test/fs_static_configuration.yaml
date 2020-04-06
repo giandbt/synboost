@@ -1,5 +1,5 @@
 # Name of the experiment for saving files
-experiment_name: epfl_8 # where checkpoints are stored
+experiment_name: spade_custom_dynamic_epfl # where checkpoints are stored
 save_folder: results/ # where checkpoints are stored
 which_epoch: best
 store_results: /home/giancarlo/data/innosuisse/visualization/fs_static/
@@ -7,11 +7,11 @@ visualize: False
 
 # model options
 model:
-  architecture: vgg16 #[options: 'vgg16', 'vgg16_bn', 'vgg16_guided', 'resnet18', 'vgg16_correlated']
+  architecture: vgg16_bn #[options: 'vgg16', 'vgg16_bn', 'vgg16_guided', 'resnet18', 'vgg16_correlated']
   semantic: True
   pretrained: True
   correlation: True
-  spade: '' #[options: 'encoder', 'decoder', 'both', '']
+  spade: 'both' #[options: 'encoder', 'decoder', 'both', '']
   num_semantic_classes: 19 # Actual training labels
 
 # parameters for dataset
@@ -22,14 +22,13 @@ dataset:
 test_dataloader:
   dataset_args:
     dataroot: /home/giancarlo/data/innosuisse/fs_static
-    preprocess_mode: fixed
-    load_size: 1024
+    preprocess_mode: none
     crop_size: 512
     aspect_ratio: 2
-    image_set: val
-    no_flip: True
-    roi: False
+    roi: True
+    void: False
     num_semantic_classes: 19
+    is_train: True
   dataloader_args:
     batch_size: 1
     num_workers: 1

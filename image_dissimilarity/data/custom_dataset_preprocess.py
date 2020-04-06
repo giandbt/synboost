@@ -101,7 +101,7 @@ def get_mapillary_labels(data_dir, data_type, save_dir):
 def get_cityscapes_labels(data_dir, data_type, save_dir):
 
     # labels to show
-    void_labels = [0, 4, 5]
+    void_labels = [5]
 
     # create save folder
     if not os.path.isdir(save_dir):
@@ -125,14 +125,15 @@ def get_cityscapes_labels(data_dir, data_type, save_dir):
             label_img += mask_unknown
 
         final_mask = np.where(label_img != 1, 0, 1).astype(np.uint8)
-        mask_img = Image.fromarray((final_mask).astype(np.uint8))
-        label_name = os.path.basename(label)
-        mask_img.save(os.path.join(save_dir, label_name))
+        if len(np.unique(final_mask)) == 2:
+            mask_img = Image.fromarray((final_mask).astype(np.uint8))
+            label_name = os.path.basename(label)
+            mask_img.save(os.path.join(save_dir, label_name))
 
 def get_wild_dash_labels(data_dir, save_dir):
 
     # labels to show
-    void_labels = [4, 5]
+    void_labels = [5]
 
     # create save folder
     if not os.path.isdir(save_dir):
@@ -159,6 +160,59 @@ def get_wild_dash_labels(data_dir, save_dir):
         mask_img = Image.fromarray((final_mask).astype(np.uint8))
         label_name = os.path.basename(label)
         mask_img.save(os.path.join(save_dir, label_name))
+
+
+def get_cityscapes_labels_dynamic(data_dir, data_type, save_dir):
+
+    # labels to show
+    void_labels = [5]
+
+    # create save folder
+    original_path = os.path.join(save_dir, 'original')
+    semantic_path = os.path.join(save_dir, 'semantic')
+    synthesis_path = os.path.join(save_dir, 'synthesis')
+    label_save_path = os.path.join(save_dir, 'labels')
+
+    # find label images
+    label_dir = os.path.join(data_dir, 'gtFine', data_type)
+    label_paths_all = make_dataset(label_dir, recursive=True)
+    label_paths = [p for p in label_paths_all if p.endswith('_labelIds.png')]
+
+    semantic_paths = [os.path.join(semantic_path, image)
+                      for image in os.listdir(semantic_path)]
+
+    synthesis_paths = [os.path.join(synthesis_path, image)
+                      for image in os.listdir(synthesis_path)]
+
+    original_paths = [os.path.join(original_path, image)
+                      for image in os.listdir(original_path)]
+
+    label_paths = natsorted(label_paths)
+    original_paths = natsorted(original_paths)
+    synthesis_paths = natsorted(synthesis_paths)
+    semantic_paths = natsorted(semantic_paths)
+
+    for idx, (label, original, semantic, synthesis) in enumerate(zip(label_paths, original_paths, semantic_paths, synthesis_paths)):
+        print('Generating image %i our of %i' % (idx + 1, len(label_paths)))
+        # load images
+        label_image = Image.open(label)
+        # convert labeled data to numpy arrays for better handling
+        label_array = np.array(label_image)
+        label_img = np.zeros(label_array.shape)
+        for void_label in void_labels:
+            mask_unknown = np.where(label_array == void_label, 1, 0).astype(np.uint8)
+            label_img += mask_unknown
+
+        final_mask = np.where(label_img != 1, 0, 1).astype(np.uint8)
+        if len(np.unique(final_mask)) == 2:
+            mask_img = Image.fromarray((final_mask).astype(np.uint8))
+            label_name = os.path.basename(label)
+            mask_img.save(os.path.join(label_save_path, label_name))
+        else:
+            os.remove(original)
+            os.remove(semantic)
+            os.remove(synthesis)
+
 if __name__ == "__main__":
     #data_dir = '/media/giandbt/Samsung_T5/data/Mapillary_Vistas'
     #data_type = 'validation'
@@ -170,6 +224,11 @@ if __name__ == "__main__":
     #save_dir = '/home/giandbt/Documents/cityscapes_postprocess/labels'
     #get_cityscapes_labels(data_dir, data_type, save_dir)
 
-    data_dir = '/home/giandbt/Documents/data/master_thesis/wild_dash'
-    save_dir = '/home/giandbt/Documents/wilddash_postprocess/labels'
-    get_wild_dash_labels(data_dir, save_dir)
+    #data_dir = '/home/giandbt/Documents/data/master_thesis/wild_dash'
+    #save_dir = '/home/giandbt/Documents/wilddash_postprocess/labels'
+    #get_wild_dash_labels(data_dir, save_dir)
+
+    data_dir = '/media/giandbt/Samsung_T5/data/cityscapes'
+    data_type = 'train'
+    save_dir = '/home/giandbt/Desktop/custom_dynamic'
+    get_cityscapes_labels_dynamic(data_dir, data_type, save_dir)

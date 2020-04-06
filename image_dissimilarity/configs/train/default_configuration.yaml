@@ -1,5 +1,5 @@
 # Name of the experiment for saving files
-experiment_name: spade_baseline_custom
+experiment_name: baseline_custom_all
 save_folder: results/
 
 # Define training strategy
@@ -13,11 +13,11 @@ training_strategy:
 
 # model options
 model:
-  architecture: vgg16_bn #[options: 'vgg16', 'vgg16_bn', 'vgg16_guided', 'resnet18', 'vgg16_correlated']
+  architecture: vgg16 #[options: 'vgg16', 'vgg16_bn', 'vgg16_guided', 'resnet18', 'vgg16_correlated']
   semantic: True
   pretrained: True
   correlation: True
-  spade: 'both' #[options: 'encoder', 'decoder', 'both', '']
+  spade: '' #[options: 'encoder', 'decoder', 'both', '']
   num_semantic_classes: 19 # Actual training labels
 diss_pretrained:
   load: False
@@ -27,7 +27,7 @@ diss_pretrained:
 
 # logger options
 logger:
-  results_dir: ./custom_logs
+  results_dir: ./logs_final
   save_epoch_freq: 50 #frequency of saving checkpoints at the end of epochs
 
 # loss options (remove tasks not needed)
@@ -40,8 +40,8 @@ optimizer:
   parameters:
     lr: 1.e-4 # 1.e-4
     lr_policy: ReduceLROnPlateau
-    patience: 3
-    factor: 0.75
+    patience: 10
+    factor: 0.5
     weight_decay: 0.0000
     beta1: 0.5 # momentum term of adam
     beta2: 0.999 # momentum term of adam
@@ -49,7 +49,7 @@ optimizer:
 # parameters for dataloaders
 train_dataloader:
   dataset_args:
-    dataroot: /home/giancarlo/data/innosuisse/custom
+    dataroot: /home/giancarlo/data/innosuisse/custom_all
     #dataroot: /home/giancarlo/data/innosuisse/road_anomaly  #(only for quick debugging)
     preprocess_mode: none
     crop_size: 512
@@ -63,7 +63,7 @@ train_dataloader:
     shuffle: True
 val_dataloader:
   dataset_args:
-    dataroot: /home/giancarlo/data/innosuisse/custom_val
+    dataroot: /home/giancarlo/data/innosuisse/fs_lost_and_found
     preprocess_mode: none
     crop_size: 512
     aspect_ratio: 2
