@@ -87,14 +87,13 @@ with torch.no_grad():
         (softmax_pred, predictions) = torch.max(outputs,dim=1)
         flat_pred[i*w*h:i*w*h+w*h] = torch.flatten(outputs[:,1,:,:]).detach().cpu().numpy()
         flat_labels[i*w*h:i*w*h+w*h] = torch.flatten(label).detach().cpu().numpy()
-    
         # Save results
-        predicted_tensor = predictions * 255
-        label_tensor = label * 255
+        predicted_tensor = predictions * 1
+        label_tensor = label * 1
         
         file_name = os.path.basename(data_i['original_path'][0])
-        label_img = Image.fromarray(label_tensor.squeeze().cpu().numpy().astype(np.uint8)).convert('RGB')
-        predicted_img = Image.fromarray(predicted_tensor.squeeze().cpu().numpy().astype(np.uint8)).convert('RGB')
+        label_img = Image.fromarray(label_tensor.squeeze().cpu().numpy().astype(np.uint8))
+        predicted_img = Image.fromarray(predicted_tensor.squeeze().cpu().numpy().astype(np.uint8))
         predicted_img.save(os.path.join(store_fdr_exp, 'pred', file_name))
         label_img.save(os.path.join(store_fdr_exp, 'label', file_name))
 
