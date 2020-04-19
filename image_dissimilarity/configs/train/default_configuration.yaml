@@ -1,5 +1,5 @@
 # Name of the experiment for saving files
-experiment_name: baseline_custom_all
+experiment_name: baseline_custom_dynamic_epfl
 save_folder: results/
 
 # Define training strategy
@@ -49,7 +49,7 @@ optimizer:
 # parameters for dataloaders
 train_dataloader:
   dataset_args:
-    dataroot: /home/giancarlo/data/innosuisse/custom_all
+    dataroot: /home/giancarlo/data/innosuisse/custom_dynamic_epfl
     #dataroot: /home/giancarlo/data/innosuisse/road_anomaly  #(only for quick debugging)
     preprocess_mode: none
     crop_size: 512
