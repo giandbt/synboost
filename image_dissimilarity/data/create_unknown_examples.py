@@ -11,16 +11,21 @@ import data.cityscapes_labels as cityscapes_labels
 
 trainid_to_name = cityscapes_labels.trainId2name
 id_to_trainid = cityscapes_labels.label2trainid
-objects_to_change = np.arange(24,33) # instance labels from cityscapes
+#objects_to_change = [7, 8, 11, 12, 13, 17, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 31, 32, 33]
+objects_to_change = [7, 7, 7, 8, 11, 12, 13, 20, 21, 22, 24, 24, 24, 25, 26, 26, 26, 26, 26, 26, 26, 27, 28, 32, 33]
+#objects_to_change = [7, 8, 11, 12, 13, 17, 19, 20, 21, 22, 23, 25, 26, 27, 28, 31, 32, 33]
 
-def create_unknown_examples(instance_path, semantic_path, original_path, save_dir, visualize=False):
+def create_unknown_examples(instance_path, semantic_path, original_path, save_dir, visualize=False, dynamic=True):
 
     if not os.path.isdir(os.path.join(save_dir, 'labels')):
         os.mkdir(os.path.join(save_dir, 'labels'))
 
     if not os.path.isdir(os.path.join(save_dir, 'semantic')):
         os.mkdir(os.path.join(save_dir, 'semantic'))
-        
+
+    if not os.path.isdir(os.path.join(save_dir, 'semantic_trainId')):
+        os.mkdir(os.path.join(save_dir, 'semantic_trainId'))
+
     if not os.path.isdir(os.path.join(save_dir, 'original')):
         os.mkdir(os.path.join(save_dir, 'original'))
 
@@ -28,7 +33,6 @@ def create_unknown_examples(instance_path, semantic_path, original_path, save_di
                            for image in os.listdir(semantic_path)]
     instance_paths = [os.path.join(instance_path, image)
                            for image in os.listdir(instance_path)]
-
     original_paths = [os.path.join(original_path, image)
                       for image in os.listdir(original_path)]
 
@@ -45,7 +49,7 @@ def create_unknown_examples(instance_path, semantic_path, original_path, save_di
         
         unique_classes = [sample for sample in np.unique(instance_img) if len(str(sample)) == 5]
 
-        how_many = int(random.random()*len(unique_classes)/2) # We only change a maximum of half the instances
+        how_many = int(random.random()*len(unique_classes))
 
         final_mask = np.zeros(np.shape(instance_img))
         new_semantic_map = np.copy(semantic_img)
@@ -69,7 +73,13 @@ def create_unknown_examples(instance_path, semantic_path, original_path, save_di
             np.place(new_semantic_map, mask, new_instance_id)
             final_mask += mask
 
+        # also mark dynamic labels (Optional)
+        if dynamic:
+            mask = np.where(semantic_img==5, 1, 0)
+            final_mask += mask
+
         new_semantic_name = os.path.basename(semantic).replace('labelIds', 'unknown_labelIds')
+        new_semantic_train_name = os.path.basename(semantic).replace('labelIds', 'unknown_trainIds')
         new_label_name = os.path.basename(instance).replace('instanceIds', 'unknown')
         old_semantic_name = os.path.basename(semantic)
         new_original_name = os.path.basename(original).replace('leftImg8bit', 'unknown_leftImg8bit')
@@ -92,7 +102,6 @@ def create_unknown_examples(instance_path, semantic_path, original_path, save_di
                 semantic_copy[new_semantic_map == k] = v
             new_semantic_map =semantic_copy.astype(np.uint8)
 
-
             new_semantic_img =visualization.colorize_mask(new_semantic_map)
             old_semantic_img = visualization.colorize_mask(semantic_img)
 
@@ -104,10 +113,18 @@ def create_unknown_examples(instance_path, semantic_path, original_path, save_di
         else:
             new_semantic_img = Image.fromarray(new_semantic_map)
 
+            # Correct labels to train ID for new semantic
+            semantic_copy = new_semantic_map.copy()
+            for k, v in id_to_trainid.items():
+                semantic_copy[new_semantic_map == k] = v
+            new_semantic_map =semantic_copy.astype(np.uint8)
+            new_semantic_train_img = Image.fromarray(new_semantic_map)
+
             # save images
             mask_img.save(os.path.join(save_dir, 'labels', new_label_name))
             original_img.save(os.path.join(save_dir, 'original', new_original_name))
             new_semantic_img.save(os.path.join(save_dir, 'semantic', new_semantic_name))
+            new_semantic_train_img.save(os.path.join(save_dir, 'semantic_trainId', new_semantic_train_name))
 
 def create_known_examples(instance_path, semantic_path, original_path, save_dir):
 
@@ -154,10 +171,10 @@ def create_known_examples(instance_path, semantic_path, original_path, save_dir)
 
 
 if __name__ == '__main__':
-    instance_path = '/media/giancarlo/Samsung_T5/master_thesis/data/dissimilarity_model/val/instances'
-    semantic_path = '/media/giancarlo/Samsung_T5/master_thesis/data/dissimilarity_model/val/semantic'
-    original_path = '/media/giancarlo/Samsung_T5/master_thesis/data/dissimilarity_model/val/original'
-    save_dir = '/media/giancarlo/Samsung_T5/master_thesis/data/dissimilarity_model/post-process/val'
+    instance_path = '/home/giandbt/Documents/dataset/cityscapes/val/instances'
+    semantic_path = '/home/giandbt/Documents/dataset/cityscapes/val/semantic'
+    original_path = '/home/giandbt/Documents/dataset/cityscapes/val/original'
+    save_dir = '/home/giandbt/Documents/dataset/cityscapes/val/post-process'
     
     create_unknown_examples(instance_path, semantic_path, original_path, save_dir, visualize=False)
     #create_known_examples(instance_path, semantic_path, original_path, save_dir)
