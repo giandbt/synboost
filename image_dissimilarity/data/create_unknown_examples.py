@@ -11,23 +11,32 @@ import data.cityscapes_labels as cityscapes_labels
 
 trainid_to_name = cityscapes_labels.trainId2name
 id_to_trainid = cityscapes_labels.label2trainid
-#objects_to_change = [7, 8, 11, 12, 13, 17, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 31, 32, 33]
-objects_to_change = [7, 7, 7, 8, 11, 12, 13, 20, 21, 22, 24, 24, 24, 25, 26, 26, 26, 26, 26, 26, 26, 27, 28, 32, 33]
+objects_to_change = [7, 8, 11, 12, 13, 17, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 31, 32, 33]
+#objects_to_change = [7, 7, 7, 8, 11, 12, 13, 20, 21, 22, 24, 24, 24, 25, 26, 26, 26, 26, 26, 26, 26, 27, 28, 32, 33]
 #objects_to_change = [7, 8, 11, 12, 13, 17, 19, 20, 21, 22, 23, 25, 26, 27, 28, 31, 32, 33]
 
 def create_unknown_examples(instance_path, semantic_path, original_path, save_dir, visualize=False, dynamic=True):
 
+    if not os.path.isdir(save_dir):
+        os.mkdir(save_dir)
+
     if not os.path.isdir(os.path.join(save_dir, 'labels')):
         os.mkdir(os.path.join(save_dir, 'labels'))
+
+    if not os.path.isdir(os.path.join(save_dir, 'semantic_labelId')):
+        os.mkdir(os.path.join(save_dir, 'semantic_labelId'))
 
     if not os.path.isdir(os.path.join(save_dir, 'semantic')):
         os.mkdir(os.path.join(save_dir, 'semantic'))
 
-    if not os.path.isdir(os.path.join(save_dir, 'semantic_trainId')):
-        os.mkdir(os.path.join(save_dir, 'semantic_trainId'))
-
     if not os.path.isdir(os.path.join(save_dir, 'original')):
         os.mkdir(os.path.join(save_dir, 'original'))
+
+    # for creating synthesis later
+    if not os.path.exists(os.path.join(save_dir, 'temp')):
+        os.makedirs(os.path.join(save_dir, 'temp'))
+        os.makedirs(os.path.join(save_dir, 'temp', 'gtFine', 'val'))
+        os.makedirs(os.path.join(save_dir, 'temp', 'leftImg8bit', 'val'))
 
     semantic_paths = [os.path.join(semantic_path, image)
                            for image in os.listdir(semantic_path)]
@@ -123,8 +132,15 @@ def create_unknown_examples(instance_path, semantic_path, original_path, save_di
             # save images
             mask_img.save(os.path.join(save_dir, 'labels', new_label_name))
             original_img.save(os.path.join(save_dir, 'original', new_original_name))
-            new_semantic_img.save(os.path.join(save_dir, 'semantic', new_semantic_name))
-            new_semantic_train_img.save(os.path.join(save_dir, 'semantic_trainId', new_semantic_train_name))
+            new_semantic_img.save(os.path.join(save_dir, 'semantic_labelId', new_semantic_name))
+            new_semantic_train_img.save(os.path.join(save_dir, 'semantic', new_semantic_train_name))
+
+            # save images for synthesis
+            original_img.save(os.path.join(save_dir, 'temp', 'leftImg8bit', 'val', new_original_name))
+            new_semantic_img.save(os.path.join(save_dir, 'temp', 'gtFine', 'val', new_semantic_name))
+
+            instance_img = Image.open(instance)
+            instance_img.save(os.path.join(save_dir, 'temp', 'gtFine', 'val', os.path.basename(instance)))
 
 def create_known_examples(instance_path, semantic_path, original_path, save_dir):
 
@@ -171,10 +187,10 @@ def create_known_examples(instance_path, semantic_path, original_path, save_dir)
 
 
 if __name__ == '__main__':
-    instance_path = '/home/giandbt/Documents/dataset/cityscapes/val/instances'
-    semantic_path = '/home/giandbt/Documents/dataset/cityscapes/val/semantic'
-    original_path = '/home/giandbt/Documents/dataset/cityscapes/val/original'
-    save_dir = '/home/giandbt/Documents/dataset/cityscapes/val/post-process'
+    instance_path = '/home/giancarlo/data/innosuisse/cityscapes/train/instances'
+    semantic_path = '/home/giancarlo/data/innosuisse/cityscapes/train/semantic'
+    original_path = '/home/giancarlo/data/innosuisse/cityscapes/train/original'
+    save_dir = '/home/giancarlo/data/innosuisse/equal_prob'
     
     create_unknown_examples(instance_path, semantic_path, original_path, save_dir, visualize=False)
     #create_known_examples(instance_path, semantic_path, original_path, save_dir)
