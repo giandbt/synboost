@@ -7,8 +7,10 @@ import shutil
 import torch
 from torch.backends import cudnn
 import torch.onnx
+import torch.nn as nn
 import torchvision.transforms as transforms
 import onnx
+import onnxruntime
 
 from options.test_options import TestOptions
 
@@ -57,40 +59,72 @@ def convert_segmentation_model(model_name = 'segmentation.onnx'):
                       dynamic_axes={'input' : {0 : 'batch_size'},    # variable lenght axes
                                     'output' : {0 : 'batch_size'}})
 
+    ort_session = onnxruntime.InferenceSession(model_name)
 
-def convert_synthesis_model(model_name = 'synthesis.onnx'):
+    def to_numpy(tensor):
+        return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
+    
+    ort_inputs = {ort_session.get_inputs()[0].name: to_numpy(x)}
+    ort_outs = ort_session.run(None, ort_inputs)
+
+    # compare ONNX Runtime and PyTorch results
+    np.testing.assert_allclose(to_numpy(torch_out), ort_outs[0], rtol=1e-03, atol=1e-05)
+
+    print("Exported model has been tested with ONNXRuntime, and the result looks good!")
+
+
+def convert_synthesis_model(dataroot = '/home/giancarlo/Desktop/images_temp', model_name = 'synthesis.onnx'):
 
     import sys
     sys.path.insert(0, './image_synthesis')
     from models.pix2pix_model import Pix2PixModel
+    import data
 
     world_size = 1
     rank = 0
 
     # Corrects where dataset is in necesary format
-    opt.dataroot = os.path.join(opt.results_dir, 'temp')
+    opt.dataroot = dataroot
+    
 
     opt.world_size = world_size
     opt.gpu = 0
     opt.mpdist = False
 
+    dataloader = data.create_dataloader(opt, world_size, rank)
+
     model = Pix2PixModel(opt)
     model.eval()
+    
+    def remove_all_spectral_norm(item):
+        if isinstance(item, nn.Module):
+            try:
+                nn.utils.remove_spectral_norm(item)
+            except Exception:
+                pass
+        
+            for child in item.children():
+                remove_all_spectral_norm(child)
+    
+        if isinstance(item, nn.ModuleList):
+            for module in item:
+                remove_all_spectral_norm(module)
+    
+        if isinstance(item, nn.Sequential):
+            modules = item.children()
+            for module in modules:
+                remove_all_spectral_norm(module)
 
+    remove_all_spectral_norm(model)
     # Input to the model
     batch_size = 1
-
-    label = torch.randn(batch_size, 1, 256, 512, requires_grad=True).cuda()
-    instance = torch.randn(batch_size, 1, 256, 512, requires_grad=True).cuda()
-    image = torch.randn(batch_size, 3, 256, 512, requires_grad=True).cuda()
-    path = ['dummy']
-    data = {'label': label, 'instance': instance, 'image': image, 'path': path}
-    import pdb; pdb.set_trace()
-    torch_out = model(data, mode='inference')
+    for i, data_i in enumerate(dataloader):
+        torch_out = model(data_i, mode='inference')
+        break
 
     # Export the model
     torch.onnx.export(model,               # model being run
-                      (data, 'inference'),                         # model input (or a tuple for multiple inputs)
+                      (data_i, 'inference'),                         # model input (or a tuple for multiple inputs)
                       model_name,   # where to save the model (can be a file or file-like object)
                       export_params=True,        # store the trained parameter weights inside the model file
                       opset_version=11,          # the ONNX version to export the model to
