@@ -1,5 +1,5 @@
 # Name of the experiment for saving files
-experiment_name: baseline_custom_dynamic_epfl
+experiment_name: baseline_optimized_only
 save_folder: results/
 
 # Define training strategy
@@ -27,7 +27,7 @@ diss_pretrained:
 
 # logger options
 logger:
-  results_dir: ./logs_final
+  results_dir: ./logs_distribution
   save_epoch_freq: 50 #frequency of saving checkpoints at the end of epochs
 
 # loss options (remove tasks not needed)
@@ -49,7 +49,7 @@ optimizer:
 # parameters for dataloaders
 train_dataloader:
   dataset_args:
-    dataroot: /home/giancarlo/data/innosuisse/custom_dynamic_epfl
+    dataroot: /home/giancarlo/data/innosuisse/optimized_only
     #dataroot: /home/giancarlo/data/innosuisse/road_anomaly  #(only for quick debugging)
     preprocess_mode: none
     crop_size: 512

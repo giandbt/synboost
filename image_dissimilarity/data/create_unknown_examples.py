@@ -11,11 +11,11 @@ import data.cityscapes_labels as cityscapes_labels
 
 trainid_to_name = cityscapes_labels.trainId2name
 id_to_trainid = cityscapes_labels.label2trainid
-objects_to_change = [7, 8, 11, 12, 13, 17, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 31, 32, 33]
-#objects_to_change = [7, 7, 7, 8, 11, 12, 13, 20, 21, 22, 24, 24, 24, 25, 26, 26, 26, 26, 26, 26, 26, 27, 28, 32, 33]
-#objects_to_change = [7, 8, 11, 12, 13, 17, 19, 20, 21, 22, 23, 25, 26, 27, 28, 31, 32, 33]
+#objects_to_change = [7, 8, 11, 12, 13, 17, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 31, 32, 33] # equal_prob
+objects_to_change = [7, 7, 7, 8, 11, 12, 13, 20, 21, 22, 24, 24, 24, 25, 26, 26, 26, 26, 26, 26, 26, 27, 28, 32, 33] # optmized
+#objects_to_change = [7, 8, 11, 12, 13, 17, 19, 20, 21, 22, 23, 25, 26, 27, 28, 31, 32, 33] # no person
 
-def create_unknown_examples(instance_path, semantic_path, original_path, save_dir, visualize=False, dynamic=True):
+def create_unknown_examples(instance_path, semantic_path, original_path, save_dir, visualize=False, dynamic=False):
 
     if not os.path.isdir(save_dir):
         os.mkdir(save_dir)
@@ -93,7 +93,7 @@ def create_unknown_examples(instance_path, semantic_path, original_path, save_di
         old_semantic_name = os.path.basename(semantic)
         new_original_name = os.path.basename(original).replace('leftImg8bit', 'unknown_leftImg8bit')
 
-        mask_img = Image.fromarray((final_mask * 255).astype(np.uint8))
+        mask_img = Image.fromarray((final_mask).astype(np.uint8))
 
         if visualize:
             if not os.path.isdir(os.path.join(save_dir, 'old_semantic')):
@@ -190,7 +190,7 @@ if __name__ == '__main__':
     instance_path = '/home/giancarlo/data/innosuisse/cityscapes/train/instances'
     semantic_path = '/home/giancarlo/data/innosuisse/cityscapes/train/semantic'
     original_path = '/home/giancarlo/data/innosuisse/cityscapes/train/original'
-    save_dir = '/home/giancarlo/data/innosuisse/equal_prob'
+    save_dir = '/home/giancarlo/data/innosuisse/optimized_only'
     
     create_unknown_examples(instance_path, semantic_path, original_path, save_dir, visualize=False)
     #create_known_examples(instance_path, semantic_path, original_path, save_dir)

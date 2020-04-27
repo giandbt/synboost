@@ -40,6 +40,7 @@ if not os.path.isdir(store_fdr_exp):
 if not os.path.isdir(os.path.join(store_fdr_exp, 'pred')):
     os.mkdir(os.path.join(store_fdr_exp, 'label'))
     os.mkdir(os.path.join(store_fdr_exp, 'pred'))
+    os.mkdir(os.path.join(store_fdr_exp, 'soft'))
 
 # Activate GPUs
 config['gpu_ids'] = opts.gpu_ids
@@ -85,6 +86,7 @@ with torch.no_grad():
         
         outputs = softmax(diss_model(original, synthesis, semantic))
         (softmax_pred, predictions) = torch.max(outputs,dim=1)
+        soft_pred = outputs[:,1,:,:]
         flat_pred[i*w*h:i*w*h+w*h] = torch.flatten(outputs[:,1,:,:]).detach().cpu().numpy()
         flat_labels[i*w*h:i*w*h+w*h] = torch.flatten(label).detach().cpu().numpy()
         # Save results
@@ -93,8 +95,10 @@ with torch.no_grad():
         
         file_name = os.path.basename(data_i['original_path'][0])
         label_img = Image.fromarray(label_tensor.squeeze().cpu().numpy().astype(np.uint8))
+        soft_img = Image.fromarray((soft_pred.squeeze().cpu().numpy()*255).astype(np.uint8))
         predicted_img = Image.fromarray(predicted_tensor.squeeze().cpu().numpy().astype(np.uint8))
         predicted_img.save(os.path.join(store_fdr_exp, 'pred', file_name))
+        soft_img.save(os.path.join(store_fdr_exp, 'soft', file_name))
         label_img.save(os.path.join(store_fdr_exp, 'label', file_name))
 
 print('Calculating metric scores')
