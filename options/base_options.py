@@ -3,6 +3,7 @@ import argparse
 import os
 import sys
 sys.path.insert(0, './image_synthesis')
+sys.path.insert(0, '../image_synthesis')
 from util import util
 import torch
 import models
