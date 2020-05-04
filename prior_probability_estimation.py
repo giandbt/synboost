@@ -49,7 +49,7 @@ img_transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize(
 if not os.path.exists(opt.results_dir):
     os.makedirs(opt.results_dir)
 
-soft_fdr = os.path.join(opt.results_dir, 'soft_segmentation')
+soft_fdr = os.path.join(opt.results_dir, 'entropy')
 
 if not os.path.exists(soft_fdr):
     os.makedirs(soft_fdr)
@@ -69,15 +69,15 @@ for img_id, img_name in enumerate(images):
         print('%04d/%04d: Segmentation Inference done.' % (img_id + 1, len(images)))
 
         outputs = softmax(pred)
-        (softmax_pred, predictions) = torch.max(outputs,dim=1)
+        softmax_pred = torch.sum(-outputs*torch.log(outputs), dim=1)
+        softmax_pred = (softmax_pred - softmax_pred.min()) / softmax_pred.max()
 
     pred_og = pred.cpu().numpy().squeeze()
     softmax_pred_og = softmax_pred.cpu().numpy().squeeze()
-    predictions_og = predictions.cpu().numpy().squeeze()
     pred = np.argmax(pred_og, axis=0)
 
     softmax_pred_og = softmax_pred_og* 255
-    pred_name = 'soft_prob_' + img_name
+    pred_name = 'entropy_' + img_name
     cv2.imwrite(os.path.join(soft_fdr, pred_name), softmax_pred_og)
 
 print('Segmentation Results saved.')
