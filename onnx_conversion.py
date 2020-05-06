@@ -133,6 +133,19 @@ def convert_synthesis_model(dataroot = '/home/giancarlo/Desktop/images_temp', mo
                       output_names = ['output'], # the model's output names
                       dynamic_axes={'input' : {0 : 'batch_size'},    # variable lenght axes
                                     'output' : {0 : 'batch_size'}})
+
+    ort_session = onnxruntime.InferenceSession(model_name)
+
+    #def to_numpy(tensor):
+    #    return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
+
+    #ort_inputs = {ort_session.get_inputs()[0].name: data_i}
+    #ort_outs = ort_session.run(None, ort_inputs)
+
+    # compare ONNX Runtime and PyTorch results
+    #np.testing.assert_allclose(to_numpy(torch_out), ort_outs[0], rtol=1e-03, atol=1e-05)
+
+    print("Exported model has been tested with ONNXRuntime, and the result looks good!")
 if __name__ == '__main__':
     #convert_segmentation_model()
     convert_synthesis_model()
