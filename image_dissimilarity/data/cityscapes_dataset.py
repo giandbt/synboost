@@ -6,11 +6,13 @@ import numpy as np
 from natsort import natsorted
 from torchvision import transforms
 import torch
+import random
 
 import sys
 sys.path.append("..")
 import data.cityscapes_labels as cityscapes_labels
 from data.augmentations import get_transform
+
 
 trainid_to_name = cityscapes_labels.trainId2name
 id_to_trainid = cityscapes_labels.label2trainid
@@ -20,8 +22,8 @@ INVALID_LABELED_FRAMES = [17,  37,  55,  72,  91, 110, 129, 153, 174, 197, 218, 
 
 class CityscapesDataset(Dataset):
     
-    def __init__(self, dataroot, preprocess_mode, crop_size=512, aspect_ratio= 0.5, only_valid = False,
-                 roi = False, void = False, num_semantic_classes = 19, is_train = True):
+    def __init__(self, dataroot, preprocess_mode, crop_size=512, aspect_ratio= 0.5, flip=False, normalize=False,
+                 only_valid = False, roi = False, void = False, num_semantic_classes = 19, is_train = True):
 
         self.original_paths = [os.path.join(dataroot, 'original', image)
                                for image in os.listdir(os.path.join(dataroot, 'original'))]
@@ -63,6 +65,8 @@ class CityscapesDataset(Dataset):
         self.num_semantic_classes = num_semantic_classes
         self.is_train = is_train
         self.void = void
+        self.flip = flip
+        self.normalize = normalize
 
     def __getitem__(self, index):
         
@@ -83,6 +87,13 @@ class CityscapesDataset(Dataset):
         w = self.crop_size
         h = round(self.crop_size / self.aspect_ratio)
         image_size = (h, w)
+        
+        if self.flip:
+            flip_ran = random.random() > 0.5
+            label = _flip(label, flip_ran)
+            semantic = _flip(semantic, flip_ran)
+            image = _flip(image, flip_ran)
+            syn_image = _flip(syn_image, flip_ran)
 
         # get augmentations
         base_transforms, augmentations = get_transform(image_size, self.preprocess_mode)
@@ -96,8 +107,12 @@ class CityscapesDataset(Dataset):
             image_tensor = augmentations(image)
         else:
             image_tensor = base_transforms(image)
-
-
+            
+        if self.normalize:
+            norm_transform = transforms.Compose([transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))]) #imageNet normamlization
+            syn_image_tensor = norm_transform(syn_image_tensor)
+            image_tensor = norm_transform(image_tensor)
+            
         # post processing for semantic labels
         if self.num_semantic_classes == 19:
             semantic_tensor[semantic_tensor == 255] = self.num_semantic_classes + 1  # 'ignore label is 20'
@@ -117,6 +132,14 @@ class CityscapesDataset(Dataset):
         
     def __len__(self):
         return self.dataset_size
+    
+def normalize():
+    return
+
+def _flip(img, flip):
+    if flip:
+        return img.transpose(Image.FLIP_LEFT_RIGHT)
+    return img
 
 def one_hot_encoding(semantic, num_classes=20):
     one_hot = torch.zeros(num_classes, semantic.size(1), semantic.size(2))
@@ -145,7 +168,7 @@ def test(dataset_args, dataloader_args, save_imgs=False, path='./visualization')
             enumerate(zip(sample['original'], sample['label'], sample['semantic'], sample['synthesis'])):
                 # get original image
                 original = original.squeeze().cpu()
-                #original = decoder(original)
+                original = decoder(original)
                 original = np.asarray(transform(original))
                 original = Image.fromarray(original)
                 original.save(os.path.join(path, 'Original_%i_%i' % (counter, idx) + '.png'))
@@ -165,7 +188,7 @@ def test(dataset_args, dataloader_args, save_imgs=False, path='./visualization')
 
                 # get original image
                 synthesis = synthesis.squeeze().cpu()
-                #synthesis = decoder(synthesis)
+                synthesis = decoder(synthesis)
                 synthesis = np.asarray(transform(synthesis))
                 synthesis = Image.fromarray(synthesis)
                 synthesis.save(os.path.join(path, 'Synthesis_%i_%i' % (counter, idx) + '.png'))
@@ -181,10 +204,12 @@ if __name__ == '__main__':
     from util import visualization
     
     dataset_args = {
-        'dataroot': '/home/giancarlo/data/innosuisse/fs_lost_and_found',
+        'dataroot': '/media/giancarlo/Samsung_T5/master_thesis/data/fs_static',
         'preprocess_mode': 'none',
         'crop_size': 512,
         'aspect_ratio': 2,
+        'flip': True,
+        'normalize': True,
         'void': False,
         'num_semantic_classes': 19,
         'is_train': False

@@ -1,5 +1,5 @@
 # Name of the experiment for saving files
-experiment_name: baseline_optimized_only
+experiment_name: spade_norm
 save_folder: results/
 
 # Define training strategy
@@ -8,16 +8,16 @@ training_strategy:
   niter_decay: 0 # of iter to linearly decay learning rate to zero
   is_train: True
   class_weight: True
-  class_weight_cityscapes: False
-  image_visualization: True
+  class_weight_cityscapes: True
+  image_visualization: False
 
 # model options
 model:
-  architecture: vgg16 #[options: 'vgg16', 'vgg16_bn', 'vgg16_guided', 'resnet18', 'vgg16_correlated']
+  architecture: vgg16_bn #[options: 'vgg16', 'vgg16_bn', 'vgg16_guided', 'resnet18', 'vgg16_correlated']
   semantic: True
   pretrained: True
   correlation: True
-  spade: '' #[options: 'encoder', 'decoder', 'both', '']
+  spade: 'both' #[options: 'encoder', 'decoder', 'both', '']
   num_semantic_classes: 19 # Actual training labels
 diss_pretrained:
   load: False
@@ -27,7 +27,7 @@ diss_pretrained:
 
 # logger options
 logger:
-  results_dir: ./logs_distribution
+  results_dir: ./logs_norm
   save_epoch_freq: 50 #frequency of saving checkpoints at the end of epochs
 
 # loss options (remove tasks not needed)
@@ -49,11 +49,13 @@ optimizer:
 # parameters for dataloaders
 train_dataloader:
   dataset_args:
-    dataroot: /home/giancarlo/data/innosuisse/optimized_only
+    dataroot: /home/giancarlo/data/innosuisse/epfl/train
     #dataroot: /home/giancarlo/data/innosuisse/road_anomaly  #(only for quick debugging)
     preprocess_mode: none
     crop_size: 512
     aspect_ratio: 2
+    flip: True
+    normalize: True
     void: False
     num_semantic_classes: 19
     is_train: True
@@ -63,10 +65,12 @@ train_dataloader:
     shuffle: True
 val_dataloader:
   dataset_args:
-    dataroot: /home/giancarlo/data/innosuisse/fs_lost_and_found
+    dataroot: /home/giancarlo/data/innosuisse/epfl/val
     preprocess_mode: none
     crop_size: 512
     aspect_ratio: 2
+    flip: False
+    normalize: True
     num_semantic_classes: 19
     is_train: False
   dataloader_args:
@@ -79,6 +83,8 @@ test_dataloader1:
     preprocess_mode: none
     crop_size: 512
     aspect_ratio: 2
+    flip: False
+    normalize: True
     roi: False
     num_semantic_classes: 19
     is_train: False
@@ -92,6 +98,8 @@ test_dataloader2:
     preprocess_mode: none
     crop_size: 512
     aspect_ratio: 2
+    flip: False
+    normalize: True
     roi: True
     num_semantic_classes: 19
     is_train: False
@@ -105,6 +113,8 @@ test_dataloader3:
     preprocess_mode: none
     crop_size: 512
     aspect_ratio: 2
+    flip: False
+    normalize: True
     roi: True
     num_semantic_classes: 19
     is_train: False
@@ -118,6 +128,8 @@ test_dataloader4:
     preprocess_mode: none
     crop_size: 512
     aspect_ratio: 2
+    flip: False
+    normalize: True
     roi: False
     num_semantic_classes: 19
     is_train: False
@@ -131,6 +143,8 @@ img_dataloader:
     preprocess_mode: none
     crop_size: 512
     aspect_ratio: 2
+    flip: False
+    normalize: True
     void: False
     num_semantic_classes: 19
     is_train: True
