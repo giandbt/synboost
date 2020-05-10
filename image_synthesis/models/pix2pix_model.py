@@ -52,6 +52,16 @@ class Pix2PixModel(torch.nn.Module):
             return fake_image
         else:
             raise ValueError("|mode| is invalid")
+        
+    def _forward(self, label, image):
+        # move to GPU and change data types
+        label = label.cuda(self.opt.gpu)
+        image = image.cuda(self.opt.gpu)
+        
+        with torch.no_grad():
+            fake_image, _ = self.generate_fake(label, image)
+        return fake_image
+
 
     def create_optimizers(self, opt):
         G_params = list(self.netG.parameters())
