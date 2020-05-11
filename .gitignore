@@ -6,3 +6,4 @@ visualization/
 checkpoints/
 logs/
 *.yaml
+/models/
