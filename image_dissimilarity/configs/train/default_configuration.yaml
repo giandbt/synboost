@@ -1,5 +1,5 @@
 # Name of the experiment for saving files
-experiment_name: spade_norm
+experiment_name: speed_check
 save_folder: results/
 
 # Define training strategy
@@ -13,11 +13,11 @@ training_strategy:
 
 # model options
 model:
-  architecture: vgg16_bn #[options: 'vgg16', 'vgg16_bn', 'vgg16_guided', 'resnet18', 'vgg16_correlated']
+  architecture: vgg16 #[options: 'vgg16', 'vgg16_bn', 'vgg16_guided', 'resnet18', 'vgg16_correlated']
   semantic: True
   pretrained: True
   correlation: True
-  spade: 'both' #[options: 'encoder', 'decoder', 'both', '']
+  spade: '' #[options: 'encoder', 'decoder', 'both', '']
   num_semantic_classes: 19 # Actual training labels
 diss_pretrained:
   load: False

@@ -91,24 +91,24 @@ class DissimNet(nn.Module):
     def forward(self, original_img, synthesis_img, semantic_img, softmax_out=False):
         # get all the image encodings
         if self.spade == 'encoder' or self.spade == 'both':
-            self.encoding_og = self.vgg_encoder(original_img, semantic_img)
-            self.encoding_syn = self.vgg_encoder(synthesis_img, semantic_img)
+            encoding_og = self.vgg_encoder(original_img, semantic_img)
+            encoding_syn = self.vgg_encoder(synthesis_img, semantic_img)
         else:
-            self.encoding_og = self.vgg_encoder(original_img)
-            self.encoding_syn = self.vgg_encoder(synthesis_img)
+            encoding_og = self.vgg_encoder(original_img)
+            encoding_syn = self.vgg_encoder(synthesis_img)
         
         if self.semantic:
-            self.encoding_sem = self.semantic_encoder(semantic_img)
+            encoding_sem = self.semantic_encoder(semantic_img)
             # concatenate the output of each encoder
-            layer1_cat = torch.cat((self.encoding_og[0], self.encoding_syn[0], self.encoding_sem[0]), dim=1)
-            layer2_cat = torch.cat((self.encoding_og[1], self.encoding_syn[1], self.encoding_sem[1]), dim=1)
-            layer3_cat = torch.cat((self.encoding_og[2], self.encoding_syn[2], self.encoding_sem[2]), dim=1)
-            layer4_cat = torch.cat((self.encoding_og[3], self.encoding_syn[3], self.encoding_sem[3]), dim=1)
+            layer1_cat = torch.cat((encoding_og[0], encoding_syn[0], encoding_sem[0]), dim=1)
+            layer2_cat = torch.cat((encoding_og[1], encoding_syn[1], encoding_sem[1]), dim=1)
+            layer3_cat = torch.cat((encoding_og[2], encoding_syn[2], encoding_sem[2]), dim=1)
+            layer4_cat = torch.cat((encoding_og[3], encoding_syn[3], encoding_sem[3]), dim=1)
         else:
-            layer1_cat = torch.cat((self.encoding_og[0], self.encoding_syn[0]), dim=1)
-            layer2_cat = torch.cat((self.encoding_og[1], self.encoding_syn[1]), dim=1)
-            layer3_cat = torch.cat((self.encoding_og[2], self.encoding_syn[2]), dim=1)
-            layer4_cat = torch.cat((self.encoding_og[3], self.encoding_syn[3]), dim=1)
+            layer1_cat = torch.cat((encoding_og[0], encoding_syn[0]), dim=1)
+            layer2_cat = torch.cat((encoding_og[1], encoding_syn[1]), dim=1)
+            layer3_cat = torch.cat((encoding_og[2], encoding_syn[2]), dim=1)
+            layer4_cat = torch.cat((encoding_og[3], encoding_syn[3]), dim=1)
                 
         # use 1x1 convolutions to reduce dimensions of concatenations
         layer4_cat = self.conv7(layer4_cat)
@@ -118,10 +118,10 @@ class DissimNet(nn.Module):
         
         if self.correlation:
             # get correlation for each layer (multiplication + 1x1 conv)
-            corr1 = torch.sum(torch.mul(self.encoding_og[0], self.encoding_syn[0]), dim=1).unsqueeze(dim=1)
-            corr2 = torch.sum(torch.mul(self.encoding_og[1], self.encoding_syn[1]), dim=1).unsqueeze(dim=1)
-            corr3 = torch.sum(torch.mul(self.encoding_og[2], self.encoding_syn[2]), dim=1).unsqueeze(dim=1)
-            corr4 = torch.sum(torch.mul(self.encoding_og[3], self.encoding_syn[3]), dim=1).unsqueeze(dim=1)
+            corr1 = torch.sum(torch.mul(encoding_og[0], encoding_syn[0]), dim=1).unsqueeze(dim=1)
+            corr2 = torch.sum(torch.mul(encoding_og[1], encoding_syn[1]), dim=1).unsqueeze(dim=1)
+            corr3 = torch.sum(torch.mul(encoding_og[2], encoding_syn[2]), dim=1).unsqueeze(dim=1)
+            corr4 = torch.sum(torch.mul(encoding_og[3], encoding_syn[3]), dim=1).unsqueeze(dim=1)
             
             # concatenate correlation layers
             layer4_cat = torch.cat((corr4, layer4_cat), dim = 1)
@@ -159,11 +159,8 @@ class DissimNet(nn.Module):
             x = self.conv6(x, semantic_img)
         else:
             x = self.conv6(x)
-        x = self.conv11(x)
-        
-        self.final_prediction = x
-
-        return self.final_prediction
+        logits = self.conv11(x)
+        return logits
 
 class ResNetDissimNet(nn.Module):
     def __init__(self, architecture='resnet18', semantic=True, pretrained=True, correlation=True, spade='',
