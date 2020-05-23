@@ -50,10 +50,13 @@ if not os.path.exists(opt.results_dir):
     os.makedirs(opt.results_dir)
 
 soft_fdr = os.path.join(opt.results_dir, 'entropy')
+soft_fdr_2 = os.path.join(opt.results_dir, 'logit_distance')
 
 if not os.path.exists(soft_fdr):
     os.makedirs(soft_fdr)
-
+    
+if not os.path.exists(soft_fdr_2):
+    os.makedirs(soft_fdr_2)
 
 softmax = torch.nn.Softmax(dim=1)
 
@@ -69,16 +72,29 @@ for img_id, img_name in enumerate(images):
         print('%04d/%04d: Segmentation Inference done.' % (img_id + 1, len(images)))
 
         outputs = softmax(pred)
+        
+        # get entropy
         softmax_pred = torch.sum(-outputs*torch.log(outputs), dim=1)
         softmax_pred = (softmax_pred - softmax_pred.min()) / softmax_pred.max()
+        
+        # get logit distance
+        distance, _ = torch.topk(outputs, 2, dim=1)
+        max_logit = distance[:, 0, :, :]
+        max2nd_logit = distance[:, 1, :, :]
+        result = max_logit - max2nd_logit
+        map_logit = 1 - (result - result.min()) / result.max()
 
     pred_og = pred.cpu().numpy().squeeze()
     softmax_pred_og = softmax_pred.cpu().numpy().squeeze()
+    map_logit = map_logit.cpu().numpy().squeeze()
     pred = np.argmax(pred_og, axis=0)
 
     softmax_pred_og = softmax_pred_og* 255
+    map_logit = map_logit * 255
     pred_name = 'entropy_' + img_name
+    pred_name_2 = 'distance_' + img_name
     cv2.imwrite(os.path.join(soft_fdr, pred_name), softmax_pred_og)
+    cv2.imwrite(os.path.join(soft_fdr_2, pred_name_2), map_logit)
 
 print('Segmentation Results saved.')
 
