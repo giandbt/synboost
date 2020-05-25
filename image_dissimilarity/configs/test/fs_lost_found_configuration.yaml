@@ -1,7 +1,7 @@
 # Name of the experiment for saving files
-experiment_name: spade_custom_dynamic_epfl # where checkpoints are stored
+experiment_name: spade_audi_dynamic # where checkpoints are stored
 save_folder: results/ # where checkpoints are stored
-which_epoch: best
+which_epoch: 14
 store_results: /home/giancarlo/data/innosuisse/fs_lost_and_found/predictions
 visualize: False
 
@@ -25,10 +25,12 @@ test_dataloader:
     preprocess_mode: none
     crop_size: 512
     aspect_ratio: 2
+    flip: False
+    normalize: True
     roi: True
     void: False
     num_semantic_classes: 19
-    is_train: True
+    is_train: False
   dataloader_args:
     batch_size: 1
     num_workers: 1
