@@ -7,3 +7,5 @@ checkpoints/
 logs/
 *.yaml
 /models/
+*.onnx
+*.png

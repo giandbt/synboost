@@ -33,26 +33,37 @@ class Pix2PixModel(torch.nn.Module):
     # can't parallelize custom functions, we branch to different
     # routines based on |mode|.
     def forward(self, data, mode):
-        input_semantics, real_image = self.preprocess_input(data)
-
-        if mode == 'generator':
-            g_loss, generated = self.compute_generator_loss(
-                input_semantics, real_image)
-            return g_loss, generated
-        elif mode == 'discriminator':
-            d_loss = self.compute_discriminator_loss(
-                input_semantics, real_image)
-            return d_loss
-        elif mode == 'encode_only':
-            z, mu, logvar = self.encode_z(real_image)
-            return mu, logvar
-        elif mode == 'inference':
-            with torch.no_grad():
-                fake_image, _ = self.generate_fake(input_semantics, real_image)
-            return fake_image
+        if isinstance(mode, str):
+            input_semantics, real_image = self.preprocess_input(data)
+            if mode == 'generator':
+                g_loss, generated = self.compute_generator_loss(
+                    input_semantics, real_image)
+                return g_loss, generated
+            elif mode == 'discriminator':
+                d_loss = self.compute_discriminator_loss(
+                    input_semantics, real_image)
+                return d_loss
+            elif mode == 'encode_only':
+                z, mu, logvar = self.encode_z(real_image)
+                return mu, logvar
+            elif mode == 'inference':
+                with torch.no_grad():
+                    fake_image, _ = self.generate_fake(input_semantics, real_image)
+                return fake_image
+            else:
+                raise ValueError("|mode| is invalid")
         else:
-            raise ValueError("|mode| is invalid")
+            # for modularity, I use the same name variables but this is used for onnx converion
+            label = data
+            image = mode
+            label = label.cuda(self.opt.gpu)
+            image = image.cuda(self.opt.gpu)
+    
+            with torch.no_grad():
+                fake_image, _ = self.generate_fake(label, image)
+            return fake_image
         
+    # Deprecated! (Corrected by If/Else statement in forward function)
     def _forward(self, label, image):
         # move to GPU and change data types
         label = label.cuda(self.opt.gpu)
