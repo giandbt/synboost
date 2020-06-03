@@ -93,7 +93,7 @@ def convert_segmentation_model(model_name = 'segmentation.onnx'):
     print("Exported model has been tested with ONNXRuntime, and the result looks good!")
 
 
-def convert_synthesis_model(dataroot = '/home/giancarlo/Desktop/images_temp', model_name = 'synthesis.onnx'):
+def convert_synthesis_model(dataroot = './sample_images/onnx_conversion', model_name = 'synthesis.onnx'):
 
     import sys
     sys.path.insert(0, './image_synthesis')
@@ -223,7 +223,7 @@ def get_edges(t):
 
 
 def convert_dissimilarity_model(
-    config='/home/giancarlo/Documents/master_thesis/driving_uncertainty/image_dissimilarity/configs/train/default_configuration.yaml',
+    config='./image_dissimilarity/configs/test/road_anomaly_configuration.yaml',
     model_name='dissimilarity.onnx'):
     import sys
     sys.path.insert(0, './image_dissimilarity')
@@ -295,6 +295,6 @@ def convert_dissimilarity_model(
 
 
 if __name__ == '__main__':
-    # convert_segmentation_model()
-    # convert_synthesis_model()
+    convert_segmentation_model()
+    convert_synthesis_model()
     convert_dissimilarity_model('./image_dissimilarity/configs/test/road_anomaly_configuration.yaml')

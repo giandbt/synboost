@@ -26,6 +26,15 @@ In order to run inference in these images, run the following command: `python de
 In case custom images want to be tested change the `--demo-folder` flag. Information about all the other flags can be 
 found running `demo_folder.py -h`.
 
+### ONNX Conversion 
+
+In order to convert all three models into `.onnx`, it is neccesary to update the `symbolic_opset11.py` file from the
+original `torch` module installation. The reason for this is that `torch==1.4.0` does not have compatibility for `im2col`
+which is neccesary for the synthesis model. 
+
+Simply copy the `symbolic_opset11.py` from this repository and replace the one from the torch module inside your project environment. 
+The file is located `/Path/To/Enviroment/lib/python3.7/site-packages/torch/onnx`
+
 ### Notes 
 
 - The image segmentaion folder is heavily based on [3], specifically commit `b4fc685`. Additionally, 
