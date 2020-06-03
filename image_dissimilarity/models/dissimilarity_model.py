@@ -2,12 +2,12 @@ import torch.nn as nn
 import torch
 import torchvision.models
 
-from models.semantic_encoder import SemanticEncoder, ResNetSemanticEncoder
-from models.vgg_features import VGGFeatures, VGGSPADE
-from models.resnet_features import resnet
 import sys
 sys.path.append("..")
-from models.normalization import SPADE, FILM, GuideCorrelation, GuideNormalization
+from image_dissimilarity.models.semantic_encoder import SemanticEncoder, ResNetSemanticEncoder
+from image_dissimilarity.models.vgg_features import VGGFeatures, VGGSPADE
+from image_dissimilarity.models.resnet_features import resnet
+from image_dissimilarity.models.normalization import SPADE, FILM, GuideCorrelation, GuideNormalization
 
 class DissimNet(nn.Module):
     def __init__(self, architecture='vgg16', semantic=True, pretrained=True, correlation = True, spade='',

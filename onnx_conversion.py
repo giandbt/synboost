@@ -25,6 +25,26 @@ from config import assert_and_infer_cfg
 TestOptions = TestOptions()
 opt = TestOptions.parse()
 
+
+def remove_all_spectral_norm(item):
+    if isinstance(item, nn.Module):
+        try:
+            nn.utils.remove_spectral_norm(item)
+        except Exception:
+            pass
+        
+        for child in item.children():
+            remove_all_spectral_norm(child)
+    
+    if isinstance(item, nn.ModuleList):
+        for module in item:
+            remove_all_spectral_norm(module)
+    
+    if isinstance(item, nn.Sequential):
+        modules = item.children()
+        for module in modules:
+            remove_all_spectral_norm(module)
+
 def convert_segmentation_model(model_name = 'segmentation.onnx'):
 
 
@@ -95,25 +115,6 @@ def convert_synthesis_model(dataroot = '/home/giancarlo/Desktop/images_temp', mo
 
     model = Pix2PixModel(opt)
     model.eval()
-    
-    def remove_all_spectral_norm(item):
-        if isinstance(item, nn.Module):
-            try:
-                nn.utils.remove_spectral_norm(item)
-            except Exception:
-                pass
-        
-            for child in item.children():
-                remove_all_spectral_norm(child)
-    
-        if isinstance(item, nn.ModuleList):
-            for module in item:
-                remove_all_spectral_norm(module)
-    
-        if isinstance(item, nn.Sequential):
-            modules = item.children()
-            for module in modules:
-                remove_all_spectral_norm(module)
 
     remove_all_spectral_norm(model)
     # Input to the model
@@ -220,6 +221,80 @@ def get_edges(t):
     edge[:, :, :-1, :] = edge[:, :, :-1, :] | (t[:, :, 1:, :] != t[:, :, :-1, :])
     return edge.float()
 
+
+def convert_dissimilarity_model(
+    config='/home/giancarlo/Documents/master_thesis/driving_uncertainty/image_dissimilarity/configs/train/default_configuration.yaml',
+    model_name='dissimilarity.onnx'):
+    import sys
+    sys.path.insert(0, './image_dissimilarity')
+    from image_dissimilarity.models.dissimilarity_model import DissimNet
+    from image_dissimilarity.util import trainer_util
+    import yaml
+    
+    # Load experiment setting
+    with open(config, 'r') as stream:
+        config = yaml.load(stream, Loader=yaml.FullLoader)
+    # get experiment information
+    exp_name = config['experiment_name']
+    save_fdr = config['save_folder']
+    epoch = config['which_epoch']
+    
+    cfg_test_loader = config['test_dataloader']
+    dataloader = trainer_util.get_dataloader(cfg_test_loader['dataset_args'], cfg_test_loader['dataloader_args'])
+    
+    # get model
+    
+    diss_model = DissimNet(**config['model']).cuda()
+    
+    diss_model.eval()
+    model_path = os.path.join('image_dissimilarity', save_fdr, exp_name, '%s_net_%s.pth' % (epoch, exp_name))
+    model_weights = torch.load(model_path)
+    diss_model.load_state_dict(model_weights)
+    
+    diss_model.eval()
+    
+    remove_all_spectral_norm(diss_model)
+    # Input to the model
+
+    for i, data_i in enumerate(dataloader):
+        original = data_i['original'].cuda()
+        semantic = data_i['semantic'].cuda()
+        synthesis = data_i['synthesis'].cuda()
+        
+        torch_out = diss_model(original, synthesis, semantic)
+        break
+    
+    # Export the model
+    torch.onnx.export(diss_model,  # model being run
+                      (original, synthesis, semantic),  # model input (or a tuple for multiple inputs)
+                      model_name,  # where to save the model (can be a file or file-like object)
+                      export_params=True,  # store the trained parameter weights inside the model file
+                      opset_version=11,  # the ONNX version to export the model to
+                      do_constant_folding=True,  # whether to execute constant folding for optimization
+                      input_names=['input'],  # the model's input names
+                      output_names=['output'],  # the model's output names
+                      dynamic_axes={'input': {0: 'batch_size'},  # variable lenght axes
+                                    'output': {0: 'batch_size'}})
+    
+    ort_session = onnxruntime.InferenceSession(model_name)
+    
+    def to_numpy(tensor):
+        return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
+    
+    input_feeds = {}
+    input_feeds[ort_session.get_inputs()[0].name] = to_numpy(original)
+    input_feeds[ort_session.get_inputs()[1].name] = to_numpy(synthesis)
+    input_feeds[ort_session.get_inputs()[2].name] = to_numpy(semantic)
+
+    ort_outs = ort_session.run(None, input_feeds)
+    
+    # compare ONNX Runtime and PyTorch results
+    np.testing.assert_allclose(to_numpy(torch_out), ort_outs[0], rtol=1e-03, atol=1e-03)
+    
+    print("Exported model has been tested with ONNXRuntime, and the result looks good!")
+
+
 if __name__ == '__main__':
-    #convert_segmentation_model()
-    convert_synthesis_model()
+    # convert_segmentation_model()
+    # convert_synthesis_model()
+    convert_dissimilarity_model('./image_dissimilarity/configs/test/road_anomaly_configuration.yaml')

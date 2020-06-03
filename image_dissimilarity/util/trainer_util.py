@@ -8,8 +8,8 @@ import cv2
 
 import sys
 sys.path.append("..")
-from data.cityscapes_dataset import CityscapesDataset
-import data.cityscapes_labels as cityscapes_labels
+from image_dissimilarity.data.cityscapes_dataset import CityscapesDataset
+import image_dissimilarity.data.cityscapes_labels as cityscapes_labels
 
 
 def activate_gpus(config):

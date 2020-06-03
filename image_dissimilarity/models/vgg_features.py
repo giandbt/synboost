@@ -3,7 +3,7 @@ import torchvision.models
 import torch
 import sys
 sys.path.append("..")
-from models.normalization import SPADE
+from image_dissimilarity.models.normalization import SPADE
 
 class VGGFeatures(nn.Module):
 

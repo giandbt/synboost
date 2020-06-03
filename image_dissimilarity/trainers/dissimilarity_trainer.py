@@ -6,8 +6,8 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 import sys
 sys.path.append("..")
-from util import trainer_util
-from models.dissimilarity_model import DissimNet, GuidedDissimNet, ResNetDissimNet, CorrelatedDissimNet, CorrelatedDissimNetGuide
+from image_dissimilarity.util import trainer_util
+from image_dissimilarity.models.dissimilarity_model import DissimNet, GuidedDissimNet, ResNetDissimNet, CorrelatedDissimNet, CorrelatedDissimNetGuide
 
 class DissimilarityTrainer():
     """
