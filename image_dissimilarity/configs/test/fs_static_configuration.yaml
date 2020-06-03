@@ -1,17 +1,18 @@
 # Name of the experiment for saving files
-experiment_name: spade_audi_dynamic # where checkpoints are stored
+experiment_name: prior_branch_spade_decoder # where checkpoints are stored
 save_folder: results/ # where checkpoints are stored
-which_epoch: 14
+which_epoch: best
 store_results: /home/giancarlo/data/innosuisse/fs_static/predictions
 visualize: False
 
 # model options
 model:
-  architecture: vgg16_bn #[options: 'vgg16', 'vgg16_bn', 'vgg16_guided', 'resnet18', 'vgg16_correlated']
+  architecture: vgg16 #[options: 'vgg16', 'vgg16_bn', 'vgg16_guided', 'resnet18', 'vgg16_correlated']
   semantic: True
   pretrained: True
   correlation: True
-  spade: 'both' #[options: 'encoder', 'decoder', 'both', '']
+  prior: True
+  spade: 'decoder' #[options: 'encoder', 'decoder', 'both', '']
   num_semantic_classes: 19 # Actual training labels
 
 # parameters for dataset

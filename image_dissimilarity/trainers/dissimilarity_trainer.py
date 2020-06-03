@@ -7,7 +7,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 import sys
 sys.path.append("..")
 from image_dissimilarity.util import trainer_util
-from image_dissimilarity.models.dissimilarity_model import DissimNet, GuidedDissimNet, ResNetDissimNet, CorrelatedDissimNet, CorrelatedDissimNetGuide
+from image_dissimilarity.models.dissimilarity_model import DissimNet, DissimNetPrior
 
 class DissimilarityTrainer():
     """
@@ -28,14 +28,10 @@ class DissimilarityTrainer():
         else:
             self.gpu = 'cpu'
         
-        if 'vgg' in config['model']['architecture'] and 'guided' in config['model']['architecture']:
-            self.diss_model = GuidedDissimNet(**config['model']).cuda(self.gpu)
-        if 'vgg' in config['model']['architecture'] and 'correlated' in config['model']['architecture']:
-            self.diss_model = CorrelatedDissimNetGuide(**config['model']).cuda(self.gpu)
+        if config['model']['prior']:
+            self.diss_model = DissimNetPrior(**config['model']).cuda(self.gpu)
         elif 'vgg' in config['model']['architecture']:
             self.diss_model = DissimNet(**config['model']).cuda(self.gpu)
-        elif 'resnet' in config['model']['architecture']:
-            self.diss_model = ResNetDissimNet(**config['model']).cuda(self.gpu)
         else:
             raise NotImplementedError()
 
@@ -107,6 +103,21 @@ class DissimilarityTrainer():
         
     def run_validation(self, original, synthesis, semantic, label):
         predictions = self.diss_model(original, synthesis, semantic)
+        model_loss = self.criterion(predictions, label.type(torch.LongTensor).squeeze(dim=1).cuda())
+        return model_loss, predictions
+
+    def run_model_one_step_prior(self, original, synthesis, semantic, label, entropy, mae, distance):
+        self.optimizer.zero_grad()
+        predictions = self.diss_model(original, synthesis, semantic, entropy, mae, distance)
+        model_loss = self.criterion(predictions, label.type(torch.LongTensor).squeeze(dim=1).cuda())
+        model_loss.backward()
+        self.optimizer.step()
+        self.model_losses = model_loss
+        self.generated = predictions
+        return model_loss, predictions
+
+    def run_validation_prior(self, original, synthesis, semantic, label, entropy, mae, distance):
+        predictions = self.diss_model(original, synthesis, semantic, entropy, mae, distance)
         model_loss = self.criterion(predictions, label.type(torch.LongTensor).squeeze(dim=1).cuda())
         return model_loss, predictions
 

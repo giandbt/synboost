@@ -1,5 +1,5 @@
 # Name of the experiment for saving files
-experiment_name: speed_check
+experiment_name: prior_branch_spade_decoder_master
 save_folder: results/
 
 # Define training strategy
@@ -17,7 +17,8 @@ model:
   semantic: True
   pretrained: True
   correlation: True
-  spade: '' #[options: 'encoder', 'decoder', 'both', '']
+  prior: True
+  spade: 'decoder' #[options: 'encoder', 'decoder', 'both', '']
   num_semantic_classes: 19 # Actual training labels
 diss_pretrained:
   load: False
@@ -27,7 +28,7 @@ diss_pretrained:
 
 # logger options
 logger:
-  results_dir: ./logs_norm
+  results_dir: ./logs_prior
   save_epoch_freq: 50 #frequency of saving checkpoints at the end of epochs
 
 # loss options (remove tasks not needed)
@@ -49,7 +50,7 @@ optimizer:
 # parameters for dataloaders
 train_dataloader:
   dataset_args:
-    dataroot: /home/giancarlo/data/innosuisse/epfl/train
+    dataroot: /home/giancarlo/data/innosuisse/custom_both
     #dataroot: /home/giancarlo/data/innosuisse/road_anomaly  #(only for quick debugging)
     preprocess_mode: none
     crop_size: 512
@@ -65,7 +66,7 @@ train_dataloader:
     shuffle: True
 val_dataloader:
   dataset_args:
-    dataroot: /home/giancarlo/data/innosuisse/epfl/val
+    dataroot: /home/giancarlo/data/innosuisse/fs_lost_and_found
     preprocess_mode: none
     crop_size: 512
     aspect_ratio: 2
@@ -124,7 +125,7 @@ test_dataloader3:
     shuffle: False
 test_dataloader4:
   dataset_args:
-    dataroot: /home/giancarlo/data/innosuisse/wild_dash
+    dataroot: /home/giancarlo/data/innosuisse/fs_static
     preprocess_mode: none
     crop_size: 512
     aspect_ratio: 2

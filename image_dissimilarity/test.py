@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 from util import trainer_util, metrics
 from util.iter_counter import IterationCounter
-from models.dissimilarity_model import DissimNet, GuidedDissimNet, ResNetDissimNet, CorrelatedDissimNet
+from models.dissimilarity_model import DissimNet, DissimNetPrior
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', type=str, help='Path to the config file.')
@@ -46,19 +46,19 @@ if not os.path.isdir(os.path.join(store_fdr_exp, 'pred')):
 config['gpu_ids'] = opts.gpu_ids
 gpu_info = trainer_util.activate_gpus(config)
 
+# checks if we are using prior images
+prior = config['model']['prior']
 # Get data loaders
 cfg_test_loader = config['test_dataloader']
+# adds logic to dataloaders (avoid repetition in config file)
+cfg_test_loader['dataset_args']['prior'] = prior
 test_loader = trainer_util.get_dataloader(cfg_test_loader['dataset_args'], cfg_test_loader['dataloader_args'])
 
 # get model
-if 'vgg' in config['model']['architecture'] and 'guided' in config['model']['architecture']:
-    diss_model = GuidedDissimNet(**config['model']).cuda()
-if 'vgg' in config['model']['architecture'] and 'correlated' in config['model']['architecture']:
-    diss_model = CorrelatedDissimNet(**config['model']).cuda()
+if config['model']['prior']:
+    diss_model = DissimNetPrior(**config['model']).cuda()
 elif 'vgg' in config['model']['architecture']:
     diss_model = DissimNet(**config['model']).cuda()
-elif 'resnet' in config['model']['architecture']:
-    diss_model = ResNetDissimNet(**config['model']).cuda()
 else:
     raise NotImplementedError()
 
@@ -83,8 +83,14 @@ with torch.no_grad():
         semantic = data_i['semantic'].cuda()
         synthesis = data_i['synthesis'].cuda()
         label = data_i['label'].cuda()
+        entropy = data_i['entropy'].cuda()
+        mae = data_i['mae'].cuda()
+        distance = data_i['distance'].cuda()
         
-        outputs = softmax(diss_model(original, synthesis, semantic))
+        if prior:
+            outputs = softmax(diss_model(original, synthesis, semantic, entropy, mae, distance))
+        else:
+            outputs = softmax(diss_model(original, synthesis, semantic))
         (softmax_pred, predictions) = torch.max(outputs,dim=1)
         soft_pred = outputs[:,1,:,:]
         flat_pred[i*w*h:i*w*h+w*h] = torch.flatten(outputs[:,1,:,:]).detach().cpu().numpy()

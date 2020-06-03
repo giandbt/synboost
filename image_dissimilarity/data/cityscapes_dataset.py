@@ -23,7 +23,7 @@ INVALID_LABELED_FRAMES = [17,  37,  55,  72,  91, 110, 129, 153, 174, 197, 218, 
 class CityscapesDataset(Dataset):
     
     def __init__(self, dataroot, preprocess_mode, crop_size=512, aspect_ratio= 0.5, flip=False, normalize=False,
-                 only_valid = False, roi = False, void = False, num_semantic_classes = 19, is_train = True):
+                 prior = False, only_valid = False, roi = False, void = False, num_semantic_classes = 19, is_train = True):
 
         self.original_paths = [os.path.join(dataroot, 'original', image)
                                for image in os.listdir(os.path.join(dataroot, 'original'))]
@@ -40,12 +40,23 @@ class CityscapesDataset(Dataset):
         else:
             self.label_paths = [os.path.join(dataroot, 'labels', image)
                                 for image in os.listdir(os.path.join(dataroot, 'labels'))]
+        if prior:
+            self.mae_features_paths = [os.path.join(dataroot, 'mae_features', image)
+                                       for image in os.listdir(os.path.join(dataroot, 'mae_features'))]
+            self.entropy_paths = [os.path.join(dataroot, 'entropy', image)
+                                  for image in os.listdir(os.path.join(dataroot, 'entropy'))]
+            self.logit_distance_paths = [os.path.join(dataroot, 'logit_distance', image)
+                                         for image in os.listdir(os.path.join(dataroot, 'logit_distance'))]
         
         # We need to sort the images to ensure all the pairs match with each other
         self.original_paths = natsorted(self.original_paths)
         self.semantic_paths = natsorted(self.semantic_paths)
         self.synthesis_paths = natsorted(self.synthesis_paths)
         self.label_paths = natsorted(self.label_paths)
+        if prior:
+            self.mae_features_paths = natsorted(self.mae_features_paths)
+            self.entropy_paths = natsorted(self.entropy_paths)
+            self.logit_distance_paths = natsorted(self.logit_distance_paths)
         
         if only_valid: # Only for Lost and Found
             self.original_paths = np.delete(self.original_paths, INVALID_LABELED_FRAMES)
@@ -54,7 +65,7 @@ class CityscapesDataset(Dataset):
             self.label_paths = np.delete(self.label_paths, INVALID_LABELED_FRAMES)
                
         assert len(self.original_paths) == len(self.semantic_paths) == len(self.synthesis_paths) \
-               == len(self.label_paths), \
+               == len(self.label_paths) == len(self.mae_features_paths) == len(self.entropy_paths) == len(self.logit_distance_paths), \
             "Number of images in the dataset does not match with each other"
         "The #images in %s and %s do not match. Is there something wrong?"
         
@@ -66,6 +77,7 @@ class CityscapesDataset(Dataset):
         self.is_train = is_train
         self.void = void
         self.flip = flip
+        self.prior = prior
         self.normalize = normalize
 
     def __getitem__(self, index):
@@ -82,6 +94,16 @@ class CityscapesDataset(Dataset):
 
         syn_image_path = self.synthesis_paths[index]
         syn_image = Image.open(syn_image_path).convert('RGB')
+        
+        if self.prior:
+            mae_path = self.mae_features_paths[index]
+            mae_image = Image.open(mae_path)
+    
+            entropy_path = self.entropy_paths[index]
+            entropy_image = Image.open(entropy_path)
+    
+            distance_path = self.logit_distance_paths[index]
+            distance_image = Image.open(distance_path)
 
         # get input for transformations
         w = self.crop_size
@@ -94,6 +116,10 @@ class CityscapesDataset(Dataset):
             semantic = _flip(semantic, flip_ran)
             image = _flip(image, flip_ran)
             syn_image = _flip(syn_image, flip_ran)
+            if self.prior:
+                mae_image = _flip(mae_image, flip_ran)
+                entropy_image = _flip(entropy_image, flip_ran)
+                distance_image = _flip(distance_image, flip_ran)
 
         # get augmentations
         base_transforms, augmentations = get_transform(image_size, self.preprocess_mode)
@@ -102,6 +128,14 @@ class CityscapesDataset(Dataset):
         label_tensor = base_transforms(label)*255
         semantic_tensor = base_transforms(semantic)*255
         syn_image_tensor = base_transforms(syn_image)
+        if self.prior:
+            mae_tensor = base_transforms(mae_image)
+            entropy_tensor = base_transforms(entropy_image)
+            distance_tensor = base_transforms(distance_image)
+        else:
+            mae_tensor = []
+            entropy_tensor = []
+            distance_tensor = []
 
         if self.is_train and self.preprocess_mode != 'none':
             image_tensor = augmentations(image)
@@ -126,6 +160,9 @@ class CityscapesDataset(Dataset):
                       'original_path': image_path,
                       'semantic_path': semantic_path,
                       'syn_image_path': syn_image_path,
+                      'entropy': entropy_tensor,
+                      'mae': mae_tensor,
+                      'distance': distance_tensor
                       }
 
         return input_dict
