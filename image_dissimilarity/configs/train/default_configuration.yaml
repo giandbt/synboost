@@ -17,7 +17,7 @@ model:
   semantic: True
   pretrained: True
   correlation: True
-  prior: True
+  prior: False
   spade: 'decoder' #[options: 'encoder', 'decoder', 'both', '']
   num_semantic_classes: 19 # Actual training labels
 diss_pretrained:

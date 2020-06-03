@@ -65,7 +65,7 @@ class CityscapesDataset(Dataset):
             self.label_paths = np.delete(self.label_paths, INVALID_LABELED_FRAMES)
                
         assert len(self.original_paths) == len(self.semantic_paths) == len(self.synthesis_paths) \
-               == len(self.label_paths) == len(self.mae_features_paths) == len(self.entropy_paths) == len(self.logit_distance_paths), \
+               == len(self.label_paths), \
             "Number of images in the dataset does not match with each other"
         "The #images in %s and %s do not match. Is there something wrong?"
         

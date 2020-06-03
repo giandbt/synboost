@@ -115,15 +115,16 @@ for epoch in iter_counter.training_epochs():
         semantic = data_i['semantic'].cuda()
         synthesis = data_i['synthesis'].cuda()
         label = data_i['label'].cuda()
-        entropy = data_i['entropy'].cuda()
-        mae = data_i['mae'].cuda()
-        distance = data_i['distance'].cuda()
         
         # Training
         if prior:
+            entropy = data_i['entropy'].cuda()
+            mae = data_i['mae'].cuda()
+            distance = data_i['distance'].cuda()
             model_loss, _ = trainer.run_model_one_step_prior(original, synthesis, semantic, label, entropy, mae, distance)
         else:
             model_loss, _ = trainer.run_model_one_step(original, synthesis, semantic, label)
+            
         train_loss += model_loss
         train_writer.add_scalar('Loss_iter', model_loss, iter)
         iter+=1
@@ -140,15 +141,18 @@ for epoch in iter_counter.training_epochs():
             semantic = data_i['semantic'].cuda()
             synthesis = data_i['synthesis'].cuda()
             label = data_i['label'].cuda()
-            entropy = data_i['entropy'].cuda()
-            mae = data_i['mae'].cuda()
-            distance = data_i['distance'].cuda()
-
-            # Evaluating
+            
             if prior:
-                loss, _ = trainer.run_validation_prior(original, synthesis, semantic, label, entropy, mae, distance)
+                entropy = data_i['entropy'].cuda()
+                mae = data_i['mae'].cuda()
+                distance = data_i['distance'].cuda()
+    
+                # Evaluating
+                loss, _ = trainer.run_validation_prior(original, synthesis, semantic, label, entropy, mae,
+                                                             distance)
             else:
                 loss, _ = trainer.run_validation(original, synthesis, semantic, label)
+                
             val_loss += loss
             
         avg_val_loss = val_loss / len(val_loader)
@@ -172,15 +176,18 @@ for epoch in iter_counter.training_epochs():
             semantic = data_i['semantic'].cuda()
             synthesis = data_i['synthesis'].cuda()
             label = data_i['label'].cuda()
-            entropy = data_i['entropy'].cuda()
-            mae = data_i['mae'].cuda()
-            distance = data_i['distance'].cuda()
-
-            # Evaluating
+            
             if prior:
-                loss, outputs = trainer.run_validation_prior(original, synthesis, semantic, label, entropy, mae, distance)
+                entropy = data_i['entropy'].cuda()
+                mae = data_i['mae'].cuda()
+                distance = data_i['distance'].cuda()
+    
+                # Evaluating
+                loss, outputs = trainer.run_validation_prior(original, synthesis, semantic, label, entropy, mae,
+                                                             distance)
             else:
                 loss, outputs = trainer.run_validation(original, synthesis, semantic, label)
+                
             val_loss += loss
             outputs = softmax(outputs)
             (softmax_pred, predictions) = torch.max(outputs, dim=1)
@@ -214,13 +221,15 @@ for epoch in iter_counter.training_epochs():
             semantic = data_i['semantic'].cuda()
             synthesis = data_i['synthesis'].cuda()
             label = data_i['label'].cuda()
-            entropy = data_i['entropy'].cuda()
-            mae = data_i['mae'].cuda()
-            distance = data_i['distance'].cuda()
-
-            # Evaluating
+            
             if prior:
-                loss, outputs = trainer.run_validation_prior(original, synthesis, semantic, label, entropy, mae, distance)
+                entropy = data_i['entropy'].cuda()
+                mae = data_i['mae'].cuda()
+                distance = data_i['distance'].cuda()
+    
+                # Evaluating
+                loss, outputs = trainer.run_validation_prior(original, synthesis, semantic, label, entropy, mae,
+                                                             distance)
             else:
                 loss, outputs = trainer.run_validation(original, synthesis, semantic, label)
                 
@@ -262,15 +271,18 @@ for epoch in iter_counter.training_epochs():
             semantic = data_i['semantic'].cuda()
             synthesis = data_i['synthesis'].cuda()
             label = data_i['label'].cuda()
-            entropy = data_i['entropy'].cuda()
-            mae = data_i['mae'].cuda()
-            distance = data_i['distance'].cuda()
-
-            # Evaluating
+            
             if prior:
-                loss, outputs = trainer.run_validation_prior(original, synthesis, semantic, label, entropy, mae, distance)
+                entropy = data_i['entropy'].cuda()
+                mae = data_i['mae'].cuda()
+                distance = data_i['distance'].cuda()
+    
+                # Evaluating
+                loss, outputs = trainer.run_validation_prior(original, synthesis, semantic, label, entropy, mae,
+                                                             distance)
             else:
                 loss, outputs = trainer.run_validation(original, synthesis, semantic, label)
+                
             val_loss += loss
             outputs = softmax(outputs)
             (softmax_pred, predictions) = torch.max(outputs, dim=1)
@@ -309,12 +321,13 @@ for epoch in iter_counter.training_epochs():
             semantic = data_i['semantic'].cuda()
             synthesis = data_i['synthesis'].cuda()
             label = data_i['label'].cuda()
-            entropy = data_i['entropy'].cuda()
-            mae = data_i['mae'].cuda()
-            distance = data_i['distance'].cuda()
-
-            # Evaluating
+            
             if prior:
+                entropy = data_i['entropy'].cuda()
+                mae = data_i['mae'].cuda()
+                distance = data_i['distance'].cuda()
+
+                # Evaluating
                 loss, outputs = trainer.run_validation_prior(original, synthesis, semantic, label, entropy, mae, distance)
             else:
                 loss, outputs = trainer.run_validation(original, synthesis, semantic, label)

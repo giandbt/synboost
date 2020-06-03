@@ -83,11 +83,11 @@ with torch.no_grad():
         semantic = data_i['semantic'].cuda()
         synthesis = data_i['synthesis'].cuda()
         label = data_i['label'].cuda()
-        entropy = data_i['entropy'].cuda()
-        mae = data_i['mae'].cuda()
-        distance = data_i['distance'].cuda()
-        
+    
         if prior:
+            entropy = data_i['entropy'].cuda()
+            mae = data_i['mae'].cuda()
+            distance = data_i['distance'].cuda()
             outputs = softmax(diss_model(original, synthesis, semantic, entropy, mae, distance))
         else:
             outputs = softmax(diss_model(original, synthesis, semantic))
