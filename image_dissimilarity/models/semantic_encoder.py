@@ -3,11 +3,10 @@ import torch.nn as nn
 class SemanticEncoder(nn.Module):
 	''' Semantic Encoder as described in Detecting the Unexpected via Image Resynthesis '''
 	
-	def __init__(self, architecture='vgg16', in_channels=19, num_hidden_layers=4):
+	def __init__(self, architecture='vgg16', in_channels=19, num_hidden_layers=4, base_feature_size=32):
 		super(SemanticEncoder, self).__init__()
 		
 		self.hidden_layers = nn.ModuleList()
-		base_feature_size = 32
 		
 		if 'bn' in architecture:
 			for idx in range(num_hidden_layers):

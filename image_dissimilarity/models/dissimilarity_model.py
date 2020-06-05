@@ -173,6 +173,7 @@ class DissimNetPrior(nn.Module):
         self.spade = spade
         # self.semantic = False if spade else semantic
         self.semantic = semantic
+        self.prior = prior
 
         # generate encoders
         if self.spade == 'encoder' or self.spade == 'both':
@@ -182,7 +183,7 @@ class DissimNetPrior(nn.Module):
 
         if self.semantic:
             self.semantic_encoder = SemanticEncoder(architecture=architecture, in_channels=num_semantic_classes)
-            self.prior_encoder = SemanticEncoder(architecture=architecture, in_channels=3)
+            self.prior_encoder = SemanticEncoder(architecture=architecture, in_channels=3, base_feature_size=64)
 
         # layers for decoder
         # all the 3x3 convolutions
@@ -216,10 +217,10 @@ class DissimNetPrior(nn.Module):
 
         # all the other 1x1 convolutions
         if self.semantic:
-            self.conv7 = nn.Conv2d(1536, 512, kernel_size=1, padding=0)
-            self.conv8 = nn.Conv2d(768, 256, kernel_size=1, padding=0)
-            self.conv9 = nn.Conv2d(384, 128, kernel_size=1, padding=0)
-            self.conv10 = nn.Conv2d(192, 64, kernel_size=1, padding=0)
+            self.conv7 = nn.Conv2d(1280, 512, kernel_size=1, padding=0)
+            self.conv8 = nn.Conv2d(640, 256, kernel_size=1, padding=0)
+            self.conv9 = nn.Conv2d(320, 128, kernel_size=1, padding=0)
+            self.conv10 = nn.Conv2d(160, 64, kernel_size=1, padding=0)
             self.conv11 = nn.Conv2d(64, 2, kernel_size=1, padding=0)
         else:
             self.conv7 = nn.Conv2d(1024, 512, kernel_size=1, padding=0)
@@ -255,12 +256,11 @@ class DissimNetPrior(nn.Module):
     
         if self.semantic:
             encoding_sem = self.semantic_encoder(semantic_img)
-            encoding_pior = self.prior_encoder(prior_img)
             # concatenate the output of each encoder
-            layer1_cat = torch.cat((encoding_og[0], encoding_syn[0], encoding_sem[0], encoding_pior[0]), dim=1)
-            layer2_cat = torch.cat((encoding_og[1], encoding_syn[1], encoding_sem[1], encoding_pior[1]), dim=1)
-            layer3_cat = torch.cat((encoding_og[2], encoding_syn[2], encoding_sem[2], encoding_pior[2]), dim=1)
-            layer4_cat = torch.cat((encoding_og[3], encoding_syn[3], encoding_sem[3], encoding_pior[3]), dim=1)
+            layer1_cat = torch.cat((encoding_og[0], encoding_syn[0], encoding_sem[0]), dim=1)
+            layer2_cat = torch.cat((encoding_og[1], encoding_syn[1], encoding_sem[1]), dim=1)
+            layer3_cat = torch.cat((encoding_og[2], encoding_syn[2], encoding_sem[2]), dim=1)
+            layer4_cat = torch.cat((encoding_og[3], encoding_syn[3], encoding_sem[3]), dim=1)
         else:
             layer1_cat = torch.cat((encoding_og[0], encoding_syn[0]), dim=1)
             layer2_cat = torch.cat((encoding_og[1], encoding_syn[1]), dim=1)
@@ -272,6 +272,13 @@ class DissimNetPrior(nn.Module):
         layer3_cat = self.conv8(layer3_cat)
         layer2_cat = self.conv9(layer2_cat)
         layer1_cat = self.conv10(layer1_cat)
+        
+        if self.prior:
+            encoding_pior = self.prior_encoder(prior_img)
+            layer1_cat = torch.mul(layer1_cat, encoding_pior[0])
+            layer2_cat = torch.mul(layer2_cat, encoding_pior[1])
+            layer3_cat = torch.mul(layer3_cat, encoding_pior[2])
+            layer4_cat = torch.mul(layer4_cat, encoding_pior[3])
     
         if self.correlation:
             # get correlation for each layer (multiplication + 1x1 conv)

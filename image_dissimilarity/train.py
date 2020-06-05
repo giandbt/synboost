@@ -22,6 +22,7 @@ from util import visualization
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', type=str, help='Path to the config file.')
 parser.add_argument('--gpu_ids', type=str, default='0', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
+parser.add_argument('--seed', type=str, default='0', help='seed for experiment')
 opts = parser.parse_args()
 cudnn.benchmark = True
 
@@ -93,7 +94,7 @@ w = int(dataset['crop_size'])
 
 # create trainer for our model
 print('Loading Model')
-trainer = DissimilarityTrainer(config)
+trainer = DissimilarityTrainer(config, seed=int(opts.seed))
 
 # create tool for counting iterations
 batch_size = config['train_dataloader']['dataloader_args']['batch_size']

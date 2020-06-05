@@ -1,5 +1,5 @@
 # Name of the experiment for saving files
-experiment_name: prior_branch_spade_decoder_master
+experiment_name: prior_branch_attention_3
 save_folder: results/
 
 # Define training strategy
@@ -8,7 +8,7 @@ training_strategy:
   niter_decay: 0 # of iter to linearly decay learning rate to zero
   is_train: True
   class_weight: True
-  class_weight_cityscapes: True
+  class_weight_cityscapes: False
   image_visualization: False
 
 # model options
@@ -17,8 +17,8 @@ model:
   semantic: True
   pretrained: True
   correlation: True
-  prior: False
-  spade: 'decoder' #[options: 'encoder', 'decoder', 'both', '']
+  prior: True
+  spade: '' #[options: 'encoder', 'decoder', 'both', '']
   num_semantic_classes: 19 # Actual training labels
 diss_pretrained:
   load: False
