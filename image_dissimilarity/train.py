@@ -31,7 +31,7 @@ with open(opts.config, 'r') as stream:
     config = yaml.load(stream, Loader=yaml.FullLoader)
     
 # get experiment information
-exp_name = config['experiment_name']
+exp_name = config['experiment_name'] + opts.seed
 save_fdr = config['save_folder']
 logs_fdr = config['logger']['results_dir']
 
@@ -105,11 +105,14 @@ softmax = torch.nn.Softmax(dim=1)
 
 print('Starting Training...')
 best_val_loss = float('inf')
+best_map_metric = 0
 iter = 0
 for epoch in iter_counter.training_epochs():
+    
     print('Starting Epoch #%i for experiment %s'% (epoch, exp_name))
     iter_counter.record_epoch_start(epoch)
-    train_loss = 0 
+    train_loss = 0
+    cumul_map_sum = 0
     for i, data_i in enumerate(tqdm(train_loader), start=iter_counter.epoch_iter):
         iter_counter.record_one_iteration()
         original = data_i['original'].cuda()
@@ -211,7 +214,7 @@ for epoch in iter_counter.training_epochs():
         test_writer.add_scalar('%s mAP' % os.path.basename(cfg_test_loader1['dataset_args']['dataroot']), results['AP'], epoch)
         test_writer.add_scalar('%s FPR@95TPR' % os.path.basename(cfg_test_loader1['dataset_args']['dataroot']), results['FPR@95%TPR'], epoch)
         test_writer.add_scalar('val_loss_%s' % os.path.basename(cfg_test_loader1['dataset_args']['dataroot']), avg_val_loss, epoch)
-
+        cumul_map_sum += results['AP']
         # Starts Testing (Test Set 2)
         print('Starting Testing For %s' % os.path.basename(cfg_test_loader2['dataset_args']['dataroot']))
         flat_pred = np.zeros(w * h * len(test_loader2))
@@ -253,6 +256,7 @@ for epoch in iter_counter.training_epochs():
         print('mAP: %f' % results['AP'])
         print('FPR@95TPR: %f' % results['FPR@95%TPR'])
 
+        cumul_map_sum += results['AP']
         test_writer.add_scalar('%s AUC_ROC' % os.path.basename(cfg_test_loader2['dataset_args']['dataroot']),
                                results['auroc'], epoch)
         test_writer.add_scalar('%s mAP' % os.path.basename(cfg_test_loader2['dataset_args']['dataroot']), results['AP'],
@@ -300,7 +304,7 @@ for epoch in iter_counter.training_epochs():
         print('AU_ROC: %f' % results['auroc'])
         print('mAP: %f' % results['AP'])
         print('FPR@95TPR: %f' % results['FPR@95%TPR'])
-
+        cumul_map_sum += results['AP']
         avg_val_loss = val_loss / len(test_loader3)
 
         test_writer.add_scalar('%s AUC_ROC' % os.path.basename(cfg_test_loader3['dataset_args']['dataroot']),
@@ -311,6 +315,12 @@ for epoch in iter_counter.training_epochs():
                                results['FPR@95%TPR'], epoch)
         test_writer.add_scalar('val_loss_%s' % os.path.basename(cfg_test_loader3['dataset_args']['dataroot']),
                                avg_val_loss, epoch)
+
+        if cumul_map_sum > best_map_metric:
+            print('Cumulative mAP for epoch %d (%f) is better than previous best mAP (%f). Saving best model.'
+                  % (epoch, cumul_map_sum, best_map_metric))
+            best_map_metric = cumul_map_sum
+            trainer.save(save_fdr, 'best_map', exp_name)
 
         # Starts Testing (Test Set 4)
         print('Starting Testing For %s' % os.path.basename(cfg_test_loader4['dataset_args']['dataroot']))
