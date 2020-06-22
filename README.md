@@ -38,7 +38,8 @@ The file is located `/Path/To/Enviroment/lib/python3.7/site-packages/torch/onnx`
 ### Notes 
 
 - The image segmentaion folder is heavily based on [3], specifically commit `b4fc685`. Additionally, 
-the image synthesis folder is based on [2]. specifically commit `0486b08`.
+the image synthesis folder is based on [2]. specifically commit `0486b08`. For light weight version of the segmentation
+model, we used the code from ``, and also Pix2PixHD commit ``
 
 
 ## References
