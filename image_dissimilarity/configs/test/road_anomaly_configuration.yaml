@@ -1,7 +1,7 @@
 # Name of the experiment for saving files
-experiment_name: baseline_void_prior_spadedecoder_mult_ # where checkpoints are stored
-save_folder: results/ # where checkpoints are stored
-which_epoch: best_map
+experiment_name: baseline_void_prior_spadedecoder_mult_3 # where checkpoints are stored
+save_folder: /home/giancarlo/data/innosuisse/final_results/results/ # where checkpoints are stored
+which_epoch: best
 store_results: /home/giancarlo/data/innosuisse/road_anomaly/predictions
 visualize: False
 
