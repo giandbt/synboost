@@ -23,14 +23,20 @@ INVALID_LABELED_FRAMES = [17,  37,  55,  72,  91, 110, 129, 153, 174, 197, 218, 
 class CityscapesDataset(Dataset):
     
     def __init__(self, dataroot, preprocess_mode, crop_size=512, aspect_ratio= 0.5, flip=False, normalize=False,
-                 prior = False, only_valid = False, roi = False, void = False, num_semantic_classes = 19, is_train = True):
+                 prior = False, only_valid = False, roi = False, light_data= False, void = False, num_semantic_classes = 19, is_train = True):
 
         self.original_paths = [os.path.join(dataroot, 'original', image)
                                for image in os.listdir(os.path.join(dataroot, 'original'))]
-        self.semantic_paths = [os.path.join(dataroot, 'semantic', image)
-                               for image in os.listdir(os.path.join(dataroot, 'semantic'))]
-        self.synthesis_paths = [os.path.join(dataroot, 'synthesis', image)
-                                for image in os.listdir(os.path.join(dataroot, 'synthesis'))]
+        if light_data:
+            self.semantic_paths = [os.path.join(dataroot, 'semantic_icnet', image)
+                                   for image in os.listdir(os.path.join(dataroot, 'semantic_icnet'))]
+            self.synthesis_paths = [os.path.join(dataroot, 'synthesis_spade', image)
+                                    for image in os.listdir(os.path.join(dataroot, 'synthesis_spade'))]
+        else:
+            self.semantic_paths = [os.path.join(dataroot, 'semantic', image)
+                                   for image in os.listdir(os.path.join(dataroot, 'semantic'))]
+            self.synthesis_paths = [os.path.join(dataroot, 'synthesis', image)
+                                    for image in os.listdir(os.path.join(dataroot, 'synthesis'))]
         if roi:
             self.label_paths = [os.path.join(dataroot, 'labels_with_ROI', image)
                                 for image in os.listdir(os.path.join(dataroot, 'labels_with_ROI'))]
@@ -41,12 +47,20 @@ class CityscapesDataset(Dataset):
             self.label_paths = [os.path.join(dataroot, 'labels', image)
                                 for image in os.listdir(os.path.join(dataroot, 'labels'))]
         if prior:
-            self.mae_features_paths = [os.path.join(dataroot, 'mae_features', image)
-                                       for image in os.listdir(os.path.join(dataroot, 'mae_features'))]
-            self.entropy_paths = [os.path.join(dataroot, 'entropy', image)
-                                  for image in os.listdir(os.path.join(dataroot, 'entropy'))]
-            self.logit_distance_paths = [os.path.join(dataroot, 'logit_distance', image)
-                                         for image in os.listdir(os.path.join(dataroot, 'logit_distance'))]
+            if light_data:
+                self.mae_features_paths = [os.path.join(dataroot, 'mae_features_spade', image)
+                                           for image in os.listdir(os.path.join(dataroot, 'mae_features_spade'))]
+                self.entropy_paths = [os.path.join(dataroot, 'entropy_icnet', image)
+                                      for image in os.listdir(os.path.join(dataroot, 'entropy_icnet'))]
+                self.logit_distance_paths = [os.path.join(dataroot, 'logit_distance_icnet', image)
+                                             for image in os.listdir(os.path.join(dataroot, 'logit_distance_icnet'))]
+            else:
+                self.mae_features_paths = [os.path.join(dataroot, 'mae_features', image)
+                                           for image in os.listdir(os.path.join(dataroot, 'mae_features'))]
+                self.entropy_paths = [os.path.join(dataroot, 'entropy', image)
+                                      for image in os.listdir(os.path.join(dataroot, 'entropy'))]
+                self.logit_distance_paths = [os.path.join(dataroot, 'logit_distance', image)
+                                             for image in os.listdir(os.path.join(dataroot, 'logit_distance'))]
         
         # We need to sort the images to ensure all the pairs match with each other
         self.original_paths = natsorted(self.original_paths)

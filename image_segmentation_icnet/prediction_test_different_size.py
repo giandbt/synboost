@@ -136,8 +136,8 @@ def WholeTest(args, model, size=1.0):
             save_name_semantic = os.path.join(semantic_fdr, os.path.basename(name)[:-4] + '.png')
             save_name_semantic_label = os.path.join(semantic_label_fdr, os.path.basename(name)[:-4] + '.png')
 
-            cv2.imwrite(save_name_entropy, entropy)
-            cv2.imwrite(save_name_distance, distance)
+            cv2.imwrite(save_name_entropy, entropy*255)
+            cv2.imwrite(save_name_distance, distance*255)
             cv2.imwrite(save_name_semantic, result)
             cv2.imwrite(save_name_semantic_label, dst)
 

@@ -1,5 +1,5 @@
 # Name of the experiment for saving files
-experiment_name: prior_branch_attention_3
+experiment_name: baseline_void_prior_spadedecoder_light_mult_
 save_folder: results/
 
 # Define training strategy
@@ -18,7 +18,7 @@ model:
   pretrained: True
   correlation: True
   prior: True
-  spade: '' #[options: 'encoder', 'decoder', 'both', '']
+  spade: 'decoder' #[options: 'encoder', 'decoder', 'both', '']
   num_semantic_classes: 19 # Actual training labels
 diss_pretrained:
   load: False
@@ -58,6 +58,7 @@ train_dataloader:
     flip: True
     normalize: True
     void: False
+    light_data: True
     num_semantic_classes: 19
     is_train: True
   dataloader_args:
@@ -72,6 +73,7 @@ val_dataloader:
     aspect_ratio: 2
     flip: False
     normalize: True
+    light_data: True
     num_semantic_classes: 19
     is_train: False
   dataloader_args:
@@ -86,6 +88,7 @@ test_dataloader1:
     aspect_ratio: 2
     flip: False
     normalize: True
+    light_data: True
     roi: False
     num_semantic_classes: 19
     is_train: False
@@ -101,6 +104,7 @@ test_dataloader2:
     aspect_ratio: 2
     flip: False
     normalize: True
+    light_data: True
     roi: True
     num_semantic_classes: 19
     is_train: False
@@ -116,6 +120,7 @@ test_dataloader3:
     aspect_ratio: 2
     flip: False
     normalize: True
+    light_data: True
     roi: True
     num_semantic_classes: 19
     is_train: False
@@ -131,6 +136,7 @@ test_dataloader4:
     aspect_ratio: 2
     flip: False
     normalize: True
+    light_data: True
     roi: False
     num_semantic_classes: 19
     is_train: False
@@ -146,6 +152,7 @@ img_dataloader:
     aspect_ratio: 2
     flip: False
     normalize: True
+    light_data: True
     void: False
     num_semantic_classes: 19
     is_train: True
