@@ -1,5 +1,5 @@
 # Name of the experiment for saving files
-experiment_name: baseline_void_prior_spadedecoder_light_mult_
+experiment_name: baseline_void_light_mult_
 save_folder: results/
 
 # Define training strategy
@@ -17,8 +17,8 @@ model:
   semantic: True
   pretrained: True
   correlation: True
-  prior: True
-  spade: 'decoder' #[options: 'encoder', 'decoder', 'both', '']
+  prior: False
+  spade: '' #[options: 'encoder', 'decoder', 'both', '']
   num_semantic_classes: 19 # Actual training labels
 diss_pretrained:
   load: False
@@ -28,7 +28,7 @@ diss_pretrained:
 
 # logger options
 logger:
-  results_dir: ./logs_prior
+  results_dir: ./logs_light
   save_epoch_freq: 50 #frequency of saving checkpoints at the end of epochs
 
 # loss options (remove tasks not needed)
