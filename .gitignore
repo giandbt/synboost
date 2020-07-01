@@ -9,3 +9,4 @@ logs/
 /models/
 *.onnx
 *.png
+image_segmentation_psa/exp/*

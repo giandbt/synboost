@@ -8,9 +8,9 @@ import sys
 sys.path.append("./image_dissimilarity")
 from util import trainer_util, metrics
 
-def mae_features(config_file_path, gpu_ids, dataroot):
+def mae_features(config_file_path, gpu_ids, dataroot, data_origin):
     
-    soft_fdr = os.path.join(dataroot, 'mae_features')
+    soft_fdr = os.path.join(dataroot, 'mae_features_' + data_origin)
     
     if not os.path.exists(soft_fdr):
         os.makedirs(soft_fdr)
@@ -108,9 +108,10 @@ def mae_features(config_file_path, gpu_ids, dataroot):
 if __name__ == '__main__':
     # input parameters
     config_file_path = 'image_dissimilarity/configs/visualization/default_configuration.yaml'
-    gpu_ids = '14'
+    gpu_ids = '6'
     dataroot = '/home/giancarlo/data/innosuisse/custom_both'
-    mae_features(config_file_path, gpu_ids, dataroot)
+    data_origin = 'spade'
+    mae_features(config_file_path, gpu_ids, dataroot, data_origin)
     
 
 

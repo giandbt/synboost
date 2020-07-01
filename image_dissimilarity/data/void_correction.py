@@ -183,6 +183,34 @@ def change_labelIds_to_trainIds(semantic_folder,save_dir):
             semantic_out[np.where(semantic == label_id)] = train_id
 
         cv2.imwrite(os.path.join(save_dir, new_semantic_name), semantic_out)
+        
+def change_trainIds_to_labelIds(semantic_folder,save_dir, semantic_path_pred):
+    if not os.path.isdir(save_dir):
+        os.mkdir(save_dir)
+
+    semantic_path_pred = [os.path.join(semantic_path_pred, image)
+                      for image in os.listdir(semantic_path_pred)]
+    semantic_paths = [os.path.join(semantic_folder, image)
+                      for image in os.listdir(semantic_folder)]
+
+    semantic_paths_pred = natsorted(semantic_path_pred)
+    semantic_paths = natsorted(semantic_paths)
+    for idx, (semantic_path, semantic_path_pred) in enumerate(zip(semantic_paths, semantic_paths_pred)):
+        print('Generating image %i our of %i' % (idx + 1, len(semantic_paths)))
+        new_semantic_name = os.path.basename(semantic_path)
+        semantic = Image.open(semantic_path)
+        semantic_pred = np.array(Image.open(semantic_path_pred).resize(semantic.size, Image.NEAREST))
+        semantic = np.array(semantic)
+        
+        semantic_out = np.zeros_like(semantic)
+        for label_id, train_id in id_to_trainid.items():
+            semantic_out[np.where(semantic == train_id)] = label_id
+            
+        syn_semantic = np.copy(semantic_out)
+        mask = (semantic == 255)
+        syn_semantic[mask] = semantic_pred[mask]
+        
+        cv2.imwrite(os.path.join(save_dir, new_semantic_name), syn_semantic)
 
 def create_labels(semantic_folder,save_dir):
     if not os.path.isdir(save_dir):
@@ -244,12 +272,12 @@ if __name__ == '__main__':
     #save_dir_inst = '/home/giandbt/Documents/labels_processing/instances'
     #semantic_path = '/home/giandbt/Documents/labels_processing/semantic_epfl'
     #semantic_path_pred = '/home/giandbt/Documents/labels_processing/semantic_predictions'
-    labels_path = '/home/giandbt/Documents/labels_processing/labels'
+    #labels_path = '/home/giandbt/Documents/labels_processing/labels'
     #create_void_semantic(semantic_path, labels_path, semantic_path_pred, save_dir_sema, save_dir_sema_train, save_dir_inst)
 
-    save_dir = '/home/giandbt/Documents/labels_processing/'
-    semantic_path = '/home/giandbt/Documents/labels_processing/semantic_org'
-    include_void_to_labels(labels_path, semantic_path, save_dir, include_ego_vehicle=True)
+    #save_dir = '/home/giandbt/Documents/labels_processing/'
+    #semantic_path = '/home/giandbt/Documents/labels_processing/semantic_org'
+    #include_void_to_labels(labels_path, semantic_path, save_dir, include_ego_vehicle=True)
 
     #save_dir = '/home/giandbt/Documents/labels_processing/gtFine/val'
     #semantic_path_pred = '/home/giandbt/Documents/labels_processing/semantic_predictions'
@@ -271,9 +299,14 @@ if __name__ == '__main__':
     #save_dir = '/home/giandbt/Documents/data/master_thesis/dissimilarity_model/indoorCVPR_09_post-process/labels'
     #create_labels_fake(semantic_folder, save_dir)
 
-    semantic_path = '/home/giandbt/Documents/data/master_thesis/dissimilarity_model/epfl_clean/train/semantic'
-    labels_path = '/home/giandbt/Documents/data/master_thesis/dissimilarity_model/epfl_clean/train/labels'
-    save_dir = '/home/giandbt/Documents/data/master_thesis/dissimilarity_model/epfl_clean/train/labels_ignore'
-    update_labels_to_ignore_void(semantic_path, labels_path, save_dir)
+    #semantic_path = '/home/giandbt/Documents/data/master_thesis/dissimilarity_model/epfl_clean/train/semantic'
+    #labels_path = '/home/giandbt/Documents/data/master_thesis/dissimilarity_model/epfl_clean/train/labels'
+    #save_dir = '/home/giandbt/Documents/data/master_thesis/dissimilarity_model/epfl_clean/train/labels_ignore'
+    #update_labels_to_ignore_void(semantic_path, labels_path, save_dir)
+    
+    semantic_folder = '/home/giancarlo/data/innosuisse/custom_both/semantic'
+    semantic_pred_folder = '/home/giancarlo/data/innosuisse/custom_both/semantic_label_ids_icnet'
+    save_dir = '/home/giancarlo/data/innosuisse/custom_both/semantic_labelsId_original'
+    change_trainIds_to_labelIds(semantic_folder, save_dir, semantic_pred_folder)
 
 
