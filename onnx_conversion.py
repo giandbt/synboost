@@ -227,7 +227,7 @@ def convert_dissimilarity_model(
     model_name='dissimilarity.onnx'):
     import sys
     sys.path.insert(0, './image_dissimilarity')
-    from image_dissimilarity.models.dissimilarity_model import DissimNet
+    from image_dissimilarity.models.dissimilarity_model import DissimNetPrior
     from image_dissimilarity.util import trainer_util
     import yaml
     
@@ -238,13 +238,20 @@ def convert_dissimilarity_model(
     exp_name = config['experiment_name']
     save_fdr = config['save_folder']
     epoch = config['which_epoch']
-    
+
+
+    # checks if we are using prior images
+    prior = config['model']['prior']
+    # Get data loaders
     cfg_test_loader = config['test_dataloader']
+    # adds logic to dataloaders (avoid repetition in config file)
+    cfg_test_loader['dataset_args']['prior'] = prior
+
     dataloader = trainer_util.get_dataloader(cfg_test_loader['dataset_args'], cfg_test_loader['dataloader_args'])
     
     # get model
     
-    diss_model = DissimNet(**config['model']).cuda()
+    diss_model = DissimNetPrior(**config['model']).cuda()
     
     diss_model.eval()
     model_path = os.path.join('image_dissimilarity', save_fdr, exp_name, '%s_net_%s.pth' % (epoch, exp_name))
@@ -260,13 +267,16 @@ def convert_dissimilarity_model(
         original = data_i['original'].cuda()
         semantic = data_i['semantic'].cuda()
         synthesis = data_i['synthesis'].cuda()
+        entropy = data_i['entropy'].cuda()
+        mae = data_i['mae'].cuda()
+        distance = data_i['distance'].cuda()
         
-        torch_out = diss_model(original, synthesis, semantic)
+        torch_out = diss_model(original, synthesis, semantic, entropy, mae, distance)
         break
     
     # Export the model
     torch.onnx.export(diss_model,  # model being run
-                      (original, synthesis, semantic),  # model input (or a tuple for multiple inputs)
+                      (original, synthesis, semantic, entropy, mae, distance),  # model input (or a tuple for multiple inputs)
                       model_name,  # where to save the model (can be a file or file-like object)
                       export_params=True,  # store the trained parameter weights inside the model file
                       opset_version=11,  # the ONNX version to export the model to
@@ -285,6 +295,9 @@ def convert_dissimilarity_model(
     input_feeds[ort_session.get_inputs()[0].name] = to_numpy(original)
     input_feeds[ort_session.get_inputs()[1].name] = to_numpy(synthesis)
     input_feeds[ort_session.get_inputs()[2].name] = to_numpy(semantic)
+    input_feeds[ort_session.get_inputs()[3].name] = to_numpy(entropy)
+    input_feeds[ort_session.get_inputs()[4].name] = to_numpy(mae)
+    input_feeds[ort_session.get_inputs()[5].name] = to_numpy(distance)
 
     ort_outs = ort_session.run(None, input_feeds)
     
@@ -295,6 +308,6 @@ def convert_dissimilarity_model(
 
 
 if __name__ == '__main__':
-    convert_segmentation_model()
-    convert_synthesis_model()
+    #convert_segmentation_model()
+    #convert_synthesis_model()
     convert_dissimilarity_model('./image_dissimilarity/configs/test/road_anomaly_configuration.yaml')
