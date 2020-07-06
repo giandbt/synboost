@@ -5,6 +5,7 @@ save_folder: /home/giancarlo/data/innosuisse/final_results/results/ # where chec
 which_epoch: best
 store_results: /home/giancarlo/data/innosuisse/road_anomaly/predictions
 visualize: False
+ensemble: True
 
 # model options
 model:

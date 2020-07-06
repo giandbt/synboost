@@ -29,7 +29,7 @@ save_fdr = config['save_folder']
 epoch = config['which_epoch']
 store_fdr = config['store_results']
 store_fdr_exp = os.path.join(config['store_results'],exp_name)
-
+ensemble = config['ensemble']
 
 if not os.path.isdir(store_fdr):
     os.mkdir(store_fdr)
@@ -92,8 +92,11 @@ with torch.no_grad():
         else:
             outputs = softmax(diss_model(original, synthesis, semantic))
         (softmax_pred, predictions) = torch.max(outputs,dim=1)
-        soft_pred = outputs[:,1,:,:]
-        flat_pred[i*w*h:i*w*h+w*h] = torch.flatten(outputs[:,1,:,:]).detach().cpu().numpy()
+        if ensemble:
+            soft_pred = outputs[:,1,:,:]*0.75 + entropy*0.25
+        else:
+            soft_pred = outputs[:,1,:,:]
+        flat_pred[i*w*h:i*w*h+w*h] = torch.flatten(soft_pred).detach().cpu().numpy()
         flat_labels[i*w*h:i*w*h+w*h] = torch.flatten(label).detach().cpu().numpy()
         # Save results
         predicted_tensor = predictions * 1
