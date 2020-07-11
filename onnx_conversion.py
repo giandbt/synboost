@@ -64,7 +64,7 @@ def convert_segmentation_model(model_name = 'segmentation.onnx'):
     # Input to the model
     batch_size = 1
 
-    x = torch.randn(batch_size, 3, 512, 1024, requires_grad=True).cuda()
+    x = torch.randn(batch_size, 3, 1024, 2048, requires_grad=True).cuda()
     torch_out = net(x)
 
     # Export the model
@@ -308,6 +308,6 @@ def convert_dissimilarity_model(
 
 
 if __name__ == '__main__':
-    #convert_segmentation_model()
-    #convert_synthesis_model()
+    convert_segmentation_model()
+    convert_synthesis_model()
     convert_dissimilarity_model('./image_dissimilarity/configs/test/road_anomaly_configuration.yaml')
