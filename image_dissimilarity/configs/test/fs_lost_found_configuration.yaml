@@ -5,7 +5,7 @@ save_folder: /home/giancarlo/data/innosuisse/final_results/results/ # where chec
 which_epoch: best
 store_results: /home/giancarlo/data/innosuisse/fs_lost_and_found/predictions
 visualize: False
-ensemble: True
+ensemble: False
 
 # model options
 model:

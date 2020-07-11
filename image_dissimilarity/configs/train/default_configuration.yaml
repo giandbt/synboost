@@ -1,5 +1,5 @@
 # Name of the experiment for saving files
-experiment_name: baseline_void_light_mult_
+experiment_name: baseline_light_mult_
 save_folder: results/
 
 # Define training strategy
@@ -50,7 +50,7 @@ optimizer:
 # parameters for dataloaders
 train_dataloader:
   dataset_args:
-    dataroot: /home/giancarlo/data/innosuisse/custom_both
+    dataroot: /home/giancarlo/data/innosuisse/epfl/train
     #dataroot: /home/giancarlo/data/innosuisse/road_anomaly  #(only for quick debugging)
     preprocess_mode: none
     crop_size: 512
