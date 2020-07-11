@@ -20,7 +20,7 @@ zero_pad = 256 * 3 - len(palette)
 for i in range(zero_pad):
     palette.append(0)
 
-softmax = torch.nn.Softmax(dim=1)
+softmax_torch = torch.nn.Softmax(dim=1)
 
 
 def colorize_mask(mask):
@@ -211,8 +211,6 @@ def one_hot_encoding(semantic, num_classes=20):
     one_hot = one_hot[:num_classes - 1, :, :]
     return one_hot
 
-def run_segmentation(segmentation_session, seg_inputs):
-    return segmentation_session.run(None, seg_inputs)
 
 def run_single_image(onnx_path, image_path):
     # get path for onnx files
@@ -235,11 +233,12 @@ def run_single_image(onnx_path, image_path):
     # SEGMENTATION MODULE
     # add bacth size to image to run in onnx model
     input_img = np.expand_dims(np.array(img, dtype=np.float32), axis=0)
+    import pdb; pdb.set_trace()
     seg_inputs = {segmentation_session.get_inputs()[0].name: input_img}
     
     # run segmentatiom
-    seg_outs = run_segmentation(segmentation_session, seg_inputs)
-    seg_softmax_out = softmax(torch.tensor(seg_outs[0]))
+    seg_outs = segmentation_session.run(None, seg_inputs)
+    seg_softmax_out = softmax_torch(torch.tensor(seg_outs[0]))
     seg_final = np.argmax(seg_outs[0].squeeze(), axis=0)
     
     # get entropy
@@ -298,7 +297,6 @@ def run_single_image(onnx_path, image_path):
     input_feeds[synthesis_session.get_inputs()[1].name] = image_tensor.unsqueeze(0).cpu().numpy()
     
     # run synthesis model
-    import pdb; pdb.set_trace()
     synthesis_outs = synthesis_session.run(None, input_feeds)
     
     synthesis_outs_single = np.squeeze(synthesis_outs[0])
@@ -307,11 +305,15 @@ def run_single_image(onnx_path, image_path):
     
     # DISSIMILARITY MODULE
     # get semantic map in train ids
-    semantic = Image.fromarray((seg_final).astype(np.uint8))
+    semantic = Image.fromarray(seg_final.astype(np.uint8))
     image = img_og
     syn_image = synthesis_final_img
-    entropy = Image.fromarray((entropy).astype(np.unit8))
-    distance = Image.fromarray((distance).astype(np.unit8))
+    entropy = entropy.numpy()
+    distance = distance.numpy()
+
+    #import pdb; pdb.set_trace()
+    entropy = Image.fromarray(entropy.astype(np.uint8).squeeze())
+    distance = Image.fromarray(distance.astype(np.uint8).squeeze())
 
     # for newer models we have to add normalization
     base_transforms = transforms.Compose(
@@ -333,7 +335,7 @@ def run_single_image(onnx_path, image_path):
     vgg = VGG19()
     weights = [1.0 / 32, 1.0 / 16, 1.0 / 8, 1.0 / 4, 1.0]
 
-    x_vgg, y_vgg = vgg(image_tensor), vgg(syn_image_tensor)
+    x_vgg, y_vgg = vgg(image_tensor.unsqueeze(0)), vgg(syn_image_tensor.unsqueeze(0))
     feat5 = torch.mean(torch.abs(x_vgg[4] - y_vgg[4]), dim=1).unsqueeze(1)
     feat4 = torch.mean(torch.abs(x_vgg[3] - y_vgg[3]), dim=1).unsqueeze(1)
     feat3 = torch.mean(torch.abs(x_vgg[2] - y_vgg[2]), dim=1).unsqueeze(1)
@@ -352,7 +354,8 @@ def run_single_image(onnx_path, image_path):
     max_v = torch.max(perceptual_diff.squeeze())
     perceptual_diff = (perceptual_diff.squeeze() - min_v) / (max_v - min_v)
     perceptual_diff *= perceptual_diff
-    perceptual_diff = Image.fromarray((perceptual_diff).astype(np.unit8))
+    perceptual_diff = perceptual_diff.numpy()
+    perceptual_diff = Image.fromarray(perceptual_diff.astype(np.uint8))
     
     perceptual_diff_tensor = base_transforms(perceptual_diff)
     entropy_tensor = base_transforms(entropy)
@@ -367,11 +370,15 @@ def run_single_image(onnx_path, image_path):
     input_feeds[dissimilarity_session.get_inputs()[5].name] = distance_tensor.unsqueeze(0).cpu().numpy()
     diss_outs = dissimilarity_session.run(None, input_feeds)
     
-    outputs = softmax(diss_outs[0], axis=1)
-    diss_pred = outputs[:, 1, :, :]*0.75 + entropy*0.25
+    diss_pred = softmax(diss_outs[0], axis=1)
+    diss_pred = diss_pred[:, 1, :, :]*0.75 + entropy_tensor.numpy()*0.25
+
     return diss_pred
 
 if __name__ == '__main__':
-    image_path = './demo_files/sample_images/02_Hanns_Klemm_Str_44_000001_000200_leftImg8bit.png'
+    image_path = '/home/giancarlo/data/innosuisse/fs_lost_and_found/original/image_2.png'
     onnx_path = './demo_files/onnx_models'
     diss_pred = run_single_image(onnx_path, image_path)
+    diss_pred = (diss_pred * 255).astype(np.uint8)
+    soft_img = Image.fromarray(diss_pred.squeeze()).save('./test.png')
+    #print(diss_pred)
