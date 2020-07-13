@@ -9,3 +9,5 @@ pyyaml
 scikit-image
 imgaug
 sklearn
+tqdm
+natsort

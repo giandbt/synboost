@@ -6,7 +6,6 @@ import torch.nn.functional as F
 import torchvision.transforms as transforms
 from torchvision.transforms import ToPILImage, ToTensor
 import yaml
-import bdlb
 import random
 from options.test_options import TestOptions
 import sys
@@ -183,6 +182,7 @@ def estimator(image):
 
 
 if __name__ == '__main__':
+    import bdlb
     # define fishyscapes test parameters
     fs = bdlb.load(benchmark="fishyscapes")
     # automatically downloads the dataset
