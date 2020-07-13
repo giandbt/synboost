@@ -2,6 +2,7 @@ import torch.nn as nn
 import torchvision.models
 import torch
 import sys
+from torch.nn.modules.upsampling import Upsample
 sys.path.append("..")
 from image_dissimilarity.models.normalization import SPADE
 
@@ -119,6 +120,67 @@ class VGGSPADE(torch.nn.Module):
 		out = [h_relu1, h_relu2, h_relu3, h_relu4]
 		
 		return out
+
+class VGG19_difference(torch.nn.Module):
+	def __init__(self, requires_grad=False):
+		super().__init__()
+		vgg_pretrained_features = torchvision.models.vgg19(pretrained=True).features
+		self.up5 = Upsample(scale_factor=16, mode='bicubic')
+		self.up4 = Upsample(scale_factor=8, mode='bicubic')
+		self.up3 = Upsample(scale_factor=4, mode='bicubic')
+		self.up2 = Upsample(scale_factor=2, mode='bicubic')
+		self.up1 = Upsample(scale_factor=1, mode='bicubic')
+		self.weights = [1.0 / 32, 1.0 / 16, 1.0 / 8, 1.0 / 4, 1.0]
+
+
+		
+		self.slice1 = torch.nn.Sequential()
+		self.slice2 = torch.nn.Sequential()
+		self.slice3 = torch.nn.Sequential()
+		self.slice4 = torch.nn.Sequential()
+		self.slice5 = torch.nn.Sequential()
+		for x in range(2):
+			self.slice1.add_module(str(x), vgg_pretrained_features[x])
+		for x in range(2, 7):
+			self.slice2.add_module(str(x), vgg_pretrained_features[x])
+		for x in range(7, 12):
+			self.slice3.add_module(str(x), vgg_pretrained_features[x])
+		for x in range(12, 21):
+			self.slice4.add_module(str(x), vgg_pretrained_features[x])
+		for x in range(21, 30):
+			self.slice5.add_module(str(x), vgg_pretrained_features[x])
+		if not requires_grad:
+			for param in self.parameters():
+				param.requires_grad = False
+	
+	def forward(self, X, Y):
+		x1 = self.slice1(X)
+		x2 = self.slice2(x1)
+		x3 = self.slice3(x2)
+		x4 = self.slice4(x3)
+		x5 = self.slice5(x4)
+		
+		y1 = self.slice1(Y)
+		y2 = self.slice2(y1)
+		y3 = self.slice3(y2)
+		y4 = self.slice4(y3)
+		y5 = self.slice5(y4)
+		
+		feat1 = torch.mean(torch.abs(x1-y1), dim=1).unsqueeze(0)
+		feat2 = torch.mean(torch.abs(x2-y2), dim=1).unsqueeze(0)
+		feat3 = torch.mean(torch.abs(x3-y3), dim=1).unsqueeze(0)
+		feat4 = torch.mean(torch.abs(x4-y4), dim=1).unsqueeze(0)
+		feat5 = torch.mean(torch.abs(x5-y5), dim=1).unsqueeze(0)
+		
+		img_5 = self.up5(feat5)
+		img_4 = self.up4(feat4)
+		img_3 = self.up3(feat3)
+		img_2 = self.up2(feat2)
+		img_1 = self.up1(feat1)
+		perceptual_diff = self.weights[0] * img_1 + self.weights[1] * img_2 + self.weights[2] * img_3 + self.weights[3] * img_4 + self.weights[
+    4] * img_5
+		
+		return perceptual_diff
 
 if __name__ == "__main__":
 	from PIL import Image

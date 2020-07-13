@@ -1,2 +1,0 @@
-#!/bin/bash
-CUDA_VISIBLE_DEVICES=12 python demo_folder.py --use_vae --demo-folder /home/giancarlo/data/innosuisse/camera_lidar_semantic/filter/original --results_dir /home/giancarlo/data/innosuisse/audi

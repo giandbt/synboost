@@ -16,9 +16,9 @@ class BaseNetwork(nn.Module):
         num_params = 0
         for param in self.parameters():
             num_params += param.numel()
-        print('Network [%s] was created. Total number of parameters: %.1f million. '
-              'To see the architecture, do print(network).'
-              % (type(self).__name__, num_params / 1000000))
+        #print('Network [%s] was created. Total number of parameters: %.1f million. '
+        #      'To see the architecture, do print(network).'
+        #      % (type(self).__name__, num_params / 1000000))
 
     def init_weights(self, init_type='normal', gain=0.02):
         def init_func(m):

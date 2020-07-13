@@ -18,13 +18,15 @@ class TestOptions(BaseOptions):
                             help='pre-trained Segmentation checkpoint', required=False)
         parser.add_argument('--arch', type=str, default='network.deepv3.DeepWV3Plus',
                             help='Network architecture used for Segmentation inference')
-
-        # Synthesis
-        parser.add_argument('--model_path', type=str, default='./checkpoints', help='models are saved here')
+        
+        # Dissimilarity
+        parser.add_argument('--config_diss', type=str, default='./image_dissimilarity/configs/test/fs_static_configuration.yaml', help='configuration for model constructor parameters')
 
         parser.set_defaults(preprocess_mode='scale_width_and_crop', crop_size=256, load_size=256, display_winsize=256)
         parser.set_defaults(serial_batches=True)
         parser.set_defaults(no_flip=True)
         parser.set_defaults(phase='test')
+        parser.set_defaults(use_vae=True)
+        parser.set_defaults(gpu=0)
         self.isTrain = False
         return parser

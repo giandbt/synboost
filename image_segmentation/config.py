@@ -101,7 +101,7 @@ def assert_and_infer_cfg(args, make_immutable=True, train_mode=True):
             raise Exception('No Support for SyncBN without Apex')
     else:
         __C.MODEL.BNFUNC = torch.nn.BatchNorm2d
-        print('Using regular batch norm')
+        #print('Using regular batch norm')
 
     if not train_mode:
         cfg.immutable(True)

@@ -149,7 +149,7 @@ class BaseOptions():
         opt = self.gather_options()
         opt.isTrain = self.isTrain   # train or test
 
-        self.print_options(opt)
+        #self.print_options(opt)
         if opt.isTrain:
             self.save_options(opt)
 

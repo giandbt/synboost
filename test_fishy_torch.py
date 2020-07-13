@@ -6,6 +6,7 @@ import torch.nn.functional as F
 import torchvision.transforms as transforms
 from torchvision.transforms import ToPILImage, ToTensor
 import yaml
+import bdlb
 
 from options.test_options import TestOptions
 import sys
@@ -58,15 +59,6 @@ if config_diss['model']['prior']:
     diss_model.eval()
     print('Dissimilarity Net Restored')
 
-# Get RGB Original Images
-data_dir = opt.demo_folder
-images = os.listdir(data_dir)
-if len(images) == 0:
-    print('There are no images at directory %s. Check the data path.' % (data_dir))
-else:
-    print('There are %d images to be processed.' % (len(images)))
-images.sort()
-
 # Transform images to Tensor based on ImageNet Mean and STD
 mean_std = ([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 img_transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize(*mean_std)])
@@ -91,11 +83,14 @@ norm_transform_diss = transforms.Compose(
     [transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])  # imageNet normamlization
 to_pil = ToPILImage()
 
+# define fishyscapes test parameters
+fs = bdlb.load(benchmark="fishyscapes")
+# automatically downloads the dataset
+data = fs.get_dataset('Static')
+
 # Loop around all figures
-for img_id, img_name in enumerate(images):
-    print('Predicting image %i out of %i' % (img_id + 1, len(images)))
-    img_dir = os.path.join(data_dir, img_name)
-    img = Image.open(img_dir).convert('RGB').resize((2048, 1024))
+def estimator(image):
+    img = Image.fromarray(np.array(image)).convert('RGB').resize((2048, 1024))
     img_tensor = img_transform(img)
     
     # predict segmentation
@@ -178,8 +173,12 @@ for img_id, img_name in enumerate(images):
                        distance_tensor), dim=1)
     diss_pred = diss_pred.cpu().numpy()
     diss_pred = diss_pred[:, 1, :, :] * 0.75 + entropy_tensor.cpu().numpy() * 0.25
+    diss_pred = np.array(Image.fromarray(diss_pred.squeeze()).resize((2048, 1024)))
     
-    # Save image
-    diss_pred = (diss_pred * 255).astype(np.uint8)
-    diss_pred = Image.fromarray(diss_pred.squeeze())
-    diss_pred.resize((1024, 512)).save(os.path.join(opt.results_dir, os.path.basename(img_name)))
+    return torch.tensor(diss_pred)
+
+
+metrics = fs.evaluate(estimator, data)
+print('My method achieved {:.2f}% AP'.format(100 * metrics['AP']))
+print('My method achieved {:.2f}% FPR@95TPR'.format(100 * metrics['FPR@95%TPR']))
+print('My method achieved {:.2f}% auroc'.format(100 * metrics['auroc']))

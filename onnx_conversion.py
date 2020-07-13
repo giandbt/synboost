@@ -24,7 +24,7 @@ from config import assert_and_infer_cfg
 
 TestOptions = TestOptions()
 opt = TestOptions.parse()
-
+opt.use_vae = True
 
 def remove_all_spectral_norm(item):
     if isinstance(item, nn.Module):
