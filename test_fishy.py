@@ -215,9 +215,10 @@ def one_hot_encoding(semantic, num_classes=20):
         one_hot[class_id, :, :] = (semantic.squeeze(0) == class_id)
     one_hot = one_hot[:num_classes - 1, :, :]
     return one_hot
+
 fs = bdlb.load(benchmark="fishyscapes")
 # automatically downloads the dataset
-data = fs.get_dataset('Static')
+data = fs.get_dataset('LostAndFound')
 
 
 # test your method with the benchmark metrics
@@ -242,7 +243,6 @@ def estimator(image, onnx_path='./demo_files/onnx_models'):
     # SEGMENTATION MODULE
     # add bacth size to image to run in onnx model
     input_img = np.expand_dims(np.array(img, dtype=np.float32), axis=0)
-    import pdb; pdb.set_trace()
     seg_inputs = {segmentation_session.get_inputs()[0].name: input_img}
 
     # run segmentatiom
@@ -381,8 +381,8 @@ def estimator(image, onnx_path='./demo_files/onnx_models'):
 
     diss_pred = softmax(diss_outs[0], axis=1)
     diss_pred = diss_pred[:, 1, :, :]*0.75 + entropy_tensor.numpy()*0.25
-    #np.array(image)
-    return diss_pred
+    diss_pred = np.array(Image.fromarray(diss_pred.squeeze()).resize((2048,1024)))
+    return torch.tensor(diss_pred)
 
 
 def get_images(tfdataset):
@@ -393,8 +393,9 @@ def get_images(tfdataset):
         cv2.imwrite('/home/giancarlo/data/innosuisse/fs_static/label/image_%i.png' %i, mask)
 
 
-
-metrics = fs.evaluate(estimator, data.take(2))
+metrics = fs.evaluate(estimator, data.take(100))
 print('My method achieved {:.2f}% AP'.format(100 * metrics['AP']))
+print('My method achieved {:.2f}% FPR@95TPR'.format(100 * metrics['FPR@95%TPR']))
+print('My method achieved {:.2f}% auroc'.format(100 * metrics['auroc']))
 
 #get_images(data)
