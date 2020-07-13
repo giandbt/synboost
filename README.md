@@ -12,6 +12,12 @@ In order to set-up the project, please follow these steps:
 3) Download pre-trained model for DeepLabV3+ with WiderResNet38 [3] (https://drive.google.com/file/d/1P4kPaMY-SmQ3yPJQTJ7xMGAB_Su-1zTl/view). 
 and save it `./models/image-segmentation/`. 
 4) We need to install Apex manually. Instructions can be found here: https://github.com/NVIDIA/apex
+
+```
+git clone https://github.com/NVIDIA/apex
+cd apex
+pip install -v --no-cache-dir ./
+```
 5) Install all the neccesary python modules with `pip install -r requirements.txt`
 
 ### Datasets 
