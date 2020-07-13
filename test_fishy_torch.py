@@ -7,7 +7,7 @@ import torchvision.transforms as transforms
 from torchvision.transforms import ToPILImage, ToTensor
 import yaml
 import bdlb
-
+import random
 from options.test_options import TestOptions
 import sys
 
@@ -20,6 +20,12 @@ from image_synthesis.models.pix2pix_model import Pix2PixModel
 from image_dissimilarity.models.dissimilarity_model import DissimNetPrior
 from image_dissimilarity.models.vgg_features import VGG19_difference
 from image_dissimilarity.data.cityscapes_dataset import one_hot_encoding
+
+# set seeds for reproducibility
+torch.manual_seed(0)
+torch.cuda.manual_seed_all(0)
+np.random.seed(0)
+random.seed(0)
 
 # Common options for all models
 TestOptions = TestOptions()
@@ -82,11 +88,6 @@ base_transforms_diss = transforms.Compose(
 norm_transform_diss = transforms.Compose(
     [transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])  # imageNet normamlization
 to_pil = ToPILImage()
-
-# define fishyscapes test parameters
-fs = bdlb.load(benchmark="fishyscapes")
-# automatically downloads the dataset
-data = fs.get_dataset('Static')
 
 # Loop around all figures
 def estimator(image):
@@ -177,8 +178,12 @@ def estimator(image):
     
     return torch.tensor(diss_pred)
 
-
+# define fishyscapes test parameters
+fs = bdlb.load(benchmark="fishyscapes")
+# automatically downloads the dataset
+data = fs.get_dataset('Static')
 metrics = fs.evaluate(estimator, data)
+
 print('My method achieved {:.2f}% AP'.format(100 * metrics['AP']))
 print('My method achieved {:.2f}% FPR@95TPR'.format(100 * metrics['FPR@95%TPR']))
 print('My method achieved {:.2f}% auroc'.format(100 * metrics['auroc']))
