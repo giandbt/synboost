@@ -8,3 +8,4 @@ Pillow==7.0.0
 pyyaml
 scikit-image
 imgaug
+sklearn

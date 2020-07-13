@@ -89,6 +89,7 @@ norm_transform_diss = transforms.Compose(
     [transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])  # imageNet normamlization
 to_pil = ToPILImage()
 
+
 # Loop around all figures
 def estimator(image):
     image_og_h = image.shape[0]
@@ -180,12 +181,14 @@ def estimator(image):
     
     return torch.tensor(diss_pred)
 
-# define fishyscapes test parameters
-fs = bdlb.load(benchmark="fishyscapes")
-# automatically downloads the dataset
-data = fs.get_dataset('Static')
-metrics = fs.evaluate(estimator, data)
 
-print('My method achieved {:.2f}% AP'.format(100 * metrics['AP']))
-print('My method achieved {:.2f}% FPR@95TPR'.format(100 * metrics['FPR@95%TPR']))
-print('My method achieved {:.2f}% auroc'.format(100 * metrics['auroc']))
+if __name__ == '__main__':
+    # define fishyscapes test parameters
+    fs = bdlb.load(benchmark="fishyscapes")
+    # automatically downloads the dataset
+    data = fs.get_dataset('Static')
+    metrics = fs.evaluate(estimator, data)
+    
+    print('My method achieved {:.2f}% AP'.format(100 * metrics['AP']))
+    print('My method achieved {:.2f}% FPR@95TPR'.format(100 * metrics['FPR@95%TPR']))
+    print('My method achieved {:.2f}% auroc'.format(100 * metrics['auroc']))
