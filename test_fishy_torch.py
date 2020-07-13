@@ -91,6 +91,8 @@ to_pil = ToPILImage()
 
 # Loop around all figures
 def estimator(image):
+    image_og_h = image.shape[0]
+    image_og_w = image.shape[1]
     img = Image.fromarray(np.array(image)).convert('RGB').resize((2048, 1024))
     img_tensor = img_transform(img)
     
@@ -174,7 +176,7 @@ def estimator(image):
                        distance_tensor), dim=1)
     diss_pred = diss_pred.cpu().numpy()
     diss_pred = diss_pred[:, 1, :, :] * 0.75 + entropy_tensor.cpu().numpy() * 0.25
-    diss_pred = np.array(Image.fromarray(diss_pred.squeeze()).resize((2048, 1024)))
+    diss_pred = np.array(Image.fromarray(diss_pred.squeeze()).resize((image_og_w, image_og_h)))
     
     return torch.tensor(diss_pred)
 
