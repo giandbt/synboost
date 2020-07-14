@@ -1,4 +1,4 @@
-# Semantic Segmentation Uncertainty Estimation
+# Pixel-wise Anomaly Detection for Complex Outdoors Scenes
 This repository is the paper implementation of Pixel-wise Anomaly Detection for Complex Outdoors Scenes (`HYPER-LINK PAPER`). 
 
 ### Installation
