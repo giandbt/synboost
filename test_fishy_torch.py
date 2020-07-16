@@ -16,7 +16,7 @@ from optimizer import restore_snapshot
 from datasets import cityscapes
 from config import assert_and_infer_cfg
 from image_synthesis.models.pix2pix_model import Pix2PixModel
-from image_dissimilarity.models.dissimilarity_model import DissimNetPrior
+from image_dissimilarity.models.dissimilarity_model import DissimNetPrior, DissimNet
 from image_dissimilarity.models.vgg_features import VGG19_difference
 from image_dissimilarity.data.cityscapes_dataset import one_hot_encoding
 
@@ -36,7 +36,7 @@ assert_and_infer_cfg(opt, train_mode=False)
 opt.dataset_cls = cityscapes
 net = network.get_net(opt, criterion=None)
 net = torch.nn.DataParallel(net).cuda()
-print('Segmentation Net built.')
+print('Segmentation Net Built.')
 seg_net, _ = restore_snapshot(net, optimizer=None, snapshot=opt.snapshot, restore_optimizer_bool=False)
 seg_net.eval()
 print('Segmentation Net Restored.')
@@ -44,7 +44,7 @@ print('Segmentation Net Restored.')
 # Get Synthesis Net
 world_size = 1
 rank = 0
-print('Synthesis Net built.')
+print('Synthesis Net Built.')
 syn_net = Pix2PixModel(opt)
 syn_net.eval()
 print('Synthesis Net Restored')
@@ -55,14 +55,16 @@ with open(opt.config_diss, 'r') as stream:
 
 if config_diss['model']['prior']:
     diss_model = DissimNetPrior(**config_diss['model']).cuda()
-    print('Dissimilarity Net built.')
+else:
+    diss_model = DissimNet(**config_diss['model']).cuda()
     
-    model_path = os.path.join(config_diss['save_folder'],
-                              '%s_net_%s.pth' % (config_diss['which_epoch'], config_diss['experiment_name']))
-    model_weights = torch.load(model_path)
-    diss_model.load_state_dict(model_weights)
-    diss_model.eval()
-    print('Dissimilarity Net Restored')
+print('Dissimilarity Net Built.')
+model_path = os.path.join(config_diss['save_folder'],
+                          '%s_net_%s.pth' % (config_diss['which_epoch'], config_diss['experiment_name']))
+model_weights = torch.load(model_path)
+diss_model.load_state_dict(model_weights)
+diss_model.eval()
+print('Dissimilarity Net Restored')
 
 # Transform images to Tensor based on ImageNet Mean and STD
 mean_std = ([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
@@ -171,11 +173,19 @@ def estimator(image):
     
     # run dissimilarity
     with torch.no_grad():
-        diss_pred = F.softmax(
-            diss_model(image_tensor, syn_image_tensor, semantic_tensor, entropy_tensor, perceptual_diff_tensor,
-                       distance_tensor), dim=1)
+        if config_diss['model']['prior']:
+            diss_pred = F.softmax(
+                diss_model(image_tensor, syn_image_tensor, semantic_tensor, entropy_tensor, perceptual_diff_tensor,
+                           distance_tensor), dim=1)
+        else:
+            diss_pred = F.softmax(diss_model(image_tensor, syn_image_tensor, semantic_tensor), dim=1)
     diss_pred = diss_pred.cpu().numpy()
-    diss_pred = diss_pred[:, 1, :, :] * 0.75 + entropy_tensor.cpu().numpy() * 0.25
+    
+    # do ensemble if necessary
+    if config_diss['ensemble']:
+        diss_pred = diss_pred[:, 1, :, :] * 0.75 + entropy_tensor.cpu().numpy() * 0.25
+    else:
+        diss_pred = diss_pred[:, 1, :, :]
     diss_pred = np.array(Image.fromarray(diss_pred.squeeze()).resize((image_og_w, image_og_h)))
     
     return torch.tensor(diss_pred)

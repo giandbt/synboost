@@ -1,0 +1,16 @@
+# Name of the experiment for saving files
+experiment_name: baseline_void_prior_spadedecoder_mult_3 # where checkpoints are stored
+save_folder: ./models/image-dissimilarity/
+which_epoch: best
+ensemble: True
+
+# model options
+model:
+  architecture: vgg16 #[options: 'vgg16', 'vgg16_bn', 'vgg16_guided', 'resnet18', 'vgg16_correlated']
+  semantic: True
+  pretrained: True
+  correlation: True
+  prior: True
+  spade: 'decoder' #[options: 'encoder', 'decoder', 'both', '']
+  num_semantic_classes: 19 # Actual training labels
+

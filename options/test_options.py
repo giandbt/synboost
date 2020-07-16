@@ -20,7 +20,7 @@ class TestOptions(BaseOptions):
                             help='Network architecture used for Segmentation inference')
         
         # Dissimilarity
-        parser.add_argument('--config_diss', type=str, default='./image_dissimilarity/configs/test/fs_static_configuration.yaml', help='configuration for model constructor parameters')
+        parser.add_argument('--config_diss', type=str, default='./image_dissimilarity/configs/test/ours_configuration.yaml', help='configuration for model constructor parameters')
 
         parser.set_defaults(preprocess_mode='scale_width_and_crop', crop_size=256, load_size=256, display_winsize=256)
         parser.set_defaults(serial_batches=True)
