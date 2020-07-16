@@ -216,11 +216,6 @@ def one_hot_encoding(semantic, num_classes=20):
     one_hot = one_hot[:num_classes - 1, :, :]
     return one_hot
 
-fs = bdlb.load(benchmark="fishyscapes")
-# automatically downloads the dataset
-data = fs.get_dataset('LostAndFound')
-
-
 # test your method with the benchmark metrics
 def estimator(image, onnx_path='./demo_files/onnx_models'):
     """Assigns a random uncertainty per pixel."""
@@ -393,7 +388,11 @@ def get_images(tfdataset):
         cv2.imwrite('/home/giancarlo/data/innosuisse/fs_static/label/image_%i.png' %i, mask)
 
 
-metrics = fs.evaluate(estimator, data.take(100))
+fs = bdlb.load(benchmark="fishyscapes")
+# automatically downloads the dataset
+data = fs.get_dataset('Static')
+metrics = fs.evaluate(estimator, data)
+
 print('My method achieved {:.2f}% AP'.format(100 * metrics['AP']))
 print('My method achieved {:.2f}% FPR@95TPR'.format(100 * metrics['FPR@95%TPR']))
 print('My method achieved {:.2f}% auroc'.format(100 * metrics['auroc']))
