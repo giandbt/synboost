@@ -5,7 +5,7 @@ This repository is the paper implementation of Pixel-wise Anomaly Detection for 
 
 In order to set-up the project, please follow these steps:
 1) Run  `git clone https://github.com/giandbt/driving_uncertainty.git`. 
-2) Download pre-trained models using `wget https://dissimilarity.s3.eu-central-1.amazonaws.com/models.tar`. 
+2) Download pre-trained models using `https://dissimilarity.s3.eu-central-1.amazonaws.com/models.tar`. 
 De-compress file and save inside the repository
 3) We need to install Apex (https://github.com/NVIDIA/apex) running the following:
     ```
@@ -13,19 +13,15 @@ De-compress file and save inside the repository
     cd apex
     pip install -v --no-cache-dir ./
     ```
-5) Install all the neccesary python modules with `pip install -r requirements_demo.txt`
-<!---2) Download pre-trained model for CC-FPSE [2] 
-#(https://drive.google.com/uc?id=1m4JMtKLDfcXCW1HXHKz-fP6y3_SAaUqX&export=download) and save it under `/models/image-synthesis/`
-#3) Download pre-trained model for DeepLabV3+ with WiderResNet38 [3] (https://drive.google.com/file/d/1P4kPaMY-SmQ3yPJQTJ7xMGAB_Su-1zTl/view). 
-#and save it `./models/image-segmentation/`. ---> 
+4) Install all the neccesary python modules with `pip install -r requirements_demo.txt`
 
 ### Datasets 
-The repository uses the following datasets for training
-TODO
+The repository uses the Cityscapes Dataset [X] as the basis of the training data for the dissimilarity moodel. 
+To download the dataset please register and follow the instructions here: https://www.cityscapes-dataset.com/downloads/
+
 
 ### Training 
 The anomaly pipeline uses pre-trained models for segmentation and image re-synthesis. 
-
 You can find this pre-trained models using `wget https://dissimilarity.s3.eu-central-1.amazonaws.com/models.tar`. 
 Additionally, you can refer to the original repositories. 
 
