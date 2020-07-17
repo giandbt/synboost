@@ -134,13 +134,9 @@ class AnomalyDetector():
             diss_pred = diss_pred[:, 1, :, :]
         diss_pred = np.array(Image.fromarray(diss_pred.squeeze()).resize((image_og_w, image_og_h)))
         
-<<<<<<< HEAD
-        return torch.tensor(diss_pred)
-=======
         out = {'anomaly_score': torch.tensor(diss_pred), 'segmentation': torch.tensor(seg_final)}
         
         return out['anomaly_score']
->>>>>>> 8628ffee9e79ff42bb9db24c41f1f84237fb7b0c
 
     def set_seeds(self, seed=0):
         # set seeds for reproducibility
