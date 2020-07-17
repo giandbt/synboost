@@ -10,7 +10,7 @@ import random
 import options.test_options
 
 import sys
-sys.path.insert(0, './image_segmentation')
+sys.path.insert(0, os.path.join(os.getcwd(), os.path.dirname(__file__), 'image_segmentation'))
 import network
 from optimizer import restore_snapshot
 from datasets import cityscapes
@@ -37,7 +37,7 @@ class AnomalyDetector():
         self.get_transformations()
 
     # Loop around all figures
-    def estimator(self, image):
+    def estimator_worker(self, image):
         image_og_h = image.shape[0]
         image_og_w = image.shape[1]
         img = Image.fromarray(np.array(image)).convert('RGB').resize((2048, 1024))
@@ -155,7 +155,8 @@ class AnomalyDetector():
         net = network.get_net(self.opt, criterion=None)
         net = torch.nn.DataParallel(net).cuda()
         print('Segmentation Net Built.')
-        self.seg_net, _ = restore_snapshot(net, optimizer=None, snapshot=self.opt.snapshot,
+        snapshot = os.path.join(os.getcwd(), os.path.dirname(__file__), self.opt.snapshot)
+        self.seg_net, _ = restore_snapshot(net, optimizer=None, snapshot=snapshot,
                                            restore_optimizer_bool=False)
         self.seg_net.eval()
         print('Segmentation Net Restored.')
@@ -163,6 +164,7 @@ class AnomalyDetector():
     def get_synthesis(self):
         # Get Synthesis Net
         print('Synthesis Net Built.')
+        self.opt.checkpoints_dir = os.path.join(os.getcwd(), os.path.dirname(__file__), self.opt.checkpoints_dir)
         self.syn_net = Pix2PixModel(self.opt)
         self.syn_net.eval()
         print('Synthesis Net Restored')
@@ -170,9 +172,9 @@ class AnomalyDetector():
     def get_dissimilarity(self, ours):
         # Get Dissimilarity Net
         if ours:
-            config_diss = './image_dissimilarity/configs/test/ours_configuration.yaml'
+            config_diss = os.path.join(os.getcwd(), os.path.dirname(__file__), 'image_dissimilarity/configs/test/ours_configuration.yaml')
         else:
-            config_diss = './image_dissimilarity/configs/test/baseline_configuration.yaml'
+            config_diss = os.path.join(os.getcwd(), os.path.dirname(__file__), 'image_dissimilarity/configs/test/baseline_configuration.yaml')
     
         with open(config_diss, 'r') as stream:
             config_diss = yaml.load(stream, Loader=yaml.FullLoader)
@@ -186,7 +188,8 @@ class AnomalyDetector():
             self.diss_model = DissimNet(**config_diss['model']).cuda()
     
         print('Dissimilarity Net Built.')
-        model_path = os.path.join(config_diss['save_folder'],
+        save_folder = os.path.join(os.getcwd(), os.path.dirname(__file__), config_diss['save_folder'])
+        model_path = os.path.join(save_folder,
                                   '%s_net_%s.pth' % (config_diss['which_epoch'], config_diss['experiment_name']))
         model_weights = torch.load(model_path)
         self.diss_model.load_state_dict(model_weights)
@@ -222,7 +225,7 @@ if __name__ == '__main__':
     # automatically downloads the dataset
     data = fs.get_dataset('Static')
     detector = AnomalyDetector(False)
-    metrics = fs.evaluate(detector.estimator, data)
+    metrics = fs.evaluate(detector.estimator_worker, data)
     
     print('My method achieved {:.2f}% AP'.format(100 * metrics['AP']))
     print('My method achieved {:.2f}% FPR@95TPR'.format(100 * metrics['FPR@95%TPR']))

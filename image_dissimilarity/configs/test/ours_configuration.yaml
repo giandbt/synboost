@@ -1,6 +1,6 @@
 # Name of the experiment for saving files
 experiment_name: baseline_void_prior_spadedecoder_mult_3 # where checkpoints are stored
-save_folder: ./models/image-dissimilarity/
+save_folder: models/image-dissimilarity/
 which_epoch: best
 ensemble: True
 
