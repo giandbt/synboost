@@ -14,14 +14,11 @@ class TestOptions(BaseOptions):
         parser.add_argument('--no-segmentation', action='store_true', help='if specified, do *not* segment images since they are already created')
 
         # Segmentation
-        parser.add_argument('--snapshot', type=str, default='./models/image-segmentation/cityscapes_best.pth',
+        parser.add_argument('--snapshot', type=str, default='models/image-segmentation/cityscapes_best.pth',
                             help='pre-trained Segmentation checkpoint', required=False)
         parser.add_argument('--arch', type=str, default='network.deepv3.DeepWV3Plus',
                             help='Network architecture used for Segmentation inference')
         
-        # Dissimilarity
-        parser.add_argument('--config_diss', type=str, default='./image_dissimilarity/configs/test/ours_configuration.yaml', help='configuration for model constructor parameters')
-
         parser.set_defaults(preprocess_mode='scale_width_and_crop', crop_size=256, load_size=256, display_winsize=256)
         parser.set_defaults(serial_batches=True)
         parser.set_defaults(no_flip=True)
