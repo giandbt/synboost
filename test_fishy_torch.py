@@ -37,7 +37,7 @@ class AnomalyDetector():
         self.get_transformations()
 
     # Loop around all figures
-    def estimator(self, image):
+    def estimator_worker(self, image):
         image_og_h = image.shape[0]
         image_og_w = image.shape[1]
         img = Image.fromarray(np.array(image)).convert('RGB').resize((2048, 1024))
@@ -218,7 +218,7 @@ if __name__ == '__main__':
     # automatically downloads the dataset
     data = fs.get_dataset('Static')
     detector = AnomalyDetector(False)
-    metrics = fs.evaluate(detector.estimator, data)
+    metrics = fs.evaluate(detector.estimator_worker, data)
     
     print('My method achieved {:.2f}% AP'.format(100 * metrics['AP']))
     print('My method achieved {:.2f}% FPR@95TPR'.format(100 * metrics['FPR@95%TPR']))
