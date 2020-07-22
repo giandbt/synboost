@@ -7,7 +7,7 @@ import torchvision.transforms as transforms
 from torchvision.transforms import ToPILImage
 import yaml
 import random
-import options.test_options
+import driving_uncertainty.options.test_options
 
 import sys
 sys.path.insert(0, os.path.join(os.getcwd(), os.path.dirname(__file__), 'image_segmentation'))
@@ -15,10 +15,10 @@ import network
 from optimizer import restore_snapshot
 from datasets import cityscapes
 from config import assert_and_infer_cfg
-from image_synthesis.models.pix2pix_model import Pix2PixModel
-from image_dissimilarity.models.dissimilarity_model import DissimNetPrior, DissimNet
-from image_dissimilarity.models.vgg_features import VGG19_difference
-from image_dissimilarity.data.cityscapes_dataset import one_hot_encoding
+from driving_uncertainty.image_synthesis.models.pix2pix_model import Pix2PixModel
+from driving_uncertainty.image_dissimilarity.models.dissimilarity_model import DissimNetPrior, DissimNet
+from driving_uncertainty.image_dissimilarity.models.vgg_features import VGG19_difference
+from driving_uncertainty.image_dissimilarity.data.cityscapes_dataset import one_hot_encoding
 
 
 class AnomalyDetector():
@@ -27,7 +27,7 @@ class AnomalyDetector():
         self.set_seeds(seed)
         
         # Common options for all models
-        TestOptions = options.test_options.TestOptions()
+        TestOptions = driving_uncertainty.options.test_options.TestOptions()
         self.opt = TestOptions.parse()
         torch.cuda.empty_cache()
         

@@ -4,10 +4,10 @@ import torchvision.models
 
 import sys
 sys.path.append("..")
-from image_dissimilarity.models.semantic_encoder import SemanticEncoder, ResNetSemanticEncoder
-from image_dissimilarity.models.vgg_features import VGGFeatures, VGGSPADE
-from image_dissimilarity.models.resnet_features import resnet
-from image_dissimilarity.models.normalization import SPADE, FILM, GuideCorrelation, GuideNormalization
+from driving_uncertainty.image_dissimilarity.models.semantic_encoder import SemanticEncoder, ResNetSemanticEncoder
+from driving_uncertainty.image_dissimilarity.models.vgg_features import VGGFeatures, VGGSPADE
+from driving_uncertainty.image_dissimilarity.models.resnet_features import resnet
+from driving_uncertainty.image_dissimilarity.models.normalization import SPADE, FILM, GuideCorrelation, GuideNormalization
 
 class DissimNet(nn.Module):
     def __init__(self, architecture='vgg16', semantic=True, pretrained=True, correlation = True, prior = False, spade='',
