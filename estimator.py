@@ -24,7 +24,7 @@ from image_dissimilarity.data.cityscapes_dataset import one_hot_encoding
 
 
 class AnomalyDetector():
-    def __init__(self, ours=True, seed=0):
+    def __init__(self, ours=True, seed=0, fishyscapes_wrapper=True):
         
         self.set_seeds(seed)
         
@@ -36,7 +36,118 @@ class AnomalyDetector():
         self.get_synthesis()
         self.get_dissimilarity(ours)
         self.get_transformations()
+        self.fishyscapes_wrapper= fishyscapes_wrapper
 
+    def estimator_image(self, image):
+        image_og_h = image.size[1]
+        image_og_w = image.size[0]
+        img = image.resize((2048, 1024))
+        img_tensor = self.img_transform(img)
+    
+        # predict segmentation
+        with torch.no_grad():
+            seg_outs = self.seg_net(img_tensor.unsqueeze(0).cuda())
+    
+        seg_softmax_out = F.softmax(seg_outs, dim=1)
+        seg_final = np.argmax(seg_outs.cpu().numpy().squeeze(), axis=0)  # segmentation map
+    
+        # get entropy
+        entropy = torch.sum(-seg_softmax_out * torch.log(seg_softmax_out), dim=1)
+        entropy = (entropy - entropy.min()) / entropy.max()
+        entropy *= 255  # for later use in the dissimilarity
+    
+        # get softmax distance
+        distance, _ = torch.topk(seg_softmax_out, 2, dim=1)
+        max_logit = distance[:, 0, :, :]
+        max2nd_logit = distance[:, 1, :, :]
+        result = max_logit - max2nd_logit
+        distance = 1 - (result - result.min()) / result.max()
+        distance *= 255  # for later use in the dissimilarity
+    
+        # get label map for synthesis model
+        label_out = np.zeros_like(seg_final)
+        for label_id, train_id in self.opt.dataset_cls.id_to_trainid.items():
+            label_out[np.where(seg_final == train_id)] = label_id
+        label_img = Image.fromarray((label_out).astype(np.uint8))
+    
+        # prepare for synthesis
+        label_tensor = self.transform_semantic(label_img) * 255.0
+        label_tensor[label_tensor == 255] = 35  # 'unknown' is opt.label_nc
+        image_tensor = self.transform_image_syn(img)
+        # Get instance map in right format. Since prediction doesn't have instance map, we use semantic instead
+        instance_tensor = label_tensor.clone()
+    
+        # run synthesis
+        syn_input = {'label': label_tensor.unsqueeze(0), 'instance': instance_tensor.unsqueeze(0),
+                     'image': image_tensor.unsqueeze(0)}
+        
+        generated = self.syn_net(syn_input, mode='inference')
+    
+        image_numpy = (np.transpose(generated.squeeze().cpu().numpy(), (1, 2, 0)) + 1) / 2.0
+        synthesis_final_img = Image.fromarray((image_numpy * 255).astype(np.uint8))
+    
+        # prepare dissimilarity
+        entropy = entropy.cpu().numpy()
+        distance = distance.cpu().numpy()
+        entropy_img = Image.fromarray(entropy.astype(np.uint8).squeeze())
+        distance = Image.fromarray(distance.astype(np.uint8).squeeze())
+        semantic = Image.fromarray((seg_final).astype(np.uint8))
+    
+        # get initial transformation
+        semantic_tensor = self.base_transforms_diss(semantic) * 255
+        syn_image_tensor = self.base_transforms_diss(synthesis_final_img)
+        image_tensor = self.base_transforms_diss(img)
+        syn_image_tensor = self.norm_transform_diss(syn_image_tensor).unsqueeze(0).cuda()
+        image_tensor = self.norm_transform_diss(image_tensor).unsqueeze(0).cuda()
+    
+        # get softmax difference
+        perceptual_diff = self.vgg_diff(image_tensor, syn_image_tensor)
+        min_v = torch.min(perceptual_diff.squeeze())
+        max_v = torch.max(perceptual_diff.squeeze())
+        perceptual_diff = (perceptual_diff.squeeze() - min_v) / (max_v - min_v)
+        perceptual_diff *= 255
+        perceptual_diff = perceptual_diff.cpu().numpy()
+        perceptual_diff = Image.fromarray(perceptual_diff.astype(np.uint8))
+    
+        # finish transformation
+        perceptual_diff_tensor = self.base_transforms_diss(perceptual_diff).unsqueeze(0).cuda()
+        entropy_tensor = self.base_transforms_diss(entropy_img).unsqueeze(0).cuda()
+        distance_tensor = self.base_transforms_diss(distance).unsqueeze(0).cuda()
+    
+        # hot encode semantic map
+        semantic_tensor[semantic_tensor == 255] = 20  # 'ignore label is 20'
+        semantic_tensor = one_hot_encoding(semantic_tensor, 20).unsqueeze(0).cuda()
+    
+        # run dissimilarity
+        with torch.no_grad():
+            if self.prior:
+                diss_pred = F.softmax(
+                    self.diss_model(image_tensor, syn_image_tensor, semantic_tensor, entropy_tensor,
+                                    perceptual_diff_tensor,
+                                    distance_tensor), dim=1)
+            else:
+                diss_pred = F.softmax(self.diss_model(image_tensor, syn_image_tensor, semantic_tensor), dim=1)
+        diss_pred = diss_pred.cpu().numpy()
+    
+        # do ensemble if necessary
+        if self.ensemble:
+            diss_pred = diss_pred[:, 1, :, :] * 0.75 + entropy_tensor.cpu().numpy() * 0.25
+        else:
+            diss_pred = diss_pred[:, 1, :, :]
+            
+        # Resize outputs to original input image size
+        diss_pred = Image.fromarray(diss_pred.squeeze()*255).resize((image_og_w, image_og_h))
+        seg_img = semantic.resize((image_og_w, image_og_h))
+        entropy = entropy_img.resize((image_og_w, image_og_h))
+        perceptual_diff = perceptual_diff.resize((image_og_w, image_og_h))
+        distance = entropy.resize((image_og_w, image_og_h))
+        synthesis = synthesis_final_img.resize((image_og_w, image_og_h))
+        
+        out = {'anomaly_map': diss_pred, 'segmentation': seg_img, 'synthesis': synthesis,
+               'softmax_entropy':entropy, 'perceptual_diff': perceptual_diff, 'softmax_distance': distance}
+    
+        return out
+    
     # Loop around all figures
     def estimator_worker(self, image):
         image_og_h = image.shape[0]
