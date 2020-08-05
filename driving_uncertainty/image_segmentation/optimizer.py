@@ -5,7 +5,7 @@ import math
 import logging
 import torch
 from torch import optim
-from image_segmentation.config import cfg
+from driving_uncertainty.image_segmentation.config import cfg
 
 
 def get_optimizer(args, net):

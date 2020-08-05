@@ -10,8 +10,8 @@ import random
 
 import sys
 sys.path.append("..")
-import image_dissimilarity.data.cityscapes_labels as cityscapes_labels
-from image_dissimilarity.data.augmentations import get_transform
+import driving_uncertainty.image_dissimilarity.data.cityscapes_labels as cityscapes_labels
+from driving_uncertainty.image_dissimilarity.data.augmentations import get_transform
 
 
 trainid_to_name = cityscapes_labels.trainId2name

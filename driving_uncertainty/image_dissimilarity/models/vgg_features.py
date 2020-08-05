@@ -4,7 +4,7 @@ import torch
 import sys
 from torch.nn.modules.upsampling import Upsample
 sys.path.append("..")
-from image_dissimilarity.models.normalization import SPADE
+from driving_uncertainty.image_dissimilarity.models.normalization import SPADE
 
 class VGGFeatures(nn.Module):
 
