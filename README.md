@@ -46,6 +46,12 @@ Then, we need to pre-process the images in order to get the predicted entropy, d
 The neccesary files to do all the operations can be found under `data_preparation` folder. In future releases, we will make one script to do all 
 the pre-process automatically. For the time being, you can download the processed datasets used in the paper here: ADD LINK TO DATA.
 
+### Framework Light Version 
+The original paper discussed the implementation of a lighter version in order to demostrate the generalization ability of the network to different
+synthesis and segmentation networks (even with lower performance).
+
+In the repository, we include the code and pre-trained model used for this lighter version. However, compatiblity with `demo.py` is still not supported. 
+
 ### Google Colab Demo Notebook
 A demo of the anomaly detection pipeline can be found here: https://colab.research.google.com/drive/1HQheunEWYHvOJhQQiWbQ9oHXCNi9Frfl?usp=sharing#scrollTo=gC-ViJmm23eM
 
