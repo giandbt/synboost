@@ -1,5 +1,5 @@
-# Pixel-wise Anomaly Detection for Complex Outdoors Scenes
-This repository is the paper implementation of Pixel-wise Anomaly Detection for Complex Outdoors Scenes (`HYPER-LINK PAPER`). 
+# Pixel-wise Anomaly Detection for Complex Driving Scenes
+This repository is the paper implementation for Pixel-wise Anomaly Detection for Complex Driving Scenes (`HYPER-LINK PAPER ONCE IN ARXIV`). 
 
 ![Alt text](display_images/methodology.png?raw=true "Methodology")
 
@@ -69,6 +69,8 @@ The file is located `/Path/To/Enviroment/lib/python3.7/site-packages/torch/onnx`
 - The image segmentaion folder is heavily based on [1], specifically commit `b4fc685`. Additionally, 
 the image synthesis folder is based on [2]. specifically commit `0486b08`. For light weight version of the segmentation
 model, we used the code from [3] (commit `682e0e6`) as our segmentation model, and [4] as our synthesis model (commit `5a2c872`)
+- The branch `fishyscapes_package` includes the code as a package specifically made for Fishyscapes submission.
+In ther to get the class for the detector simply `from test_fishy_torch import AnomalyDetector`.
 
 
 ## References
