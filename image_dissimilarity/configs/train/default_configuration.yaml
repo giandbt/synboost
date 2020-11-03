@@ -1,6 +1,6 @@
 # Name of the experiment for saving files
-experiment_name: baseline_light_mult_
-save_folder: results/
+experiment_name: replicate_best_mult_
+save_folder: /media/giancarlo/Samsung_T5/personal/master_thesis/cvpr/results/
 
 # Define training strategy
 training_strategy:
@@ -17,8 +17,8 @@ model:
   semantic: True
   pretrained: True
   correlation: True
-  prior: False
-  spade: '' #[options: 'encoder', 'decoder', 'both', '']
+  prior: True
+  spade: 'decoder' #[options: 'encoder', 'decoder', 'both', '']
   num_semantic_classes: 19 # Actual training labels
 diss_pretrained:
   load: False
@@ -28,7 +28,7 @@ diss_pretrained:
 
 # logger options
 logger:
-  results_dir: ./logs_light
+  results_dir: /media/giancarlo/Samsung_T5/personal/master_thesis/cvpr/logs
   save_epoch_freq: 50 #frequency of saving checkpoints at the end of epochs
 
 # loss options (remove tasks not needed)
@@ -61,8 +61,8 @@ train_dataloader:
     num_semantic_classes: 19
     is_train: True
   dataloader_args:
-    batch_size: 1
-    num_workers: 1
+    batch_size: 4
+    num_workers: 2
     shuffle: True
 val_dataloader:
   dataset_args:

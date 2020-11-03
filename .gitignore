@@ -12,3 +12,4 @@ logs/
 image_segmentation_psa/exp/*
 *.tar
 demo_files/
+*.vscode

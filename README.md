@@ -44,7 +44,7 @@ To download the dataset please register and follow the instructions here: https:
 
 Then, we need to pre-process the images in order to get the predicted entropy, distance, perceptual difference, synthesis, and semantic maps. 
 The neccesary files to do all the operations can be found under `data_preparation` folder. In future releases, we will make one script to do all 
-the pre-process automatically. For the time being, you can download the processed datasets used in the paper here: ADD LINK TO DATA.
+the pre-process automatically. For the time being, you can download the processed datasets used in the paper here: http://robotics.ethz.ch/~asl-datasets/Dissimilarity/ .
 
 ### Framework Light Version 
 The original paper discussed the implementation of a lighter version in order to demostrate the generalization ability of the network to different
