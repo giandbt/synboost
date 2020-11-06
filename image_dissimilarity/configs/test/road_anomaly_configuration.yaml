@@ -1,11 +1,10 @@
 # Name of the experiment for saving files
-experiment_name: baseline_void_prior_spadedecoder_mult_3 # where checkpoints are stored
-save_folder: /home/giancarlo/data/innosuisse/final_results/results/ # where checkpoints are stored
-#save_folder: results/ # where checkpoints are stored
+experiment_name: replicate_best_mult_3 # where checkpoints are stored
+save_folder: /media/giancarlo/Samsung_T5/personal/master_thesis/cvpr/results/ # where checkpoints are stored
 which_epoch: best
-store_results: /home/giancarlo/data/innosuisse/road_anomaly/predictions
+store_results: /media/giancarlo/Samsung_T5/personal/master_thesis/cvpr/road_anomaly/predictions
 visualize: False
-ensemble: False
+ensemble: True
 
 # model options
 model:
@@ -24,7 +23,7 @@ dataset:
 # parameters for dataloaders
 test_dataloader:
   dataset_args:
-    dataroot: /home/giancarlo/data/innosuisse/road_anomaly
+    dataroot: /media/giancarlo/Samsung_T5/data/thesis/final_dataset/road_anomaly
     preprocess_mode: none
     crop_size: 512
     aspect_ratio: 2
