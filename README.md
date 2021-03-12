@@ -1,5 +1,5 @@
-# Pixel-wise Anomaly Detection for Complex Driving Scenes
-This repository is the paper implementation for Pixel-wise Anomaly Detection for Complex Driving Scenes ([Link](https://arxiv.org/abs/2103.05445)). 
+# Pixel-wise Anomaly Detection in Complex Driving Scenes
+This repository is the paper implementation for Pixel-wise Anomaly Detection in Complex Driving Scenes ([Link](https://arxiv.org/abs/2103.05445)). 
 
 ![Alt text](display_images/methodology.png?raw=true "Methodology")
 
@@ -7,7 +7,7 @@ This repository is the paper implementation for Pixel-wise Anomaly Detection for
 
 In order to set-up the project, please follow these steps:
 1) Run  `git clone https://github.com/giandbt/driving_uncertainty.git`. 
-2) Download pre-trained models using `wget https://dissimilarity.s3.eu-central-1.amazonaws.com/models.tar`. 
+2) Download pre-trained models using `wget http://robotics.ethz.ch/~asl-datasets/Dissimilarity/models.tar`. 
 De-compress file and save inside the repository (`tar -xvf ./models.tar`)
 3) We need to install Apex (https://github.com/NVIDIA/apex) running the following:
     ```
@@ -19,7 +19,7 @@ De-compress file and save inside the repository (`tar -xvf ./models.tar`)
 
 ### Training 
 The anomaly pipeline uses pre-trained models for segmentation and image re-synthesis. 
-You can find this pre-trained models using `wget https://dissimilarity.s3.eu-central-1.amazonaws.com/models.tar`. 
+You can find this pre-trained models using `wget http://robotics.ethz.ch/~asl-datasets/Dissimilarity/models.tar`. 
 Additionally, you can refer to the original repositories. 
 
 In order to trained the dissimilarity network, we have to do the following:
@@ -44,7 +44,7 @@ To download the dataset please register and follow the instructions here: https:
 
 Then, we need to pre-process the images in order to get the predicted entropy, distance, perceptual difference, synthesis, and semantic maps. 
 The neccesary files to do all the operations can be found under `data_preparation` folder. In future releases, we will make one script to do all 
-the pre-process automatically. For the time being, you can download the processed datasets used in the paper here: http://robotics.ethz.ch/~asl-datasets/Dissimilarity/ .
+the pre-process automatically. For the time being, you can download the processed datasets used in the paper here: `http://robotics.ethz.ch/~asl-datasets/Dissimilarity/data_processed.tar` .
 
 ### Framework Light Version 
 The original paper discussed the implementation of a lighter version in order to demostrate the generalization ability of the network to different
