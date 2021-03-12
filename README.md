@@ -1,5 +1,5 @@
 # Pixel-wise Anomaly Detection for Complex Driving Scenes
-This repository is the paper implementation for Pixel-wise Anomaly Detection for Complex Driving Scenes (`HYPER-LINK PAPER ONCE IN ARXIV`). 
+This repository is the paper implementation for Pixel-wise Anomaly Detection for Complex Driving Scenes ([Link](https://arxiv.org/abs/2103.05445)). 
 
 ![Alt text](display_images/methodology.png?raw=true "Methodology")
 
