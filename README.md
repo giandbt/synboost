@@ -6,7 +6,7 @@ This repository is the paper implementation for Pixel-wise Anomaly Detection in 
 ### Installation
 
 In order to set-up the project, please follow these steps:
-1) Run  `git clone https://github.com/giandbt/driving_uncertainty.git`. 
+1) Run  `git clone https://github.com/giandbt/synboost.git`. 
 2) Download pre-trained models using `wget http://robotics.ethz.ch/~asl-datasets/Dissimilarity/models.tar`. 
 De-compress file and save inside the repository (`tar -xvf ./models.tar`)
 3) We need to install Apex (https://github.com/NVIDIA/apex) running the following:
